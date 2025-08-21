@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Golf Scotland 2025 v2</title>
+    <title>Golf Scotland 2025</title>
     <style>
         * {
             margin: 0;
@@ -54,6 +54,18 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             z-index: 1000;
             font-size: 14px;
+        }
+        
+        .version-badge {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            color: #718096;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         
         .nav-grid {
@@ -175,11 +187,11 @@
             font-weight: bold;
         }
         
-        .scorecard-grid {
+        .nine-grid {
             display: grid;
-            grid-template-columns: repeat(9, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
             gap: 8px;
-            margin-bottom: 10px;
+            max-width: 100%;
         }
         
         .hole-input {
@@ -187,6 +199,7 @@
             padding: 8px;
             border-radius: 8px;
             border: 2px solid #e2e8f0;
+            text-align: center;
         }
         
         .hole-input.stroke {
@@ -486,8 +499,8 @@
                 font-size: 11px;
             }
             
-            .scorecard-grid {
-                grid-template-columns: repeat(5, 1fr);
+            .nine-grid {
+                grid-template-columns: repeat(3, 1fr);
             }
             
             .hole-input label {
@@ -502,18 +515,14 @@
                 padding: 5px 3px;
             }
         }
-        
-        @media (max-width: 480px) {
-            .scorecard-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
     </style>
 </head>
 <body>
     <div class="lang-toggle" onclick="toggleLanguage()">
         <span id="langBtn">🇬🇧 EN</span>
     </div>
+    
+    <div class="version-badge">v1.10</div>
     
     <div class="container">
         <div class="header">
@@ -599,6 +608,9 @@
     </div>
     
     <script>
+        // App version
+        const APP_VERSION = 'v1.10';
+        
         // Data structure - with updateable players array
         let players = [
             { id: 1, name: 'Klaus', handicap: 18.1 },
@@ -704,7 +716,14 @@
         // Load saved players if exists
         const savedPlayers = localStorage.getItem('golfPlayers2025');
         if (savedPlayers) {
-            players = JSON.parse(savedPlayers);
+            try {
+                const parsed = JSON.parse(savedPlayers);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    players = parsed;
+                }
+            } catch (e) {
+                console.log('Using default players');
+            }
         }
         
         // Initialize with sync from server if available
@@ -717,7 +736,7 @@
                     scrambleScores = serverData.scrambleScores || scrambleScores;
                     awards = serverData.awards || awards;
                     scrambleWinners = serverData.scrambleWinners || scrambleWinners;
-                    if (serverData.players) {
+                    if (serverData.players && Array.isArray(serverData.players) && serverData.players.length > 0) {
                         players = serverData.players;
                     }
                     localStorage.setItem('golfScores2025', JSON.stringify(scores));
@@ -883,32 +902,35 @@
         function selectTeam(roundId, teamIdx) {
             const round = schedule.find(r => r.id === roundId);
             const team = round.teams[teamIdx];
+            const course = courses[round.course];
+            const scoreKey = `${roundId}_team_${teamIdx}`;
+            const existingScores = scrambleScores[scoreKey] || {};
             
             let html = `<h3>${round.course} - ${round.date}</h3>
                 <h4>Lag ${teamIdx + 1}: ${team.join(' & ')}</h4>
                 <h4>Registrer lagscore:</h4>
                 <div class="scorecard-container">`;
             
-            const course = courses[round.course];
-            
             // Front 9
-            html += '<div class="nine-holes"><h5>Front 9</h5><div class="scorecard-grid">';
+            html += '<div class="nine-holes"><h5>Front 9</h5><div class="nine-grid">';
             for (let i = 1; i <= 9; i++) {
                 const par = course.pars[i-1];
+                const value = existingScores[i] || '';
                 html += `<div class="hole-input">
                     <label>Hull ${i}<br>Par ${par}</label>
-                    <input type="number" id="hole${i}" min="1" max="15" placeholder="-">
+                    <input type="number" id="hole${i}" min="1" max="15" value="${value}" placeholder="-">
                 </div>`;
             }
             html += '</div></div>';
             
             // Back 9
-            html += '<div class="nine-holes"><h5>Back 9</h5><div class="scorecard-grid">';
+            html += '<div class="nine-holes"><h5>Back 9</h5><div class="nine-grid">';
             for (let i = 10; i <= 18; i++) {
                 const par = course.pars[i-1];
+                const value = existingScores[i] || '';
                 html += `<div class="hole-input">
                     <label>Hull ${i}<br>Par ${par}</label>
-                    <input type="number" id="hole${i}" min="1" max="15" placeholder="-">
+                    <input type="number" id="hole${i}" min="1" max="15" value="${value}" placeholder="-">
                 </div>`;
             }
             html += '</div></div>';
@@ -930,6 +952,8 @@
             const round = schedule.find(r => r.id == roundId);
             const course = courses[round.course];
             const courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
+            const scoreKey = `${roundId}_${playerId}`;
+            const existingScores = scores[scoreKey] || {};
             
             let html = `<div style="margin: 20px 0; padding: 15px; background: #edf2f7; border-radius: 10px;">
                 <strong>${player.name}</strong><br>
@@ -940,29 +964,31 @@
             <div class="scorecard-container">`;
             
             // Front 9
-            html += '<div class="nine-holes"><h5>Front 9</h5><div class="scorecard-grid">';
+            html += '<div class="nine-holes"><h5>Front 9</h5><div class="nine-grid">';
             for (let i = 1; i <= 9; i++) {
                 const par = course.pars[i-1];
                 const hcpIndex = course.handicaps[i-1];
                 const hasStroke = hcpIndex <= courseHandicap;
+                const value = existingScores[i] || '';
                 
                 html += `<div class="hole-input ${hasStroke ? 'stroke' : ''}">
                     <label>Hull ${i}<br>Par ${par}${hasStroke ? '+1' : ''}</label>
-                    <input type="number" id="hole${i}" min="1" max="15" placeholder="-">
+                    <input type="number" id="hole${i}" min="1" max="15" value="${value}" placeholder="-">
                 </div>`;
             }
             html += '</div></div>';
             
             // Back 9
-            html += '<div class="nine-holes"><h5>Back 9</h5><div class="scorecard-grid">';
+            html += '<div class="nine-holes"><h5>Back 9</h5><div class="nine-grid">';
             for (let i = 10; i <= 18; i++) {
                 const par = course.pars[i-1];
                 const hcpIndex = course.handicaps[i-1];
                 const hasStroke = hcpIndex <= courseHandicap;
+                const value = existingScores[i] || '';
                 
                 html += `<div class="hole-input ${hasStroke ? 'stroke' : ''}">
                     <label>Hull ${i}<br>Par ${par}${hasStroke ? '+1' : ''}</label>
-                    <input type="number" id="hole${i}" min="1" max="15" placeholder="-">
+                    <input type="number" id="hole${i}" min="1" max="15" value="${value}" placeholder="-">
                 </div>`;
             }
             html += '</div></div>';
@@ -1057,12 +1083,14 @@
                         
                         team.forEach(playerName => {
                             const player = players.find(p => p.name === playerName);
-                            const course = courses[round.course];
-                            const courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
-                            
-                            overallScores[playerName].gross += teamGross / 2;
-                            overallScores[playerName].net += (teamGross / 2) - (courseHandicap / 2);
-                            overallScores[playerName].rounds++;
+                            if (player) {
+                                const course = courses[round.course];
+                                const courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
+                                
+                                overallScores[playerName].gross += teamGross / 2;
+                                overallScores[playerName].net += (teamGross / 2) - (courseHandicap / 2);
+                                overallScores[playerName].rounds++;
+                            }
                         });
                     }
                 });
@@ -1228,7 +1256,7 @@
             document.getElementById('coursesContent').innerHTML = html;
         }
         
-        // Load players
+        // Load players - FIXED
         function loadPlayers() {
             let html = '<div class="player-grid">';
             players.forEach(player => {
@@ -1248,7 +1276,7 @@
             document.getElementById('playersContent').innerHTML = html;
         }
         
-        // Admin section with handicap editing
+        // Admin section with handicap editing - FIXED
         function loadAdmin() {
             let html = '';
             
