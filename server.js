@@ -22,7 +22,8 @@ app.get('/api/scores', (req, res) => {
                 scores: {},
                 scrambleScores: {},
                 awards: {},
-                scrambleWinners: {}
+                scrambleWinners: {},
+                players: [] // Add this
             });
         }
     } catch (error) {
