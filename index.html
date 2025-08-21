@@ -522,7 +522,7 @@
         <span id="langBtn">🇬🇧 EN</span>
     </div>
     
-    <div class="version-badge">v1.10</div>
+    <div class="version-badge">v1.12</div>
     
     <div class="container">
         <div class="header">
@@ -609,7 +609,7 @@
     
     <script>
         // App version
-        const APP_VERSION = 'v1.10';
+        const APP_VERSION = 'v1.12';
         
         // Data structure - with updateable players array
         let players = [
@@ -1113,7 +1113,7 @@
             document.getElementById('leaderboardContent').innerHTML = html;
         }
         
-        // Load courses with improved table layout
+        // Load courses with improved table layout - Front 9 and Back 9 on separate rows
         function loadCourses() {
             let html = '';
             
@@ -1128,66 +1128,106 @@
                     html += `<h4>${round.date} - ${round.time} (${round.type})</h4>`;
                     
                     if (round.type === 'Individuell') {
-                        html += '<div class="scorecard-table-wrapper">';
-                        html += '<table class="scorecard-table"><thead><tr><th>Spiller</th>';
-                        
-                        // Header row with hole numbers
-                        for (let i = 1; i <= 9; i++) {
-                            html += `<th class="hole-header">${i}</th>`;
-                        }
-                        html += '<th class="total-cell">Out</th>';
-                        for (let i = 10; i <= 18; i++) {
-                            html += `<th class="hole-header">${i}</th>`;
-                        }
-                        html += '<th class="total-cell">In</th>';
-                        html += '<th class="total-cell">Tot</th></tr>';
-                        
-                        // Par row
-                        html += '<tr class="par-row"><td>Par</td>';
-                        let frontPar = 0, backPar = 0;
-                        for (let i = 0; i < 9; i++) {
-                            html += `<td>${courseData.pars[i]}</td>`;
-                            frontPar += courseData.pars[i];
-                        }
-                        html += `<td class="total-cell">${frontPar}</td>`;
-                        for (let i = 9; i < 18; i++) {
-                            html += `<td>${courseData.pars[i]}</td>`;
-                            backPar += courseData.pars[i];
-                        }
-                        html += `<td class="total-cell">${backPar}</td>`;
-                        html += `<td class="total-cell">${frontPar + backPar}</td></tr>`;
-                        
-                        html += '</thead><tbody>';
-                        
-                        // Player scores
+                        // Get all players with scores for this round
+                        const playersWithScores = [];
                         players.forEach(player => {
                             const scoreKey = `${round.id}_${player.id}`;
                             const roundScores = scores[scoreKey];
-                            
                             if (roundScores && Object.keys(roundScores).length > 0) {
-                                html += `<tr><td>${player.name}</td>`;
-                                let frontTotal = 0, backTotal = 0;
-                                
-                                // Front 9
+                                playersWithScores.push({ player, scores: roundScores });
+                            }
+                        });
+                        
+                        if (playersWithScores.length > 0) {
+                            // Front 9 Table
+                            html += '<div class="scorecard-table-wrapper">';
+                            html += '<h5 style="margin: 10px 0 5px 0; font-size: 14px; font-weight: bold;">Front 9</h5>';
+                            html += '<table class="scorecard-table"><thead><tr><th>Spiller</th>';
+                            
+                            for (let i = 1; i <= 9; i++) {
+                                html += `<th class="hole-header">${i}</th>`;
+                            }
+                            html += '<th class="total-cell">Out</th></tr>';
+                            
+                            // Par row for Front 9
+                            html += '<tr class="par-row"><td>Par</td>';
+                            let frontPar = 0;
+                            for (let i = 0; i < 9; i++) {
+                                html += `<td>${courseData.pars[i]}</td>`;
+                                frontPar += courseData.pars[i];
+                            }
+                            html += `<td class="total-cell">${frontPar}</td></tr>';
+                            html += '</thead><tbody>';
+                            
+                            // Player scores for Front 9
+                            playersWithScores.forEach(({ player, scores: roundScores }) => {
+                                html += '<tr><td>' + player.name + '</td>';
+                                let frontTotal = 0;
                                 for (let i = 1; i <= 9; i++) {
                                     const score = roundScores[i] || '-';
-                                    html += `<td>${score}</td>`;
+                                    html += '<td>' + score + '</td>';
                                     if (score !== '-') frontTotal += score;
                                 }
-                                html += `<td class="total-cell">${frontTotal || '-'}</td>`;
-                                
-                                // Back 9
+                                html += '<td class="total-cell">' + (frontTotal || '-') + '</td></tr>';
+                            });
+                            
+                            html += '</tbody></table>';
+                            
+                            // Back 9 Table
+                            html += '<h5 style="margin: 15px 0 5px 0; font-size: 14px; font-weight: bold;">Back 9</h5>';
+                            html += '<table class="scorecard-table"><thead><tr><th>Spiller</th>';
+                            
+                            for (let i = 10; i <= 18; i++) {
+                                html += `<th class="hole-header">${i}</th>`;
+                            }
+                            html += '<th class="total-cell">In</th></tr>';
+                            
+                            // Par row for Back 9
+                            html += '<tr class="par-row"><td>Par</td>';
+                            let backPar = 0;
+                            for (let i = 9; i < 18; i++) {
+                                html += `<td>${courseData.pars[i]}</td>`;
+                                backPar += courseData.pars[i];
+                            }
+                            html += `<td class="total-cell">${backPar}</td></tr>';
+                            html += '</thead><tbody>';
+                            
+                            // Player scores for Back 9
+                            playersWithScores.forEach(({ player, scores: roundScores }) => {
+                                html += `<tr><td>${player.name}</td>`;
+                                let backTotal = 0;
                                 for (let i = 10; i <= 18; i++) {
                                     const score = roundScores[i] || '-';
                                     html += `<td>${score}</td>`;
                                     if (score !== '-') backTotal += score;
                                 }
-                                html += `<td class="total-cell">${backTotal || '-'}</td>`;
+                                html += `<td class="total-cell">${backTotal || '-'}</td></tr>`;
+                            });
+                            
+                            html += '</tbody></table>';
+                            
+                            // Total scores summary
+                            html += '<h5 style="margin: 15px 0 5px 0; font-size: 14px; font-weight: bold;">Totaler</h5>';
+                            html += '<table class="scorecard-table"><thead><tr>';
+                            html += '<th>Spiller</th><th>Front 9</th><th>Back 9</th><th class="total-cell">Total</th>';
+                            html += '</tr></thead><tbody>';
+                            
+                            playersWithScores.forEach(({ player, scores: roundScores }) => {
+                                let frontTotal = 0, backTotal = 0;
+                                for (let i = 1; i <= 9; i++) {
+                                    if (roundScores[i]) frontTotal += roundScores[i];
+                                }
+                                for (let i = 10; i <= 18; i++) {
+                                    if (roundScores[i]) backTotal += roundScores[i];
+                                }
+                                html += `<tr><td>${player.name}</td>`;
+                                html += `<td>${frontTotal || '-'}</td>`;
+                                html += `<td>${backTotal || '-'}</td>`;
                                 html += `<td class="total-cell"><strong>${frontTotal + backTotal || '-'}</strong></td></tr>`;
-                            }
-                        });
-                        
-                        html += '</tbody></table></div>';
+                            });
+                            
+                            html += '</tbody></table></div>';
+                        }
                         
                         // Show awards
                         if (round.longestDrive || round.closestToPin) {
@@ -1218,32 +1258,42 @@
                                 html += `<div class="${isWinner ? 'winner' : ''}">
                                     <h5>${isWinner ? '🏆 ' : ''}Lag ${teamIdx + 1}: ${team.join(' & ')}</h5>`;
                                 html += '<div class="scorecard-table-wrapper">';
-                                html += '<table class="scorecard-table"><thead><tr>';
                                 
+                                // Front 9 for team
+                                html += '<h6 style="margin: 10px 0 5px 0; font-size: 13px;">Front 9</h6>';
+                                html += '<table class="scorecard-table"><thead><tr>';
                                 for (let i = 1; i <= 9; i++) {
                                     html += `<th>${i}</th>`;
                                 }
-                                html += '<th class="total-cell">Out</th>';
-                                for (let i = 10; i <= 18; i++) {
-                                    html += `<th>${i}</th>`;
-                                }
-                                html += '<th class="total-cell">In</th>';
-                                html += '<th class="total-cell">Tot</th></tr></thead><tbody><tr>';
+                                html += '<th class="total-cell">Out</th></tr></thead><tbody><tr>';
                                 
-                                let frontTotal = 0, backTotal = 0;
+                                let frontTotal = 0;
                                 for (let i = 1; i <= 9; i++) {
                                     const score = teamScores[i] || '-';
                                     html += `<td>${score}</td>`;
                                     if (score !== '-') frontTotal += score;
                                 }
-                                html += `<td class="total-cell">${frontTotal || '-'}</td>`;
+                                html += `<td class="total-cell">${frontTotal || '-'}</td></tr></tbody></table>`;
+                                
+                                // Back 9 for team
+                                html += '<h6 style="margin: 10px 0 5px 0; font-size: 13px;">Back 9</h6>';
+                                html += '<table class="scorecard-table"><thead><tr>';
+                                for (let i = 10; i <= 18; i++) {
+                                    html += `<th>${i}</th>`;
+                                }
+                                html += '<th class="total-cell">In</th></tr></thead><tbody><tr>';
+                                
+                                let backTotal = 0;
                                 for (let i = 10; i <= 18; i++) {
                                     const score = teamScores[i] || '-';
                                     html += `<td>${score}</td>`;
                                     if (score !== '-') backTotal += score;
                                 }
-                                html += `<td class="total-cell">${backTotal || '-'}</td>`;
-                                html += `<td class="total-cell"><strong>${frontTotal + backTotal || '-'}</strong></td></tr></tbody></table></div></div>`;
+                                html += `<td class="total-cell">${backTotal || '-'}</td></tr></tbody></table>`;
+                                
+                                // Total
+                                html += `<p style="margin-top: 10px; font-weight: bold;">Total: ${frontTotal + backTotal || '-'}</p>`;
+                                html += '</div></div>';
                             }
                         });
                         html += '</div>';
