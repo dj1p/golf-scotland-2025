@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Golf Scotland 2025</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .header h1 {
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #718096;
+        }
+        
+        .lang-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .nav-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .nav-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        
+        .nav-card h3 {
+            color: #2d3748;
+            margin: 15px 0 10px;
+        }
+        
+        .nav-card p {
+            color: #718096;
+            font-size: 14px;
+        }
+        
+        .icon {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto;
+            font-size: 40px;
+        }
+        
+        .content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: none;
+        }
+        
+        .content.active {
+            display: block;
+        }
+        
+        .back-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        
+        .back-btn:hover {
+            background: #5a67d8;
+        }
+        
+        .schedule-item {
+            background: #f7fafc;
+            border-left: 4px solid #48bb78;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .player-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .player-card {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .player-card h4 {
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+        
+        .player-card p {
+            color: #718096;
+            font-size: 14px;
+        }
+        
+        .scorecard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .hole-input {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .hole-input.stroke {
+            background: #fef5e7;
+            border-color: #f6d55c;
+        }
+        
+        .hole-input label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #2d3748;
+        }
+        
+        .hole-input input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #cbd5e0;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        button {
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        
+        button:hover {
+            background: #38a169;
+        }
+        
+        .round-select, .team-select {
+            background: #f7fafc;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .round-select:hover, .team-select:hover {
+            background: #edf2f7;
+        }
+        
+        select {
+            padding: 8px;
+            border: 1px solid #cbd5e0;
+            border-radius: 5px;
+            font-size: 16px;
+            width: 100%;
+            margin: 10px 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        th {
+            background: #f7fafc;
+            font-weight: bold;
+            color: #2d3748;
+        }
+        
+        .success-message {
+            background: #48bb78;
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            text-align: center;
+        }
+        
+        .overall-section {
+            background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .overall-section h3 {
+            color: white;
+            margin-bottom: 15px;
+        }
+        
+        .overall-table {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .trophy {
+            color: gold;
+            margin-right: 5px;
+        }
+        
+        .team-section {
+            background: #edf2f7;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        
+        .team-member {
+            display: inline-block;
+            background: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin: 5px;
+        }
+        
+        .course-section {
+            border-top: 3px solid #667eea;
+            margin: 30px 0;
+            padding-top: 20px;
+        }
+        
+        .scramble-result {
+            background: #e6fffa;
+            border: 2px solid #38b2ac;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        .winner {
+            background: #c6f6d5;
+            border-color: #48bb78;
+        }
+    </style>
+</head>
+<body>
+    <div class="lang-toggle" onclick="toggleLanguage()">
+        <span id="langBtn">🇬🇧 EN</span>
+    </div>
+    
+    <div class="container">
+        <div class="header">
+            <h1 id="appTitle">Golf Skottland 2025</h1>
+            <p id="appSubtitle">Årlig golftur til Skottland</p>
+        </div>
+        
+        <div id="homeView" class="view">
+            <div class="nav-grid">
+                <div class="nav-card" onclick="showView('schedule')">
+                    <div class="icon">📅</div>
+                    <h3 id="scheduleTitle">Timeplan</h3>
+                    <p id="scheduleDesc">Se runder og starttider</p>
+                </div>
+                
+                <div class="nav-card" onclick="showView('scorecard')">
+                    <div class="icon">⛳</div>
+                    <h3 id="scorecardTitle">Registrer score</h3>
+                    <p id="scorecardDesc">Registrer din runde</p>
+                </div>
+                
+                <div class="nav-card" onclick="showView('leaderboard')">
+                    <div class="icon">🏆</div>
+                    <h3 id="leaderboardTitle">Resultatliste</h3>
+                    <p id="leaderboardDesc">Live score og stilling</p>
+                </div>
+                
+                <div class="nav-card" onclick="showView('courses')">
+                    <div class="icon">🏌️</div>
+                    <h3 id="coursesTitle">Baner</h3>
+                    <p id="coursesDesc">Scorekort per bane</p>
+                </div>
+                
+                <div class="nav-card" onclick="showView('players')">
+                    <div class="icon">👥</div>
+                    <h3 id="playersTitle">Spillere</h3>
+                    <p id="playersDesc">Spillerliste og handicap</p>
+                </div>
+            </div>
+        </div>
+        
+        <div id="scheduleView" class="content">
+            <button class="back-btn" onclick="showView('home')">← Tilbake</button>
+            <h2>Turneringsplan</h2>
+            <div id="scheduleContent"></div>
+        </div>
+        
+        <div id="scorecardView" class="content">
+            <button class="back-btn" onclick="showView('home')">← Tilbake</button>
+            <h2>Registrer Score</h2>
+            <div id="scorecardContent"></div>
+        </div>
+        
+        <div id="leaderboardView" class="content">
+            <button class="back-btn" onclick="showView('home')">← Tilbake</button>
+            <h2>Resultatliste</h2>
+            <div id="leaderboardContent"></div>
+        </div>
+        
+        <div id="coursesView" class="content">
+            <button class="back-btn" onclick="showView('home')">← Tilbake</button>
+            <h2>Scorekort per Bane</h2>
+            <div id="coursesContent"></div>
+        </div>
+        
+        <div id="playersView" class="content">
+            <button class="back-btn" onclick="showView('home')">← Tilbake</button>
+            <h2>Spillere</h2>
+            <div id="playersContent"></div>
+        </div>
+    </div>
+    
+    <script>
+        // Data
+        const players = [
+            { id: 1, name: 'Klaus', handicap: 18.1 },
+            { id: 2, name: 'Ruben', handicap: 11 },
+            { id: 3, name: 'Sigbjørn', handicap: 20.2 },
+            { id: 4, name: 'Bjørn', handicap: 23.8 },
+            { id: 5, name: 'Truls', handicap: 36 },
+            { id: 6, name: 'Tor Espen', handicap: 27 },
+            { id: 7, name: 'Dag', handicap: 19.4 },
+            { id: 8, name: 'Roar', handicap: 25.9 }
+        ];
+        
+        const schedule = [
+            { 
+                id: 1, 
+                date: 'Fredag 29. aug', 
+                time: 'Morgen', 
+                course: 'Cullen Links', 
+                type: 'Scramble',
+                teams: [
+                    ['Klaus', 'Ruben'],
+                    ['Sigbjørn', 'Bjørn'],
+                    ['Truls', 'Tor Espen'],
+                    ['Dag', 'Roar']
+                ]
+            },
+            { 
+                id: 2, 
+                date: 'Fredag 29. aug', 
+                time: 'Ettermiddag', 
+                course: 'Cullen Links', 
+                type: 'Individuell',
+                longestDrive: [5, 15],
+                closestToPin: [2, 13]
+            },
+            { 
+                id: 3, 
+                date: 'Lørdag 30. aug', 
+                time: 'Morgen', 
+                course: 'Spey Bay', 
+                type: 'Individuell',
+                longestDrive: [5, 16],
+                closestToPin: [4, 15]
+            },
+            { 
+                id: 4, 
+                date: 'Lørdag 30. aug', 
+                time: 'Ettermiddag', 
+                course: 'Garmouth & Kingston', 
+                type: 'Scramble',
+                teams: [
+                    ['Truls', 'Roar'],
+                    ['Klaus', 'Sigbjørn'],
+                    ['Bjørn', 'Dag'],
+                    ['Ruben', 'Tor Espen']
+                ]
+            },
+            { 
+                id: 5, 
+                date: 'Søndag 31. aug', 
+                time: 'Hele dagen', 
+                course: 'Strathlene', 
+                type: 'Individuell',
+                longestDrive: [8, 14],
+                closestToPin: [7, 13]
+            }
+        ];
+        
+        const courses = {
+            'Cullen Links': { 
+                slopeRating: 113, 
+                par: 63,
+                pars: [4,3,3,3,4,3,3,4,3,4,3,3,3,3,5,4,4,4],
+                handicaps: [9,7,1,11,3,13,5,17,15,14,6,2,4,8,10,12,18,16]
+            },
+            'Spey Bay': { 
+                slopeRating: 115, 
+                par: 70,
+                pars: [4,4,4,3,4,4,4,3,5,4,4,4,3,4,3,5,4,4],
+                handicaps: [3,11,7,9,1,17,5,13,15,16,8,4,10,2,14,12,18,6]
+            },
+            'Strathlene': { 
+                slopeRating: 117, 
+                par: 69,
+                pars: [4,4,4,3,4,4,3,4,4,4,4,4,3,5,4,4,4,3],
+                handicaps: [12,16,7,5,9,10,18,3,1,14,8,2,17,11,4,15,6,13]
+            },
+            'Garmouth & Kingston': { 
+                slopeRating: 112, 
+                par: 67,
+                pars: [4,4,4,3,4,4,4,4,3,4,4,4,3,4,3,4,4,3],
+                handicaps: [7,8,1,9,10,5,14,3,12,6,15,17,18,11,13,2,4,16]
+            }
+        };
+        
+        let language = 'no';
+        let scores = JSON.parse(localStorage.getItem('golfScores2025') || '{}');
+        let scrambleScores = JSON.parse(localStorage.getItem('scrambleScores2025') || '{}');
+        
+        // Language toggle
+        function toggleLanguage() {
+            language = language === 'no' ? 'en' : 'no';
+            document.getElementById('langBtn').textContent = language === 'no' ? '🇬🇧 EN' : '🇳🇴 NO';
+            updateLanguage();
+        }
+        
+        function updateLanguage() {
+            const texts = {
+                no: {
+                    appTitle: 'Golf Skottland 2025',
+                    appSubtitle: 'Årlig golftur til Skottland',
+                    scheduleTitle: 'Timeplan',
+                    scheduleDesc: 'Se runder og starttider',
+                    scorecardTitle: 'Registrer score',
+                    scorecardDesc: 'Registrer din runde',
+                    leaderboardTitle: 'Resultatliste',
+                    leaderboardDesc: 'Live score og stilling',
+                    coursesTitle: 'Baner',
+                    coursesDesc: 'Scorekort per bane',
+                    playersTitle: 'Spillere',
+                    playersDesc: 'Spillerliste og handicap'
+                },
+                en: {
+                    appTitle: 'Golf Scotland 2025',
+                    appSubtitle: 'Annual Golf Trip to Scotland',
+                    scheduleTitle: 'Schedule',
+                    scheduleDesc: 'View rounds and tee times',
+                    scorecardTitle: 'Enter Scores',
+                    scorecardDesc: 'Record your round',
+                    leaderboardTitle: 'Leaderboard',
+                    leaderboardDesc: 'Live scores & standings',
+                    coursesTitle: 'Courses',
+                    coursesDesc: 'Scorecards per course',
+                    playersTitle: 'Players',
+                    playersDesc: 'Player list & handicaps'
+                }
+            };
+            
+            const t = texts[language];
+            document.getElementById('appTitle').textContent = t.appTitle;
+            document.getElementById('appSubtitle').textContent = t.appSubtitle;
+            document.getElementById('scheduleTitle').textContent = t.scheduleTitle;
+            document.getElementById('scheduleDesc').textContent = t.scheduleDesc;
+            document.getElementById('scorecardTitle').textContent = t.scorecardTitle;
+            document.getElementById('scorecardDesc').textContent = t.scorecardDesc;
+            document.getElementById('leaderboardTitle').textContent = t.leaderboardTitle;
+            document.getElementById('leaderboardDesc').textContent = t.leaderboardDesc;
+            document.getElementById('coursesTitle').textContent = t.coursesTitle;
+            document.getElementById('coursesDesc').textContent = t.coursesDesc;
+            document.getElementById('playersTitle').textContent = t.playersTitle;
+            document.getElementById('playersDesc').textContent = t.playersDesc;
+        }
+        
+        // View management
+        function showView(viewName) {
+            document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
+            document.getElementById('homeView').style.display = viewName === 'home' ? 'block' : 'none';
+            
+            if (viewName !== 'home') {
+                document.getElementById(viewName + 'View').classList.add('active');
+                
+                // Load content for each view
+                if (viewName === 'schedule') loadSchedule();
+                if (viewName === 'scorecard') loadScorecard();
+                if (viewName === 'leaderboard') loadLeaderboard();
+                if (viewName === 'courses') loadCourses();
+                if (viewName === 'players') loadPlayers();
+            }
+        }
+        
+        // Load schedule
+        function loadSchedule() {
+            let html = '';
+            schedule.forEach(round => {
+                html += `
+                    <div class="schedule-item">
+                        <strong>${round.date} - ${round.time}</strong><br>
+                        ${round.course}<br>
+                        <span style="color: #4299e1;">${round.type}</span>
+                `;
+                
+                if (round.teams) {
+                    html += '<div class="team-section">';
+                    html += '<strong>Lag:</strong><br>';
+                    round.teams.forEach((team, idx) => {
+                        html += `<div>Lag ${idx + 1}: ${team.join(' & ')}</div>`;
+                    });
+                    html += '</div>';
+                }
+                
+                if (round.longestDrive) {
+                    html += `<div>🚀 Lengste drive: Hull ${round.longestDrive.join(', ')}</div>`;
+                }
+                if (round.closestToPin) {
+                    html += `<div>🎯 Nærmest pinnen: Hull ${round.closestToPin.join(', ')}</div>`;
+                }
+                
+                html += '</div>';
+            });
+            document.getElementById('scheduleContent').innerHTML = html;
+        }
+        
+        // Load scorecard
+        function loadScorecard() {
+            let html = '<h3>Velg runde:</h3>';
+            schedule.forEach(round => {
+                html += `
+                    <div class="round-select" onclick="selectRound(${round.id})">
+                        <strong>${round.date} - ${round.time}</strong><br>
+                        ${round.course} (${round.type})
+                    </div>
+                `;
+            });
+            html += '<div id="scorecardForm"></div>';
+            document.getElementById('scorecardContent').innerHTML = html;
+        }
+        
+        // Select round for scoring
+        function selectRound(roundId) {
+            const round = schedule.find(r => r.id === roundId);
+            let html = `<h3>${round.course} - ${round.date}</h3>`;
+            
+            if (round.type === 'Scramble') {
+                // Show teams for scramble
+                html += '<h4>Velg lag:</h4>';
+                round.teams.forEach((team, idx) => {
+                    html += `
+                        <div class="team-select" onclick="selectTeam(${roundId}, ${idx})">
+                            <strong>Lag ${idx + 1}</strong><br>
+                            ${team.join(' & ')}
+                        </div>
+                    `;
+                });
+            } else {
+                // Show players for individual
+                html += '<h4>Velg spiller:</h4>';
+                html += '<select id="playerSelect" onchange="loadScorecardForm()">';
+                html += '<option value="">-- Velg spiller --</option>';
+                players.forEach(player => {
+                    html += `<option value="${player.id}">${player.name}</option>`;
+                });
+                html += '</select>';
+                html += `<input type="hidden" id="selectedRound" value="${roundId}">`;
+                html += '<div id="holesForm"></div>';
+            }
+            
+            document.getElementById('scorecardForm').innerHTML = html;
+        }
+        
+        // Select team for scramble scoring
+        function selectTeam(roundId, teamIdx) {
+            const round = schedule.find(r => r.id === roundId);
+            const team = round.teams[teamIdx];
+            
+            let html = `
+                <h3>${round.course} - ${round.date}</h3>
+                <h4>Lag ${teamIdx + 1}: ${team.join(' & ')}</h4>
+                <input type="hidden" id="selectedRound" value="${roundId}">
+                <input type="hidden" id="selectedTeam" value="${teamIdx}">
+                <h4>Registrer lagscore:</h4>
+                <div class="scorecard-grid">
+            `;
+            
+            const course = courses[round.course];
+            for (let i = 1; i <= 18; i++) {
+                const par = course.pars[i-1];
+                html += `
+                    <div class="hole-input">
+                        <label>Hull ${i} (Par ${par})</label>
+                        <input type="number" id="hole${i}" min="1" max="15" placeholder="Score">
+                    </div>
+                `;
+            }
+            
+            html += `
+                </div>
+                <button onclick="saveTeamScores(${roundId}, ${teamIdx})">Lagre Lagscore</button>
+                <div id="saveMessage"></div>
+            `;
+            
+            document.getElementById('scorecardForm').innerHTML = html;
+        }
+        
+        // Load scorecard form for individual
+        function loadScorecardForm() {
+            const playerId = document.getElementById('playerSelect').value;
+            const roundId = document.getElementById('selectedRound').value;
+            
+            if (!playerId) return;
+            
+            const player = players.find(p => p.id == playerId);
+            const round = schedule.find(r => r.id == roundId);
+            const course = courses[round.course];
+            const courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
+            
+            let html = `
+                <div style="margin: 20px 0; padding: 15px; background: #edf2f7; border-radius: 10px;">
+                    <strong>${player.name}</strong><br>
+                    Handicap: ${player.handicap}<br>
+                    Banehandicap: ${courseHandicap}
+                </div>
+                <h4>Registrer score:</h4>
+                <div class="scorecard-grid">
+            `;
+            
+            for (let i = 1; i <= 18; i++) {
+                const par = course.pars[i-1];
+                const hcpIndex = course.handicaps[i-1];
+                const hasStroke = hcpIndex <= courseHandicap;
+                
+                html += `
+                    <div class="hole-input ${hasStroke ? 'stroke' : ''}">
+                        <label>Hull ${i} (Par ${par}) ${hasStroke ? '+1' : ''}</label>
+                        <input type="number" id="hole${i}" min="1" max="15" placeholder="Score">
+                    </div>
+                `;
+            }
+            
+            html += `
+                </div>
+                <button onclick="saveScores(${playerId}, ${roundId})">Lagre Score</button>
+                <div id="saveMessage"></div>
+            `;
+            
+            document.getElementById('holesForm').innerHTML = html;
+        }
+        
+        // Save individual scores
+        function saveScores(playerId, roundId) {
+            const scoreKey = `${roundId}_${playerId}`;
+            const roundScores = {};
+            
+            for (let i = 1; i <= 18; i++) {
+                const score = document.getElementById(`hole${i}`).value;
+                if (score) {
+                    roundScores[i] = parseInt(score);
+                }
+            }
+            
+            scores[scoreKey] = roundScores;
+            localStorage.setItem('golfScores2025', JSON.stringify(scores));
+            
+            document.getElementById('saveMessage').innerHTML = '<div class="success-message">Score lagret!</div>';
+            setTimeout(() => {
+                document.getElementById('saveMessage').innerHTML = '';
+            }, 3000);
+        }
+        
+        // Save team scores for scramble
+        function saveTeamScores(roundId, teamIdx) {
+            const scoreKey = `${roundId}_team_${teamIdx}`;
+            const teamScores = {};
+            
+            for (let i = 1; i <= 18; i++) {
+                const score = document.getElementById(`hole${i}`).value;
+                if (score) {
+                    teamScores[i] = parseInt(score);
+                }
+            }
+            
+            scrambleScores[scoreKey] = teamScores;
+            localStorage.setItem('scrambleScores2025', JSON.stringify(scrambleScores));
+            
+            document.getElementById('saveMessage').innerHTML = '<div class="success-message">Lagscore lagret!</div>';
+            setTimeout(() => {
+                document.getElementById('saveMessage').innerHTML = '';
+            }, 3000);
+        }
+        
+        // Load leaderboard with overall standings
+        function loadLeaderboard() {
+            let html = '';
+            
+            // Overall standings
+            html += '<div class="overall-section">';
+            html += '<h3>⭐ SAMMENLAGT STILLING ⭐</h3>';
+            html += '<div class="overall-table">';
+            html += '<table><thead><tr><th>Spiller</th><th>Total Brutto</th><th>Total Netto</th></tr></thead><tbody>';
+            
+            const overallScores = {};
+            players.forEach(player => {
+                overallScores[player.name] = { gross: 0, net: 0, rounds: 0 };
+            });
+            
+            // Calculate individual round scores
+            schedule.filter(r => r.type === 'Individuell').forEach(round => {
+                players.forEach(player => {
+                    const scoreKey = `${round.id}_${player.id}`;
+                    const roundScores = scores[scoreKey];
+                    
+                    if (roundScores) {
+                        const gross = Object.values(roundScores).reduce((sum, s) => sum + s, 0);
+                        const course = courses[round.course];
+                        const courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
+                        const net = gross - courseHandicap;
+                        
+                        overallScores[player.name].gross += gross;
+                        overallScores[player.name].net += net;
+                        overallScores[player.name].rounds++;
+                    }
+                });
+            });
+            
+            // Add scramble scores (divided by 2)
+            schedule.filter(r => r.type === 'Scramble').forEach(round => {
+                round.teams.forEach((team, teamIdx) => {
+                    const scoreKey = `${round.id}_team_${teamIdx}`;
+                    const teamScores = scrambleScores[scoreKey];
+                    
+                    if (teamScores) {
+                        const teamGross = Object.values(teamScores).reduce((sum, s) => sum + s, 0);
+                        
+                        team.forEach(playerName => {
+                            const player = players.find(p => p.name === playerName);
+                            const course = courses[round.course];
+                            const courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
+                            
+                            overallScores[playerName].gross += teamGross / 2;
+                            overallScores[playerName].net += (teamGross / 2) - (courseHandicap / 2);
+                            overallScores[playerName].rounds++;
+                        });
+                    }
+                });
+            });
+            
+            // Sort and display overall scores
+            const sortedOverall = Object.entries(overallScores)
+                .filter(([name, scores]) => scores.rounds > 0)
+                .sort((a, b) => a[1].net - b[1].net);
+            
+            sortedOverall.forEach(([name, playerScores], idx) => {
+                html += '<tr>';
+                html += `<td>${idx === 0 ? '<span class="trophy">🏆</span>' : ''}${name}</td>`;
+                html += `<td style="text-align: center;">${Math.round(playerScores.gross)}</td>`;
+                html += `<td style="text-align: center; font-weight: bold;">${Math.round(playerScores.net)}</td>`;
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table></div></div>';
+            
+            // Individual rounds
+            html += '<h3>Individuelle Runder</h3>';
+            schedule.filter(r => r.type === 'Individuell').forEach(round => {
+                html += `<h4>${round.date} - ${round.course}</h4>`;
+                html += '<table><thead><tr><th>Spiller</th><th>Brutto</th><th>Netto</th></tr></thead><tbody>';
+                
+                const roundResults = [];
+                players.forEach(player => {
+                    const scoreKey = `${round.id}_${player.id}`;
+                    const roundScores = scores[scoreKey];
+                    
+                    if (roundScores) {
+                        const gross = Object.values(roundScores).reduce((sum, s) => sum + s, 0);
+                        const course = courses[round.course];
+                        const courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
+                        const net = gross - courseHandicap;
+                        
+                        roundResults.push({ name: player.name, gross, net });
+                    }
+                });
+                
+                roundResults.sort((a, b) => a.net - b.net);
+                roundResults.forEach(result => {
+                    html += `<tr><td>${result.name}</td><td>${result.gross}</td><td>${result.net}</td></tr>`;
+                });
+                
+                html += '</tbody></table>';
+            });
+            
+            // Scramble results
+            html += '<h3>Scramble Resultater</h3>';
+            schedule.filter(r => r.type === 'Scramble').forEach(round => {
+                html += `<h4>${round.date} - ${round.course}</h4>`;
+                
+                const teamResults = [];
+                round.teams.forEach((team, teamIdx) => {
+                    const scoreKey = `${round.id}_team_${teamIdx}`;
+                    const teamScores = scrambleScores[scoreKey];
+                    
+                    if (teamScores) {
+                        const total = Object.values(teamScores).reduce((sum, s) => sum + s, 0);
+                        teamResults.push({ idx: teamIdx, team, total });
+                    }
+                });
+                
+                teamResults.sort((a, b) => a.total - b.total);
+                teamResults.forEach((result, idx) => {
+                    html += `<div class="scramble-result ${idx === 0 ? 'winner' : ''}">`;
+                    html += `${idx === 0 ? '🏆 ' : ''}Lag ${result.idx + 1}: ${result.team.join(' & ')} - Score: ${result.total}`;
+                    html += '</div>';
+                });
+            });
+            
+            document.getElementById('leaderboardContent').innerHTML = html;
+        }
+        
+        // Load courses with individual scorecards
+        function loadCourses() {
+            let html = '';
+            
+            Object.entries(courses).forEach(([courseName, courseData]) => {
+                html += `<div class="course-section">`;
+                html += `<h3>${courseName}</h3>`;
+                html += `<p>Par: ${courseData.par} | Slope: ${courseData.slopeRating}</p>`;
+                
+                // Find all rounds on this course
+                const courseRounds = schedule.filter(r => r.course === courseName);
+                
+                courseRounds.forEach(round => {
+                    html += `<h4>${round.date} - ${round.time} (${round.type})</h4>`;
+                    
+                    if (round.type === 'Individuell') {
+                        html += '<table><thead><tr><th>Spiller</th>';
+                        for (let i = 1; i <= 18; i++) {
+                            html += `<th>${i}</th>`;
+                        }
+                        html += '<th>Tot</th></tr></thead><tbody>';
+                        
+                        players.forEach(player => {
+                            const scoreKey = `${round.id}_${player.id}`;
+                            const roundScores = scores[scoreKey];
+                            
+                            if (roundScores && Object.keys(roundScores).length > 0) {
+                                html += `<tr><td>${player.name}</td>`;
+                                let total = 0;
+                                for (let i = 1; i <= 18; i++) {
+                                    const score = roundScores[i] || '-';
+                                    html += `<td>${score}</td>`;
+                                    if (score !== '-') total += score;
+                                }
+                                html += `<td><strong>${total}</strong></td></tr>`;
+                            }
+                        });
+                        
+                        html += '</tbody></table>';
+                    } else {
+                        // Scramble scores
+                        html += '<div class="team-section">';
+                        round.teams.forEach((team, teamIdx) => {
+                            const scoreKey = `${round.id}_team_${teamIdx}`;
+                            const teamScores = scrambleScores[scoreKey];
+                            
+                            if (teamScores && Object.keys(teamScores).length > 0) {
+                                html += `<h5>Lag ${teamIdx + 1}: ${team.join(' & ')}</h5>`;
+                                html += '<table style="margin-bottom: 15px;"><thead><tr>';
+                                for (let i = 1; i <= 18; i++) {
+                                    html += `<th>${i}</th>`;
+                                }
+                                html += '<th>Tot</th></tr></thead><tbody><tr>';
+                                
+                                let total = 0;
+                                for (let i = 1; i <= 18; i++) {
+                                    const score = teamScores[i] || '-';
+                                    html += `<td>${score}</td>`;
+                                    if (score !== '-') total += score;
+                                }
+                                html += `<td><strong>${total}</strong></td></tr></tbody></table>`;
+                            }
+                        });
+                        html += '</div>';
+                    }
+                });
+                
+                html += '</div>';
+            });
+            
+            document.getElementById('coursesContent').innerHTML = html;
+        }
+        
+        // Load players
+        function loadPlayers() {
+            let html = '<div class="player-grid">';
+            players.forEach(player => {
+                html += `
+                    <div class="player-card">
+                        <h4>${player.name}</h4>
+                        <p>Handicap: ${player.handicap}</p>
+                        <p style="font-size: 12px; margin-top: 10px;">Banehandicap:</p>
+                `;
+                
+                Object.entries(courses).forEach(([name, course]) => {
+                    const courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
+                    html += `<p style="font-size: 11px;">${name}: ${courseHandicap}</p>`;
+                });
+                
+                html += '</div>';
+            });
+            html += '</div>';
+            document.getElementById('playersContent').innerHTML = html;
+        }
+        
+        // Initialize
+        updateLanguage();
+    </script>
+</body>
+</html>
