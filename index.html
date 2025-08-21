@@ -66,6 +66,7 @@
             font-size: 12px;
             color: #718096;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 100;
         }
         
         .nav-grid {
@@ -168,30 +169,32 @@
             font-size: 12px;
         }
         
-        /* Scorecard styles for Front/Back 9 */
-        .scorecard-container {
-            background: #f7fafc;
-            padding: 15px;
-            border-radius: 10px;
+        .scorecard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 8px;
             margin: 15px 0;
         }
         
-        .nine-holes {
-            margin-bottom: 20px;
+        .scorecard-grid-nine {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 8px;
+            margin: 10px 0;
         }
         
-        .nine-holes h5 {
+        .nine-section {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        
+        .nine-section h5 {
             color: #2d3748;
             margin-bottom: 10px;
             font-size: 14px;
             font-weight: bold;
-        }
-        
-        .scorecard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
-            gap: 8px;
-            max-width: 100%;
         }
         
         .hole-input {
@@ -199,6 +202,7 @@
             padding: 10px;
             border-radius: 8px;
             border: 2px solid #e2e8f0;
+            text-align: center;
         }
         
         .hole-input.stroke {
@@ -220,6 +224,7 @@
             border: 1px solid #cbd5e0;
             border-radius: 5px;
             font-size: 14px;
+            text-align: center;
         }
         
         button {
@@ -265,32 +270,6 @@
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
             margin: 10px 0;
-        }
-        
-        .scorecard-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-        }
-        
-        .scorecard-table th, .scorecard-table td {
-            padding: 6px;
-            text-align: center;
-            border: 1px solid #e2e8f0;
-        }
-        
-        .scorecard-table th {
-            background: #f7fafc;
-            font-weight: bold;
-            color: #2d3748;
-        }
-        
-        .scorecard-table td:first-child, .scorecard-table th:first-child {
-            text-align: left;
-            font-weight: bold;
-            background: #f7fafc;
-            position: sticky;
-            left: 0;
         }
         
         table {
@@ -427,7 +406,6 @@
             font-weight: bold;
         }
         
-        /* Handicap edit styles */
         .handicap-edit-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -475,7 +453,7 @@
                 font-size: 11px;
             }
             
-            .scorecard-grid {
+            .scorecard-grid-nine {
                 grid-template-columns: repeat(3, 1fr);
             }
             
@@ -494,11 +472,11 @@
         <span id="langBtn">🇬🇧 EN</span>
     </div>
     
-    <div class="version-badge">v2.00</div>
+    <div class="version-badge">v3.00</div>
     
     <div class="container">
         <div class="header">
-            <h1 id="appTitle">Golf Skottland 2025</h1>
+            <h1 id="appTitle">Cullen 2025</h1>
             <p id="appSubtitle">Årlig golftur til Skottland</p>
         </div>
         
@@ -581,7 +559,7 @@
     
     <script>
         // Data structure
-        let players = [
+        var players = [
             { id: 1, name: 'Klaus', handicap: 18.1 },
             { id: 2, name: 'Ruben', handicap: 11 },
             { id: 3, name: 'Sigbjørn', handicap: 20.2 },
@@ -592,7 +570,7 @@
             { id: 8, name: 'Roar', handicap: 25.9 }
         ];
         
-        const schedule = [
+        var schedule = [
             { 
                 id: 1, 
                 date: 'Fredag 29. aug', 
@@ -648,7 +626,7 @@
             }
         ];
         
-        const courses = {
+        var courses = {
             'Cullen Links': { 
                 slopeRating: 113, 
                 par: 63,
@@ -675,18 +653,18 @@
             }
         };
         
-        let language = 'no';
-        let scores = JSON.parse(localStorage.getItem('golfScores2025') || '{}');
-        let scrambleScores = JSON.parse(localStorage.getItem('scrambleScores2025') || '{}');
-        let awards = JSON.parse(localStorage.getItem('golfAwards2025') || '{}');
-        let scrambleWinners = JSON.parse(localStorage.getItem('scrambleWinners2025') || '{}');
-        let isAdmin = false;
+        var language = 'no';
+        var scores = JSON.parse(localStorage.getItem('golfScores2025') || '{}');
+        var scrambleScores = JSON.parse(localStorage.getItem('scrambleScores2025') || '{}');
+        var awards = JSON.parse(localStorage.getItem('golfAwards2025') || '{}');
+        var scrambleWinners = JSON.parse(localStorage.getItem('scrambleWinners2025') || '{}');
+        var isAdmin = false;
         
         // Load saved players if exists
-        const savedPlayers = localStorage.getItem('golfPlayers2025');
+        var savedPlayers = localStorage.getItem('golfPlayers2025');
         if (savedPlayers) {
             try {
-                const parsed = JSON.parse(savedPlayers);
+                var parsed = JSON.parse(savedPlayers);
                 if (Array.isArray(parsed) && parsed.length > 0) {
                     players = parsed;
                 }
@@ -698,9 +676,9 @@
         // Initialize with sync from server if available
         async function syncWithServer() {
             try {
-                const response = await fetch('/api/scores');
+                var response = await fetch('/api/scores');
                 if (response.ok) {
-                    const serverData = await response.json();
+                    var serverData = await response.json();
                     scores = serverData.scores || scores;
                     scrambleScores = serverData.scrambleScores || scrambleScores;
                     awards = serverData.awards || awards;
@@ -725,7 +703,7 @@
                 await fetch('/api/scores', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ scores, scrambleScores, awards, scrambleWinners, players })
+                    body: JSON.stringify({ scores: scores, scrambleScores: scrambleScores, awards: awards, scrambleWinners: scrambleWinners, players: players })
                 });
             } catch (e) {
                 console.log('Saved locally only');
@@ -740,9 +718,9 @@
         }
         
         function updateLanguage() {
-            const texts = {
+            var texts = {
                 no: {
-                    appTitle: 'Golf Skottland 2025',
+                    appTitle: 'Cullen 2025',
                     appSubtitle: 'Årlig golftur til Skottland',
                     scheduleTitle: 'Timeplan',
                     scheduleDesc: 'Se runder',
@@ -758,7 +736,7 @@
                     adminDesc: 'Administrer'
                 },
                 en: {
-                    appTitle: 'Golf Scotland 2025',
+                    appTitle: 'Cullen 2025',
                     appSubtitle: 'Annual Golf Trip to Scotland',
                     scheduleTitle: 'Schedule',
                     scheduleDesc: 'View rounds',
@@ -775,16 +753,19 @@
                 }
             };
             
-            const t = texts[language];
-            Object.keys(t).forEach(key => {
-                const el = document.getElementById(key);
+            var t = texts[language];
+            Object.keys(t).forEach(function(key) {
+                var el = document.getElementById(key);
                 if (el) el.textContent = t[key];
             });
         }
         
         // View management
         function showView(viewName) {
-            document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
+            var contents = document.querySelectorAll('.content');
+            for (var i = 0; i < contents.length; i++) {
+                contents[i].classList.remove('active');
+            }
             document.getElementById('homeView').style.display = viewName === 'home' ? 'block' : 'none';
             
             if (viewName !== 'home') {
@@ -801,67 +782,76 @@
         
         // Load schedule
         function loadSchedule() {
-            let html = '';
-            schedule.forEach(round => {
-                html += `<div class="schedule-item">
-                    <strong>${round.date} - ${round.time}</strong><br>
-                    ${round.course}<br>
-                    <span style="color: #4299e1;">${round.type}</span>`;
+            var html = '';
+            for (var i = 0; i < schedule.length; i++) {
+                var round = schedule[i];
+                html += '<div class="schedule-item">';
+                html += '<strong>' + round.date + ' - ' + round.time + '</strong><br>';
+                html += round.course + '<br>';
+                html += '<span style="color: #4299e1;">' + round.type + '</span>';
                 
                 if (round.teams) {
                     html += '<div class="team-section"><strong>Lag:</strong><br>';
-                    round.teams.forEach((team, idx) => {
-                        html += `<div>Lag ${idx + 1}: ${team.join(' & ')}</div>`;
-                    });
+                    for (var j = 0; j < round.teams.length; j++) {
+                        html += '<div>Lag ' + (j + 1) + ': ' + round.teams[j].join(' & ') + '</div>';
+                    }
                     html += '</div>';
                 }
                 
                 if (round.longestDrive) {
-                    html += `<div>🚀 Lengste drive: Hull ${round.longestDrive.join(', ')}</div>`;
+                    html += '<div>🚀 Lengste drive: Hull ' + round.longestDrive.join(', ') + '</div>';
                 }
                 if (round.closestToPin) {
-                    html += `<div>🎯 Nærmest pinnen: Hull ${round.closestToPin.join(', ')}</div>`;
+                    html += '<div>🎯 Nærmest pinnen: Hull ' + round.closestToPin.join(', ') + '</div>';
                 }
                 
                 html += '</div>';
-            });
+            }
             document.getElementById('scheduleContent').innerHTML = html;
         }
         
-        // Scorecard functions with improved layout for Front/Back 9
+        // Scorecard functions
         function loadScorecard() {
-            let html = '<h3>Velg runde:</h3>';
-            schedule.forEach(round => {
-                html += `<div class="round-select" onclick="selectRound(${round.id})">
-                    <strong>${round.date} - ${round.time}</strong><br>
-                    ${round.course} (${round.type})
-                </div>`;
-            });
+            var html = '<h3>Velg runde:</h3>';
+            for (var i = 0; i < schedule.length; i++) {
+                var round = schedule[i];
+                html += '<div class="round-select" onclick="selectRound(' + round.id + ')">';
+                html += '<strong>' + round.date + ' - ' + round.time + '</strong><br>';
+                html += round.course + ' (' + round.type + ')';
+                html += '</div>';
+            }
             html += '<div id="scorecardForm"></div>';
             document.getElementById('scorecardContent').innerHTML = html;
         }
         
         function selectRound(roundId) {
-            const round = schedule.find(r => r.id === roundId);
-            let html = `<h3>${round.course} - ${round.date}</h3>`;
+            var round = null;
+            for (var i = 0; i < schedule.length; i++) {
+                if (schedule[i].id === roundId) {
+                    round = schedule[i];
+                    break;
+                }
+            }
+            
+            var html = '<h3>' + round.course + ' - ' + round.date + '</h3>';
             
             if (round.type === 'Scramble') {
                 html += '<h4>Velg lag:</h4>';
-                round.teams.forEach((team, idx) => {
-                    html += `<div class="team-select" onclick="selectTeam(${roundId}, ${idx})">
-                        <strong>Lag ${idx + 1}</strong><br>
-                        ${team.join(' & ')}
-                    </div>`;
-                });
+                for (var i = 0; i < round.teams.length; i++) {
+                    html += '<div class="team-select" onclick="selectTeam(' + roundId + ', ' + i + ')">';
+                    html += '<strong>Lag ' + (i + 1) + '</strong><br>';
+                    html += round.teams[i].join(' & ');
+                    html += '</div>';
+                }
             } else {
                 html += '<h4>Velg spiller:</h4>';
                 html += '<select id="playerSelect" onchange="loadScorecardForm()">';
                 html += '<option value="">-- Velg spiller --</option>';
-                players.forEach(player => {
-                    html += `<option value="${player.id}">${player.name}</option>`;
-                });
+                for (var i = 0; i < players.length; i++) {
+                    html += '<option value="' + players[i].id + '">' + players[i].name + '</option>';
+                }
                 html += '</select>';
-                html += `<input type="hidden" id="selectedRound" value="${roundId}">`;
+                html += '<input type="hidden" id="selectedRound" value="' + roundId + '">';
                 html += '<div id="holesForm"></div>';
             }
             
@@ -869,510 +859,556 @@
         }
         
         function selectTeam(roundId, teamIdx) {
-            const round = schedule.find(r => r.id === roundId);
-            const team = round.teams[teamIdx];
-            const course = courses[round.course];
-            const scoreKey = `${roundId}_team_${teamIdx}`;
-            const existingScores = scrambleScores[scoreKey] || {};
+            var round = null;
+            for (var i = 0; i < schedule.length; i++) {
+                if (schedule[i].id === roundId) {
+                    round = schedule[i];
+                    break;
+                }
+            }
+            var team = round.teams[teamIdx];
+            var course = courses[round.course];
+            var scoreKey = roundId + '_team_' + teamIdx;
+            var existingScores = scrambleScores[scoreKey] || {};
             
-            let html = `<h3>${round.course} - ${round.date}</h3>
-                <h4>Lag ${teamIdx + 1}: ${team.join(' & ')}</h4>
-                <h4>Registrer lagscore:</h4>
-                <div class="scorecard-container">`;
+            var html = '<h3>' + round.course + ' - ' + round.date + '</h3>';
+            html += '<h4>Lag ' + (teamIdx + 1) + ': ' + team.join(' & ') + '</h4>';
+            html += '<h4>Registrer lagscore:</h4>';
             
             // Front 9
-            html += '<div class="nine-holes"><h5>Front 9</h5><div class="scorecard-grid">';
-            for (let i = 1; i <= 9; i++) {
-                const par = course.pars[i-1];
-                const value = existingScores[i] || '';
-                html += `<div class="hole-input">
-                    <label>Hull ${i}<br>Par ${par}</label>
-                    <input type="number" id="hole${i}" min="1" max="15" value="${value}" placeholder="-">
-                </div>`;
+            html += '<div class="nine-section">';
+            html += '<h5>Front 9</h5>';
+            html += '<div class="scorecard-grid-nine">';
+            for (var i = 1; i <= 9; i++) {
+                var par = course.pars[i-1];
+                var value = existingScores[i] || '';
+                html += '<div class="hole-input">';
+                html += '<label>Hull ' + i + ' (Par ' + par + ')</label>';
+                html += '<input type="number" id="hole' + i + '" min="1" max="15" value="' + value + '" placeholder="-" ';
+                html += 'onchange="autoSaveTeam(' + roundId + ', ' + teamIdx + ', ' + i + ', this.value)">';
+                html += '</div>';
             }
             html += '</div></div>';
             
             // Back 9
-            html += '<div class="nine-holes"><h5>Back 9</h5><div class="scorecard-grid">';
-            for (let i = 10; i <= 18; i++) {
-                const par = course.pars[i-1];
-                const value = existingScores[i] || '';
-                html += `<div class="hole-input">
-                    <label>Hull ${i}<br>Par ${par}</label>
-                    <input type="number" id="hole${i}" min="1" max="15" value="${value}" placeholder="-">
-                </div>`;
+            html += '<div class="nine-section">';
+            html += '<h5>Back 9</h5>';
+            html += '<div class="scorecard-grid-nine">';
+            for (var i = 10; i <= 18; i++) {
+                var par = course.pars[i-1];
+                var value = existingScores[i] || '';
+                html += '<div class="hole-input">';
+                html += '<label>Hull ' + i + ' (Par ' + par + ')</label>';
+                html += '<input type="number" id="hole' + i + '" min="1" max="15" value="' + value + '" placeholder="-" ';
+                html += 'onchange="autoSaveTeam(' + roundId + ', ' + teamIdx + ', ' + i + ', this.value)">';
+                html += '</div>';
             }
             html += '</div></div>';
             
-            html += `</div>
-                <button onclick="saveTeamScores(${roundId}, ${teamIdx})">Lagre Lagscore</button>
-                <div id="saveMessage"></div>`;
-            
+            html += '<div id="saveMessage"></div>';
             document.getElementById('scorecardForm').innerHTML = html;
         }
         
         function loadScorecardForm() {
-            const playerId = document.getElementById('playerSelect').value;
-            const roundId = document.getElementById('selectedRound').value;
+            var playerId = document.getElementById('playerSelect').value;
+            var roundId = document.getElementById('selectedRound').value;
             
             if (!playerId) return;
             
-            const player = players.find(p => p.id == playerId);
-            const round = schedule.find(r => r.id == roundId);
-            const course = courses[round.course];
-            const courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
-            const scoreKey = `${roundId}_${playerId}`;
-            const existingScores = scores[scoreKey] || {};
+            var player = null;
+            for (var i = 0; i < players.length; i++) {
+                if (players[i].id == playerId) {
+                    player = players[i];
+                    break;
+                }
+            }
             
-            let html = `<div style="margin: 20px 0; padding: 15px; background: #edf2f7; border-radius: 10px;">
-                <strong>${player.name}</strong><br>
-                Handicap: ${player.handicap}<br>
-                Banehandicap: ${courseHandicap}
-            </div>
-            <h4>Registrer score:</h4>
-            <div class="scorecard-container">`;
+            var round = null;
+            for (var i = 0; i < schedule.length; i++) {
+                if (schedule[i].id == roundId) {
+                    round = schedule[i];
+                    break;
+                }
+            }
+            
+            var course = courses[round.course];
+            var courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
+            var scoreKey = roundId + '_' + playerId;
+            var existingScores = scores[scoreKey] || {};
+            
+            var html = '<div style="margin: 20px 0; padding: 15px; background: #edf2f7; border-radius: 10px;">';
+            html += '<strong>' + player.name + '</strong><br>';
+            html += 'Handicap: ' + player.handicap + '<br>';
+            html += 'Banehandicap: ' + courseHandicap;
+            html += '</div>';
+            html += '<h4>Registrer score:</h4>';
             
             // Front 9
-            html += '<div class="nine-holes"><h5>Front 9</h5><div class="scorecard-grid">';
-            for (let i = 1; i <= 9; i++) {
-                const par = course.pars[i-1];
-                const hcpIndex = course.handicaps[i-1];
-                const hasStroke = hcpIndex <= courseHandicap;
-                const value = existingScores[i] || '';
+            html += '<div class="nine-section">';
+            html += '<h5>Front 9</h5>';
+            html += '<div class="scorecard-grid-nine">';
+            for (var i = 1; i <= 9; i++) {
+                var par = course.pars[i-1];
+                var hcpIndex = course.handicaps[i-1];
+                var hasStroke = hcpIndex <= courseHandicap;
+                var value = existingScores[i] || '';
+                var strokeClass = hasStroke ? 'stroke' : '';
                 
-                html += `<div class="hole-input ${hasStroke ? 'stroke' : ''}">
-                    <label>Hull ${i}<br>Par ${par}${hasStroke ? '+1' : ''}</label>
-                    <input type="number" id="hole${i}" min="1" max="15" value="${value}" placeholder="-">
-                </div>`;
+                html += '<div class="hole-input ' + strokeClass + '">';
+                html += '<label>Hull ' + i + ' (Par ' + par + (hasStroke ? '+1' : '') + ')</label>';
+                html += '<input type="number" id="hole' + i + '" min="1" max="15" value="' + value + '" placeholder="-" ';
+                html += 'onchange="autoSave(' + playerId + ', ' + roundId + ', ' + i + ', this.value)">';
+                html += '</div>';
             }
             html += '</div></div>';
             
             // Back 9
-            html += '<div class="nine-holes"><h5>Back 9</h5><div class="scorecard-grid">';
-            for (let i = 10; i <= 18; i++) {
-                const par = course.pars[i-1];
-                const hcpIndex = course.handicaps[i-1];
-                const hasStroke = hcpIndex <= courseHandicap;
-                const value = existingScores[i] || '';
+            html += '<div class="nine-section">';
+            html += '<h5>Back 9</h5>';
+            html += '<div class="scorecard-grid-nine">';
+            for (var i = 10; i <= 18; i++) {
+                var par = course.pars[i-1];
+                var hcpIndex = course.handicaps[i-1];
+                var hasStroke = hcpIndex <= courseHandicap;
+                var value = existingScores[i] || '';
+                var strokeClass = hasStroke ? 'stroke' : '';
                 
-                html += `<div class="hole-input ${hasStroke ? 'stroke' : ''}">
-                    <label>Hull ${i}<br>Par ${par}${hasStroke ? '+1' : ''}</label>
-                    <input type="number" id="hole${i}" min="1" max="15" value="${value}" placeholder="-">
-                </div>`;
+                html += '<div class="hole-input ' + strokeClass + '">';
+                html += '<label>Hull ' + i + ' (Par ' + par + (hasStroke ? '+1' : '') + ')</label>';
+                html += '<input type="number" id="hole' + i + '" min="1" max="15" value="' + value + '" placeholder="-" ';
+                html += 'onchange="autoSave(' + playerId + ', ' + roundId + ', ' + i + ', this.value)">';
+                html += '</div>';
             }
             html += '</div></div>';
             
-            html += `</div>
-                <button onclick="saveScores(${playerId}, ${roundId})">Lagre Score</button>
-                <div id="saveMessage"></div>`;
-            
+            html += '<div id="saveMessage"></div>';
             document.getElementById('holesForm').innerHTML = html;
         }
         
-        function saveScores(playerId, roundId) {
-            const scoreKey = `${roundId}_${playerId}`;
-            const roundScores = {};
-            
-            for (let i = 1; i <= 18; i++) {
-                const score = document.getElementById(`hole${i}`).value;
-                if (score) {
-                    roundScores[i] = parseInt(score);
-                }
+        // Auto-save functions
+        function autoSave(playerId, roundId, hole, value) {
+            var scoreKey = roundId + '_' + playerId;
+            if (!scores[scoreKey]) {
+                scores[scoreKey] = {};
             }
             
-            scores[scoreKey] = roundScores;
+            if (value === '' || value === null) {
+                delete scores[scoreKey][hole];
+            } else {
+                scores[scoreKey][hole] = parseInt(value);
+            }
+            
             localStorage.setItem('golfScores2025', JSON.stringify(scores));
             saveToServer();
             
-            document.getElementById('saveMessage').innerHTML = '<div class="success-message">Score lagret!</div>';
-            setTimeout(() => {
-                document.getElementById('saveMessage').innerHTML = '';
-            }, 3000);
+            // Visual feedback
+            var input = document.getElementById('hole' + hole);
+            if (input) {
+                input.style.backgroundColor = '#c6f6d5';
+                setTimeout(function() {
+                    input.style.backgroundColor = '';
+                }, 300);
+            }
         }
         
-        function saveTeamScores(roundId, teamIdx) {
-            const scoreKey = `${roundId}_team_${teamIdx}`;
-            const teamScores = {};
-            
-            for (let i = 1; i <= 18; i++) {
-                const score = document.getElementById(`hole${i}`).value;
-                if (score) {
-                    teamScores[i] = parseInt(score);
-                }
+        function autoSaveTeam(roundId, teamIdx, hole, value) {
+            var scoreKey = roundId + '_team_' + teamIdx;
+            if (!scrambleScores[scoreKey]) {
+                scrambleScores[scoreKey] = {};
             }
             
-            scrambleScores[scoreKey] = teamScores;
+            if (value === '' || value === null) {
+                delete scrambleScores[scoreKey][hole];
+            } else {
+                scrambleScores[scoreKey][hole] = parseInt(value);
+            }
+            
             localStorage.setItem('scrambleScores2025', JSON.stringify(scrambleScores));
             saveToServer();
             
-            document.getElementById('saveMessage').innerHTML = '<div class="success-message">Lagscore lagret!</div>';
-            setTimeout(() => {
-                document.getElementById('saveMessage').innerHTML = '';
-            }, 3000);
+            // Visual feedback
+            var input = document.getElementById('hole' + hole);
+            if (input) {
+                input.style.backgroundColor = '#c6f6d5';
+                setTimeout(function() {
+                    input.style.backgroundColor = '';
+                }, 300);
+            }
         }
         
         // Load leaderboard
         function loadLeaderboard() {
-            let html = '<div class="overall-section"><h3>⭐ SAMMENLAGT STILLING ⭐</h3>';
+            var html = '<div class="overall-section"><h3>⭐ SAMMENLAGT STILLING ⭐</h3>';
             html += '<div class="overall-table"><div class="table-wrapper">';
             html += '<table><thead><tr><th>Spiller</th><th>Total Brutto</th><th>Total Netto</th></tr></thead><tbody>';
             
-            const overallScores = {};
-            players.forEach(player => {
-                overallScores[player.name] = { gross: 0, net: 0, rounds: 0 };
-            });
+            var overallScores = {};
+            for (var i = 0; i < players.length; i++) {
+                overallScores[players[i].name] = { gross: 0, net: 0, rounds: 0 };
+            }
             
-            // Calculate scores
-            schedule.filter(r => r.type === 'Individuell').forEach(round => {
-                players.forEach(player => {
-                    const scoreKey = `${round.id}_${player.id}`;
-                    const roundScores = scores[scoreKey];
-                    
-                    if (roundScores && Object.keys(roundScores).length > 0) {
-                        const gross = Object.values(roundScores).reduce((sum, s) => sum + s, 0);
-                        const course = courses[round.course];
-                        const courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
-                        const net = gross - courseHandicap;
+            // Calculate individual scores
+            for (var i = 0; i < schedule.length; i++) {
+                var round = schedule[i];
+                if (round.type === 'Individuell') {
+                    for (var j = 0; j < players.length; j++) {
+                        var player = players[j];
+                        var scoreKey = round.id + '_' + player.id;
+                        var roundScores = scores[scoreKey];
                         
-                        overallScores[player.name].gross += gross;
-                        overallScores[player.name].net += net;
-                        overallScores[player.name].rounds++;
+                        if (roundScores && Object.keys(roundScores).length > 0) {
+                            var gross = 0;
+                            for (var hole in roundScores) {
+                                gross += roundScores[hole];
+                            }
+                            var course = courses[round.course];
+                            var courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
+                            var net = gross - courseHandicap;
+                            
+                            overallScores[player.name].gross += gross;
+                            overallScores[player.name].net += net;
+                            overallScores[player.name].rounds++;
+                        }
                     }
-                });
-            });
+                }
+            }
             
             // Add scramble scores
-            schedule.filter(r => r.type === 'Scramble').forEach(round => {
-                round.teams.forEach((team, teamIdx) => {
-                    const scoreKey = `${round.id}_team_${teamIdx}`;
-                    const teamScores = scrambleScores[scoreKey];
-                    
-                    if (teamScores && Object.keys(teamScores).length > 0) {
-                        const teamGross = Object.values(teamScores).reduce((sum, s) => sum + s, 0);
+            for (var i = 0; i < schedule.length; i++) {
+                var round = schedule[i];
+                if (round.type === 'Scramble' && round.teams) {
+                    for (var j = 0; j < round.teams.length; j++) {
+                        var scoreKey = round.id + '_team_' + j;
+                        var teamScores = scrambleScores[scoreKey];
                         
-                        team.forEach(playerName => {
-                            const player = players.find(p => p.name === playerName);
-                            const course = courses[round.course];
-                            const courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
+                        if (teamScores && Object.keys(teamScores).length > 0) {
+                            var teamGross = 0;
+                            for (var hole in teamScores) {
+                                teamGross += teamScores[hole];
+                            }
                             
-                            overallScores[playerName].gross += teamGross / 2;
-                            overallScores[playerName].net += (teamGross / 2) - (courseHandicap / 2);
-                            overallScores[playerName].rounds++;
-                        });
+                            var team = round.teams[j];
+                            for (var k = 0; k < team.length; k++) {
+                                var playerName = team[k];
+                                var player = null;
+                                for (var p = 0; p < players.length; p++) {
+                                    if (players[p].name === playerName) {
+                                        player = players[p];
+                                        break;
+                                    }
+                                }
+                                if (player) {
+                                    var course = courses[round.course];
+                                    var courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
+                                    
+                                    overallScores[playerName].gross += teamGross / 2;
+                                    overallScores[playerName].net += (teamGross / 2) - (courseHandicap / 2);
+                                    overallScores[playerName].rounds++;
+                                }
+                            }
+                        }
                     }
-                });
-            });
+                }
+            }
             
-            const sortedOverall = Object.entries(overallScores)
-                .filter(([name, scores]) => scores.rounds > 0)
-                .sort((a, b) => a[1].net - b[1].net);
+            // Sort and display
+            var sortedPlayers = [];
+            for (var name in overallScores) {
+                if (overallScores[name].rounds > 0) {
+                    sortedPlayers.push({
+                        name: name,
+                        gross: overallScores[name].gross,
+                        net: overallScores[name].net
+                    });
+                }
+            }
+            sortedPlayers.sort(function(a, b) { return a.net - b.net; });
             
-            sortedOverall.forEach(([name, playerScores], idx) => {
+            for (var i = 0; i < sortedPlayers.length; i++) {
+                var p = sortedPlayers[i];
                 html += '<tr>';
-                html += `<td>${idx === 0 ? '<span class="trophy">🏆</span>' : ''}${name}</td>`;
-                html += `<td>${Math.round(playerScores.gross)}</td>`;
-                html += `<td><strong>${Math.round(playerScores.net)}</strong></td>`;
+                html += '<td>' + (i === 0 ? '<span class="trophy">🏆</span>' : '') + p.name + '</td>';
+                html += '<td>' + Math.round(p.gross) + '</td>';
+                html += '<td><strong>' + Math.round(p.net) + '</strong></td>';
                 html += '</tr>';
-            });
+            }
             
             html += '</tbody></table></div></div></div>';
-            
             document.getElementById('leaderboardContent').innerHTML = html;
         }
         
-        // Load courses with Front 9 over Back 9
+        // Load courses with Front/Back 9 layout
         function loadCourses() {
-            let html = '';
+            var html = '';
             
-            Object.entries(courses).forEach(([courseName, courseData]) => {
-                html += `<div class="course-section">
-                    <h3>${courseName}</h3>
-                    <p>Par: ${courseData.par} | Slope: ${courseData.slopeRating}</p>`;
+            for (var courseName in courses) {
+                var courseData = courses[courseName];
+                html += '<div class="course-section">';
+                html += '<h3>' + courseName + '</h3>';
+                html += '<p>Par: ' + courseData.par + ' | Slope: ' + courseData.slopeRating + '</p>';
                 
-                const courseRounds = schedule.filter(r => r.course === courseName);
+                var courseRounds = [];
+                for (var i = 0; i < schedule.length; i++) {
+                    if (schedule[i].course === courseName) {
+                        courseRounds.push(schedule[i]);
+                    }
+                }
                 
-                courseRounds.forEach(round => {
-                    html += `<h4>${round.date} - ${round.time} (${round.type})</h4>`;
+                for (var i = 0; i < courseRounds.length; i++) {
+                    var round = courseRounds[i];
+                    html += '<h4>' + round.date + ' - ' + round.time + ' (' + round.type + ')</h4>';
                     
                     if (round.type === 'Individuell') {
-                        // Get all players with scores for this round
-                        const playersWithScores = [];
-                        players.forEach(player => {
-                            const scoreKey = `${round.id}_${player.id}`;
-                            const roundScores = scores[scoreKey];
-                            if (roundScores && Object.keys(roundScores).length > 0) {
-                                playersWithScores.push({ player, scores: roundScores });
-                            }
-                        });
+                        // Front 9
+                        html += '<div class="table-wrapper">';
+                        html += '<h5>Front 9</h5>';
+                        html += '<table><thead><tr><th>Spiller</th>';
+                        for (var h = 1; h <= 9; h++) {
+                            html += '<th>' + h + '</th>';
+                        }
+                        html += '<th>Out</th></tr>';
                         
-                        if (playersWithScores.length > 0) {
-                            // Front 9 Table
-                            html += '<div class="table-wrapper">';
-                            html += '<h5 style="margin: 10px 0 5px 0;">Front 9</h5>';
-                            html += '<table class="scorecard-table"><thead><tr><th>Spiller</th>';
-                            for (let i = 1; i <= 9; i++) {
-                                html += `<th>${i}</th>`;
-                            }
-                            html += '<th>Out</th></tr>';
+                        // Par row
+                        html += '<tr><td>Par</td>';
+                        var frontPar = 0;
+                        for (var h = 0; h < 9; h++) {
+                            html += '<td>' + courseData.pars[h] + '</td>';
+                            frontPar += courseData.pars[h];
+                        }
+                        html += '<td><strong>' + frontPar + '</strong></td></tr>';
+                        html += '</thead><tbody>';
+                        
+                        // Player scores
+                        for (var j = 0; j < players.length; j++) {
+                            var player = players[j];
+                            var scoreKey = round.id + '_' + player.id;
+                            var roundScores = scores[scoreKey];
                             
-                            // Par row
-                            html += '<tr><td>Par</td>';
-                            let frontPar = 0;
-                            for (let i = 0; i < 9; i++) {
-                                html += `<td>${courseData.pars[i]}</td>`;
-                                frontPar += courseData.pars[i];
-                            }
-                            html += `<td><strong>${frontPar}</strong></td></tr>`;
-                            html += '</thead><tbody>';
-                            
-                            // Player scores for Front 9
-                            playersWithScores.forEach(({ player, scores: roundScores }) => {
-                                html += `<tr><td>${player.name}</td>`;
-                                let frontTotal = 0;
-                                for (let i = 1; i <= 9; i++) {
-                                    const score = roundScores[i] || '-';
-                                    html += `<td>${score}</td>`;
+                            if (roundScores && Object.keys(roundScores).length > 0) {
+                                html += '<tr><td>' + player.name + '</td>';
+                                var frontTotal = 0;
+                                for (var h = 1; h <= 9; h++) {
+                                    var score = roundScores[h] || '-';
+                                    html += '<td>' + score + '</td>';
                                     if (score !== '-') frontTotal += score;
                                 }
-                                html += `<td><strong>${frontTotal || '-'}</strong></td></tr>`;
-                            });
-                            
-                            html += '</tbody></table>';
-                            
-                            // Back 9 Table
-                            html += '<h5 style="margin: 15px 0 5px 0;">Back 9</h5>';
-                            html += '<table class="scorecard-table"><thead><tr><th>Spiller</th>';
-                            for (let i = 10; i <= 18; i++) {
-                                html += `<th>${i}</th>`;
+                                html += '<td><strong>' + (frontTotal || '-') + '</strong></td></tr>';
                             }
-                            html += '<th>In</th></tr>';
+                        }
+                        html += '</tbody></table>';
+                        
+                        // Back 9
+                        html += '<h5>Back 9</h5>';
+                        html += '<table><thead><tr><th>Spiller</th>';
+                        for (var h = 10; h <= 18; h++) {
+                            html += '<th>' + h + '</th>';
+                        }
+                        html += '<th>In</th></tr>';
+                        
+                        // Par row
+                        html += '<tr><td>Par</td>';
+                        var backPar = 0;
+                        for (var h = 9; h < 18; h++) {
+                            html += '<td>' + courseData.pars[h] + '</td>';
+                            backPar += courseData.pars[h];
+                        }
+                        html += '<td><strong>' + backPar + '</strong></td></tr>';
+                        html += '</thead><tbody>';
+                        
+                        // Player scores
+                        for (var j = 0; j < players.length; j++) {
+                            var player = players[j];
+                            var scoreKey = round.id + '_' + player.id;
+                            var roundScores = scores[scoreKey];
                             
-                            // Par row
-                            html += '<tr><td>Par</td>';
-                            let backPar = 0;
-                            for (let i = 9; i < 18; i++) {
-                                html += `<td>${courseData.pars[i]}</td>`;
-                                backPar += courseData.pars[i];
-                            }
-                            html += `<td><strong>${backPar}</strong></td></tr>`;
-                            html += '</thead><tbody>';
-                            
-                            // Player scores for Back 9
-                            playersWithScores.forEach(({ player, scores: roundScores }) => {
-                                html += `<tr><td>${player.name}</td>`;
-                                let backTotal = 0;
-                                for (let i = 10; i <= 18; i++) {
-                                    const score = roundScores[i] || '-';
-                                    html += `<td>${score}</td>`;
+                            if (roundScores && Object.keys(roundScores).length > 0) {
+                                html += '<tr><td>' + player.name + '</td>';
+                                var backTotal = 0;
+                                for (var h = 10; h <= 18; h++) {
+                                    var score = roundScores[h] || '-';
+                                    html += '<td>' + score + '</td>';
                                     if (score !== '-') backTotal += score;
                                 }
-                                html += `<td><strong>${backTotal || '-'}</strong></td></tr>`;
-                            });
-                            
-                            html += '</tbody></table>';
-                            
-                            // Total summary
-                            html += '<h5 style="margin: 15px 0 5px 0;">Totaler</h5>';
-                            html += '<table class="scorecard-table"><thead><tr>';
-                            html += '<th>Spiller</th><th>Front 9</th><th>Back 9</th><th>Total</th>';
-                            html += '</tr></thead><tbody>';
-                            
-                            playersWithScores.forEach(({ player, scores: roundScores }) => {
-                                let frontTotal = 0, backTotal = 0;
-                                for (let i = 1; i <= 9; i++) {
-                                    if (roundScores[i]) frontTotal += roundScores[i];
-                                }
-                                for (let i = 10; i <= 18; i++) {
-                                    if (roundScores[i]) backTotal += roundScores[i];
-                                }
-                                html += `<tr><td>${player.name}</td>`;
-                                html += `<td>${frontTotal || '-'}</td>`;
-                                html += `<td>${backTotal || '-'}</td>`;
-                                html += `<td><strong>${(frontTotal + backTotal) || '-'}</strong></td></tr>`;
-                            });
-                            
-                            html += '</tbody></table></div>';
+                                html += '<td><strong>' + (backTotal || '-') + '</strong></td></tr>';
+                            }
                         }
+                        html += '</tbody></table></div>';
                         
-                        // Show awards
+                        // Awards
                         if (round.longestDrive || round.closestToPin) {
                             html += '<div class="team-section"><strong>Konkurranser:</strong><br>';
                             if (round.longestDrive) {
-                                round.longestDrive.forEach(hole => {
-                                    const winner = awards[`${round.id}_ld_${hole}`] || 'Ikke satt';
-                                    html += `<div>🚀 Lengste drive hull ${hole}: ${winner}</div>`;
-                                });
+                                for (var k = 0; k < round.longestDrive.length; k++) {
+                                    var hole = round.longestDrive[k];
+                                    var winner = awards[round.id + '_ld_' + hole] || 'Ikke satt';
+                                    html += '<div>🚀 Lengste drive hull ' + hole + ': ' + winner + '</div>';
+                                }
                             }
                             if (round.closestToPin) {
-                                round.closestToPin.forEach(hole => {
-                                    const winner = awards[`${round.id}_ctp_${hole}`] || 'Ikke satt';
-                                    html += `<div>🎯 Nærmest pinnen hull ${hole}: ${winner}</div>`;
-                                });
+                                for (var k = 0; k < round.closestToPin.length; k++) {
+                                    var hole = round.closestToPin[k];
+                                    var winner = awards[round.id + '_ctp_' + hole] || 'Ikke satt';
+                                    html += '<div>🎯 Nærmest pinnen hull ' + hole + ': ' + winner + '</div>';
+                                }
                             }
                             html += '</div>';
                         }
                     } else {
                         // Scramble scores
                         html += '<div class="team-section">';
-                        round.teams.forEach((team, teamIdx) => {
-                            const scoreKey = `${round.id}_team_${teamIdx}`;
-                            const teamScores = scrambleScores[scoreKey];
-                            const isWinner = scrambleWinners[round.id] === teamIdx;
+                        for (var j = 0; j < round.teams.length; j++) {
+                            var scoreKey = round.id + '_team_' + j;
+                            var teamScores = scrambleScores[scoreKey];
+                            var isWinner = scrambleWinners[round.id] === j;
                             
                             if (teamScores && Object.keys(teamScores).length > 0) {
-                                html += `<div class="${isWinner ? 'winner' : ''}">
-                                    <h5>${isWinner ? '🏆 ' : ''}Lag ${teamIdx + 1}: ${team.join(' & ')}</h5>`;
-                                
-                                // Front 9
+                                var wrapperClass = isWinner ? 'winner' : '';
+                                html += '<div class="' + wrapperClass + '">';
+                                html += '<h5>' + (isWinner ? '🏆 ' : '') + 'Lag ' + (j + 1) + ': ' + round.teams[j].join(' & ') + '</h5>';
                                 html += '<div class="table-wrapper">';
-                                html += '<h6 style="margin: 10px 0 5px 0;">Front 9</h6>';
-                                html += '<table class="scorecard-table"><thead><tr>';
-                                for (let i = 1; i <= 9; i++) {
-                                    html += `<th>${i}</th>`;
-                                }
-                                html += '<th>Out</th></tr></thead><tbody><tr>';
+                                html += '<table><thead><tr>';
                                 
-                                let frontTotal = 0;
-                                for (let i = 1; i <= 9; i++) {
-                                    const score = teamScores[i] || '-';
-                                    html += `<td>${score}</td>`;
-                                    if (score !== '-') frontTotal += score;
+                                for (var h = 1; h <= 18; h++) {
+                                    html += '<th>' + h + '</th>';
                                 }
-                                html += `<td><strong>${frontTotal || '-'}</strong></td></tr></tbody></table>`;
+                                html += '<th>Tot</th></tr></thead><tbody><tr>';
                                 
-                                // Back 9
-                                html += '<h6 style="margin: 10px 0 5px 0;">Back 9</h6>';
-                                html += '<table class="scorecard-table"><thead><tr>';
-                                for (let i = 10; i <= 18; i++) {
-                                    html += `<th>${i}</th>`;
+                                var total = 0;
+                                for (var h = 1; h <= 18; h++) {
+                                    var score = teamScores[h] || '-';
+                                    html += '<td>' + score + '</td>';
+                                    if (score !== '-') total += score;
                                 }
-                                html += '<th>In</th></tr></thead><tbody><tr>';
-                                
-                                let backTotal = 0;
-                                for (let i = 10; i <= 18; i++) {
-                                    const score = teamScores[i] || '-';
-                                    html += `<td>${score}</td>`;
-                                    if (score !== '-') backTotal += score;
-                                }
-                                html += `<td><strong>${backTotal || '-'}</strong></td></tr></tbody></table>`;
-                                html += `<p style="margin-top: 10px; font-weight: bold;">Total: ${(frontTotal + backTotal) || '-'}</p>`;
-                                html += '</div></div>';
+                                html += '<td><strong>' + (total || '-') + '</strong></td></tr></tbody></table></div></div>';
                             }
-                        });
+                        }
                         html += '</div>';
                     }
-                });
+                }
                 
                 html += '</div>';
-            });
+            }
             
             document.getElementById('coursesContent').innerHTML = html;
         }
         
         // Load players
         function loadPlayers() {
-            let html = '<div class="player-grid">';
-            players.forEach(player => {
-                html += `<div class="player-card">
-                    <h4>${player.name}</h4>
-                    <p>Handicap: ${player.handicap}</p>
-                    <p style="font-size: 12px; margin-top: 10px;">Banehandicap:</p>`;
+            var html = '<div class="player-grid">';
+            for (var i = 0; i < players.length; i++) {
+                var player = players[i];
+                html += '<div class="player-card">';
+                html += '<h4>' + player.name + '</h4>';
+                html += '<p>Handicap: ' + player.handicap + '</p>';
+                html += '<p style="font-size: 12px; margin-top: 10px;">Banehandicap:</p>';
                 
-                Object.entries(courses).forEach(([name, course]) => {
-                    const courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
-                    html += `<p style="font-size: 11px;">${name}: ${courseHandicap}</p>`;
-                });
+                for (var courseName in courses) {
+                    var course = courses[courseName];
+                    var courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
+                    html += '<p style="font-size: 11px;">' + courseName + ': ' + courseHandicap + '</p>';
+                }
                 
                 html += '</div>';
-            });
+            }
             html += '</div>';
             document.getElementById('playersContent').innerHTML = html;
         }
         
-        // Admin section with handicap editing
+        // Admin section
         function loadAdmin() {
-            let html = '';
+            var html = '';
             
             if (!isAdmin) {
-                html = `<div class="admin-section">
-                    <h3>Admin Pålogging</h3>
-                    <p>Passord:</p>
-                    <input type="password" id="adminPassword" placeholder="Skriv inn passord">
-                    <button onclick="loginAdmin()">Logg inn</button>
-                </div>`;
+                html = '<div class="admin-section">';
+                html += '<h3>Admin Pålogging</h3>';
+                html += '<p>Passord:</p>';
+                html += '<input type="password" id="adminPassword" placeholder="Skriv inn passord">';
+                html += '<button onclick="loginAdmin()">Logg inn</button>';
+                html += '</div>';
             } else {
-                html = `<div class="admin-section">
-                    <h3>Administrator Panel</h3>
-                    <button onclick="logoutAdmin()" style="background: #fc8181;">Logg ut</button>
-                    
-                    <h4>Rediger Handicap</h4>
-                    <div class="handicap-edit-grid">`;
+                html = '<div class="admin-section">';
+                html += '<h3>Administrator Panel</h3>';
+                html += '<button onclick="logoutAdmin()" style="background: #fc8181;">Logg ut</button>';
                 
-                players.forEach(player => {
-                    html += `<div class="handicap-edit-item">
-                        <label>${player.name}</label>
-                        <input type="number" step="0.1" id="hcp_${player.id}" value="${player.handicap}" 
-                               onchange="updateHandicap(${player.id}, this.value)">
-                    </div>`;
-                });
+                html += '<h4>Rediger Handicap</h4>';
+                html += '<div class="handicap-edit-grid">';
                 
-                html += `</div>
-                    <button onclick="saveHandicaps()" style="margin-top: 10px;">Lagre Handicap</button>
-                    <div id="handicapMessage"></div>
-                    
-                    <h4>Scramble Vinnere</h4>`;
+                for (var i = 0; i < players.length; i++) {
+                    var player = players[i];
+                    html += '<div class="handicap-edit-item">';
+                    html += '<label>' + player.name + '</label>';
+                    html += '<input type="number" step="0.1" id="hcp_' + player.id + '" value="' + player.handicap + '" ';
+                    html += 'onchange="updateHandicap(' + player.id + ', this.value)">';
+                    html += '</div>';
+                }
                 
-                schedule.filter(r => r.type === 'Scramble').forEach(round => {
-                    html += `<div class="award-input">
-                        <label>${round.date} - ${round.course}</label>
-                        <select onchange="setScrambleWinner(${round.id}, this.value)">
-                            <option value="">-- Velg vinner --</option>`;
-                    
-                    round.teams.forEach((team, idx) => {
-                        const selected = scrambleWinners[round.id] === idx ? 'selected' : '';
-                        html += `<option value="${idx}" ${selected}>Lag ${idx + 1}: ${team.join(' & ')}</option>`;
-                    });
-                    
-                    html += '</select></div>';
-                });
+                html += '</div>';
+                html += '<button onclick="saveHandicaps()" style="margin-top: 10px;">Lagre Handicap</button>';
+                html += '<div id="handicapMessage"></div>';
+                
+                html += '<h4>Scramble Vinnere</h4>';
+                
+                for (var i = 0; i < schedule.length; i++) {
+                    var round = schedule[i];
+                    if (round.type === 'Scramble') {
+                        html += '<div class="award-input">';
+                        html += '<label>' + round.date + ' - ' + round.course + '</label>';
+                        html += '<select onchange="setScrambleWinner(' + round.id + ', this.value)">';
+                        html += '<option value="">-- Velg vinner --</option>';
+                        
+                        for (var j = 0; j < round.teams.length; j++) {
+                            var selected = scrambleWinners[round.id] === j ? 'selected' : '';
+                            html += '<option value="' + j + '" ' + selected + '>Lag ' + (j + 1) + ': ' + round.teams[j].join(' & ') + '</option>';
+                        }
+                        
+                        html += '</select></div>';
+                    }
+                }
                 
                 html += '<h4>Individuelle Konkurranser</h4><div class="award-select">';
                 
-                schedule.filter(r => r.type === 'Individuell').forEach(round => {
-                    if (round.longestDrive) {
-                        round.longestDrive.forEach(hole => {
-                            const awardKey = `${round.id}_ld_${hole}`;
-                            html += `<div class="award-input">
-                                <label>Lengste drive - ${round.date} Hull ${hole}</label>
-                                <select onchange="setAward('${awardKey}', this.value)">
-                                    <option value="">-- Velg vinner --</option>`;
-                            
-                            players.forEach(player => {
-                                const selected = awards[awardKey] === player.name ? 'selected' : '';
-                                html += `<option value="${player.name}" ${selected}>${player.name}</option>`;
-                            });
-                            
-                            html += '</select></div>';
-                        });
+                for (var i = 0; i < schedule.length; i++) {
+                    var round = schedule[i];
+                    if (round.type === 'Individuell') {
+                        if (round.longestDrive) {
+                            for (var j = 0; j < round.longestDrive.length; j++) {
+                                var hole = round.longestDrive[j];
+                                var awardKey = round.id + '_ld_' + hole;
+                                html += '<div class="award-input">';
+                                html += '<label>Lengste drive - ' + round.date + ' Hull ' + hole + '</label>';
+                                html += '<select onchange="setAward(\'' + awardKey + '\', this.value)">';
+                                html += '<option value="">-- Velg vinner --</option>';
+                                
+                                for (var k = 0; k < players.length; k++) {
+                                    var player = players[k];
+                                    var selected = awards[awardKey] === player.name ? 'selected' : '';
+                                    html += '<option value="' + player.name + '" ' + selected + '>' + player.name + '</option>';
+                                }
+                                
+                                html += '</select></div>';
+                            }
+                        }
+                        
+                        if (round.closestToPin) {
+                            for (var j = 0; j < round.closestToPin.length; j++) {
+                                var hole = round.closestToPin[j];
+                                var awardKey = round.id + '_ctp_' + hole;
+                                html += '<div class="award-input">';
+                                html += '<label>Nærmest pinnen - ' + round.date + ' Hull ' + hole + '</label>';
+                                html += '<select onchange="setAward(\'' + awardKey + '\', this.value)">';
+                                html += '<option value="">-- Velg vinner --</option>';
+                                
+                                for (var k = 0; k < players.length; k++) {
+                                    var player = players[k];
+                                    var selected = awards[awardKey] === player.name ? 'selected' : '';
+                                    html += '<option value="' + player.name + '" ' + selected + '>' + player.name + '</option>';
+                                }
+                                
+                                html += '</select></div>';
+                            }
+                        }
                     }
-                    
-                    if (round.closestToPin) {
-                        round.closestToPin.forEach(hole => {
-                            const awardKey = `${round.id}_ctp_${hole}`;
-                            html += `<div class="award-input">
-                                <label>Nærmest pinnen - ${round.date} Hull ${hole}</label>
-                                <select onchange="setAward('${awardKey}', this.value)">
-                                    <option value="">-- Velg vinner --</option>`;
-                            
-                            players.forEach(player => {
-                                const selected = awards[awardKey] === player.name ? 'selected' : '';
-                                html += `<option value="${player.name}" ${selected}>${player.name}</option>`;
-                            });
-                            
-                            html += '</select></div>';
-                        });
-                    }
-                });
+                }
                 
                 html += '</div></div>';
             }
@@ -1381,7 +1417,7 @@
         }
         
         function loginAdmin() {
-            const password = document.getElementById('adminPassword').value;
+            var password = document.getElementById('adminPassword').value;
             if (password === 'golf') {
                 isAdmin = true;
                 loadAdmin();
@@ -1396,9 +1432,11 @@
         }
         
         function updateHandicap(playerId, newHandicap) {
-            const player = players.find(p => p.id === playerId);
-            if (player) {
-                player.handicap = parseFloat(newHandicap);
+            for (var i = 0; i < players.length; i++) {
+                if (players[i].id === playerId) {
+                    players[i].handicap = parseFloat(newHandicap);
+                    break;
+                }
             }
         }
         
@@ -1406,7 +1444,7 @@
             localStorage.setItem('golfPlayers2025', JSON.stringify(players));
             saveToServer();
             document.getElementById('handicapMessage').innerHTML = '<div class="success-message">Handicap lagret!</div>';
-            setTimeout(() => {
+            setTimeout(function() {
                 document.getElementById('handicapMessage').innerHTML = '';
             }, 3000);
         }
