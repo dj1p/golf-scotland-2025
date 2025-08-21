@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Golf Scotland 2025</title>
+    <title>Cullen 2025</title>
     <style>
         * {
             margin: 0;
@@ -168,7 +168,7 @@
             font-size: 12px;
         }
         
-        /* Updated scorecard styles for front/back 9 */
+        /* Scorecard styles for Front/Back 9 */
         .scorecard-container {
             background: #f7fafc;
             padding: 15px;
@@ -187,7 +187,7 @@
             font-weight: bold;
         }
         
-        .nine-grid {
+        .scorecard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
             gap: 8px;
@@ -195,11 +195,10 @@
         }
         
         .hole-input {
-            background: white;
-            padding: 8px;
+            background: #f7fafc;
+            padding: 10px;
             border-radius: 8px;
             border: 2px solid #e2e8f0;
-            text-align: center;
         }
         
         .hole-input.stroke {
@@ -212,16 +211,15 @@
             font-weight: bold;
             margin-bottom: 5px;
             color: #2d3748;
-            font-size: 11px;
+            font-size: 12px;
         }
         
         .hole-input input {
             width: 100%;
-            padding: 5px;
+            padding: 6px;
             border: 1px solid #cbd5e0;
             border-radius: 5px;
             font-size: 14px;
-            text-align: center;
         }
         
         button {
@@ -262,13 +260,11 @@
             margin: 10px 0;
         }
         
-        /* Updated table wrapper for better scorecard display */
-        .scorecard-table-wrapper {
-            background: white;
-            border-radius: 10px;
-            padding: 10px;
-            margin: 10px 0;
+        /* Scrollable table wrapper */
+        .table-wrapper {
             overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 10px 0;
         }
         
         .scorecard-table {
@@ -295,26 +291,6 @@
             background: #f7fafc;
             position: sticky;
             left: 0;
-        }
-        
-        .hole-header {
-            background: #e6fffa !important;
-        }
-        
-        .par-row {
-            background: #f0fff4 !important;
-        }
-        
-        .total-cell {
-            background: #fef5e7 !important;
-            font-weight: bold;
-        }
-        
-        /* Scrollable table wrapper */
-        .table-wrapper {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            margin: 10px 0;
         }
         
         table {
@@ -499,12 +475,8 @@
                 font-size: 11px;
             }
             
-            .nine-grid {
+            .scorecard-grid {
                 grid-template-columns: repeat(3, 1fr);
-            }
-            
-            .hole-input label {
-                font-size: 10px;
             }
             
             table {
@@ -522,7 +494,7 @@
         <span id="langBtn">🇬🇧 EN</span>
     </div>
     
-    <div class="version-badge">v1.12</div>
+    <div class="version-badge">v2.00</div>
     
     <div class="container">
         <div class="header">
@@ -608,10 +580,7 @@
     </div>
     
     <script>
-        // App version
-        const APP_VERSION = 'v1.12';
-        
-        // Data structure - with updateable players array
+        // Data structure
         let players = [
             { id: 1, name: 'Klaus', handicap: 18.1 },
             { id: 2, name: 'Ruben', handicap: 11 },
@@ -859,7 +828,7 @@
             document.getElementById('scheduleContent').innerHTML = html;
         }
         
-        // Scorecard functions with improved layout
+        // Scorecard functions with improved layout for Front/Back 9
         function loadScorecard() {
             let html = '<h3>Velg runde:</h3>';
             schedule.forEach(round => {
@@ -912,7 +881,7 @@
                 <div class="scorecard-container">`;
             
             // Front 9
-            html += '<div class="nine-holes"><h5>Front 9</h5><div class="nine-grid">';
+            html += '<div class="nine-holes"><h5>Front 9</h5><div class="scorecard-grid">';
             for (let i = 1; i <= 9; i++) {
                 const par = course.pars[i-1];
                 const value = existingScores[i] || '';
@@ -924,7 +893,7 @@
             html += '</div></div>';
             
             // Back 9
-            html += '<div class="nine-holes"><h5>Back 9</h5><div class="nine-grid">';
+            html += '<div class="nine-holes"><h5>Back 9</h5><div class="scorecard-grid">';
             for (let i = 10; i <= 18; i++) {
                 const par = course.pars[i-1];
                 const value = existingScores[i] || '';
@@ -964,7 +933,7 @@
             <div class="scorecard-container">`;
             
             // Front 9
-            html += '<div class="nine-holes"><h5>Front 9</h5><div class="nine-grid">';
+            html += '<div class="nine-holes"><h5>Front 9</h5><div class="scorecard-grid">';
             for (let i = 1; i <= 9; i++) {
                 const par = course.pars[i-1];
                 const hcpIndex = course.handicaps[i-1];
@@ -979,7 +948,7 @@
             html += '</div></div>';
             
             // Back 9
-            html += '<div class="nine-holes"><h5>Back 9</h5><div class="nine-grid">';
+            html += '<div class="nine-holes"><h5>Back 9</h5><div class="scorecard-grid">';
             for (let i = 10; i <= 18; i++) {
                 const par = course.pars[i-1];
                 const hcpIndex = course.handicaps[i-1];
@@ -1083,14 +1052,12 @@
                         
                         team.forEach(playerName => {
                             const player = players.find(p => p.name === playerName);
-                            if (player) {
-                                const course = courses[round.course];
-                                const courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
-                                
-                                overallScores[playerName].gross += teamGross / 2;
-                                overallScores[playerName].net += (teamGross / 2) - (courseHandicap / 2);
-                                overallScores[playerName].rounds++;
-                            }
+                            const course = courses[round.course];
+                            const courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
+                            
+                            overallScores[playerName].gross += teamGross / 2;
+                            overallScores[playerName].net += (teamGross / 2) - (courseHandicap / 2);
+                            overallScores[playerName].rounds++;
                         });
                     }
                 });
@@ -1113,7 +1080,7 @@
             document.getElementById('leaderboardContent').innerHTML = html;
         }
         
-        // Load courses with improved table layout - Front 9 and Back 9 on separate rows
+        // Load courses with Front 9 over Back 9
         function loadCourses() {
             let html = '';
             
@@ -1140,56 +1107,54 @@
                         
                         if (playersWithScores.length > 0) {
                             // Front 9 Table
-                            html += '<div class="scorecard-table-wrapper">';
-                            html += '<h5 style="margin: 10px 0 5px 0; font-size: 14px; font-weight: bold;">Front 9</h5>';
+                            html += '<div class="table-wrapper">';
+                            html += '<h5 style="margin: 10px 0 5px 0;">Front 9</h5>';
                             html += '<table class="scorecard-table"><thead><tr><th>Spiller</th>';
-                            
                             for (let i = 1; i <= 9; i++) {
-                                html += `<th class="hole-header">${i}</th>`;
+                                html += `<th>${i}</th>`;
                             }
-                            html += '<th class="total-cell">Out</th></tr>';
+                            html += '<th>Out</th></tr>';
                             
-                            // Par row for Front 9
-                            html += '<tr class="par-row"><td>Par</td>';
+                            // Par row
+                            html += '<tr><td>Par</td>';
                             let frontPar = 0;
                             for (let i = 0; i < 9; i++) {
                                 html += `<td>${courseData.pars[i]}</td>`;
                                 frontPar += courseData.pars[i];
                             }
-                            html += `<td class="total-cell">${frontPar}</td></tr>';
+                            html += `<td><strong>${frontPar}</strong></td></tr>`;
                             html += '</thead><tbody>';
                             
                             // Player scores for Front 9
                             playersWithScores.forEach(({ player, scores: roundScores }) => {
-                                html += '<tr><td>' + player.name + '</td>';
+                                html += `<tr><td>${player.name}</td>`;
                                 let frontTotal = 0;
                                 for (let i = 1; i <= 9; i++) {
                                     const score = roundScores[i] || '-';
-                                    html += '<td>' + score + '</td>';
+                                    html += `<td>${score}</td>`;
                                     if (score !== '-') frontTotal += score;
                                 }
-                                html += '<td class="total-cell">' + (frontTotal || '-') + '</td></tr>';
+                                html += `<td><strong>${frontTotal || '-'}</strong></td></tr>`;
                             });
                             
                             html += '</tbody></table>';
                             
                             // Back 9 Table
-                            html += '<h5 style="margin: 15px 0 5px 0; font-size: 14px; font-weight: bold;">Back 9</h5>';
+                            html += '<h5 style="margin: 15px 0 5px 0;">Back 9</h5>';
                             html += '<table class="scorecard-table"><thead><tr><th>Spiller</th>';
-                            
                             for (let i = 10; i <= 18; i++) {
-                                html += `<th class="hole-header">${i}</th>`;
+                                html += `<th>${i}</th>`;
                             }
-                            html += '<th class="total-cell">In</th></tr>';
+                            html += '<th>In</th></tr>';
                             
-                            // Par row for Back 9
-                            html += '<tr class="par-row"><td>Par</td>';
+                            // Par row
+                            html += '<tr><td>Par</td>';
                             let backPar = 0;
                             for (let i = 9; i < 18; i++) {
                                 html += `<td>${courseData.pars[i]}</td>`;
                                 backPar += courseData.pars[i];
                             }
-                            html += `<td class="total-cell">${backPar}</td></tr>';
+                            html += `<td><strong>${backPar}</strong></td></tr>`;
                             html += '</thead><tbody>';
                             
                             // Player scores for Back 9
@@ -1201,15 +1166,15 @@
                                     html += `<td>${score}</td>`;
                                     if (score !== '-') backTotal += score;
                                 }
-                                html += `<td class="total-cell">${backTotal || '-'}</td></tr>`;
+                                html += `<td><strong>${backTotal || '-'}</strong></td></tr>`;
                             });
                             
                             html += '</tbody></table>';
                             
-                            // Total scores summary
-                            html += '<h5 style="margin: 15px 0 5px 0; font-size: 14px; font-weight: bold;">Totaler</h5>';
+                            // Total summary
+                            html += '<h5 style="margin: 15px 0 5px 0;">Totaler</h5>';
                             html += '<table class="scorecard-table"><thead><tr>';
-                            html += '<th>Spiller</th><th>Front 9</th><th>Back 9</th><th class="total-cell">Total</th>';
+                            html += '<th>Spiller</th><th>Front 9</th><th>Back 9</th><th>Total</th>';
                             html += '</tr></thead><tbody>';
                             
                             playersWithScores.forEach(({ player, scores: roundScores }) => {
@@ -1223,7 +1188,7 @@
                                 html += `<tr><td>${player.name}</td>`;
                                 html += `<td>${frontTotal || '-'}</td>`;
                                 html += `<td>${backTotal || '-'}</td>`;
-                                html += `<td class="total-cell"><strong>${frontTotal + backTotal || '-'}</strong></td></tr>`;
+                                html += `<td><strong>${(frontTotal + backTotal) || '-'}</strong></td></tr>`;
                             });
                             
                             html += '</tbody></table></div>';
@@ -1257,15 +1222,15 @@
                             if (teamScores && Object.keys(teamScores).length > 0) {
                                 html += `<div class="${isWinner ? 'winner' : ''}">
                                     <h5>${isWinner ? '🏆 ' : ''}Lag ${teamIdx + 1}: ${team.join(' & ')}</h5>`;
-                                html += '<div class="scorecard-table-wrapper">';
                                 
-                                // Front 9 for team
-                                html += '<h6 style="margin: 10px 0 5px 0; font-size: 13px;">Front 9</h6>';
+                                // Front 9
+                                html += '<div class="table-wrapper">';
+                                html += '<h6 style="margin: 10px 0 5px 0;">Front 9</h6>';
                                 html += '<table class="scorecard-table"><thead><tr>';
                                 for (let i = 1; i <= 9; i++) {
                                     html += `<th>${i}</th>`;
                                 }
-                                html += '<th class="total-cell">Out</th></tr></thead><tbody><tr>';
+                                html += '<th>Out</th></tr></thead><tbody><tr>';
                                 
                                 let frontTotal = 0;
                                 for (let i = 1; i <= 9; i++) {
@@ -1273,15 +1238,15 @@
                                     html += `<td>${score}</td>`;
                                     if (score !== '-') frontTotal += score;
                                 }
-                                html += `<td class="total-cell">${frontTotal || '-'}</td></tr></tbody></table>`;
+                                html += `<td><strong>${frontTotal || '-'}</strong></td></tr></tbody></table>`;
                                 
-                                // Back 9 for team
-                                html += '<h6 style="margin: 10px 0 5px 0; font-size: 13px;">Back 9</h6>';
+                                // Back 9
+                                html += '<h6 style="margin: 10px 0 5px 0;">Back 9</h6>';
                                 html += '<table class="scorecard-table"><thead><tr>';
                                 for (let i = 10; i <= 18; i++) {
                                     html += `<th>${i}</th>`;
                                 }
-                                html += '<th class="total-cell">In</th></tr></thead><tbody><tr>';
+                                html += '<th>In</th></tr></thead><tbody><tr>';
                                 
                                 let backTotal = 0;
                                 for (let i = 10; i <= 18; i++) {
@@ -1289,10 +1254,8 @@
                                     html += `<td>${score}</td>`;
                                     if (score !== '-') backTotal += score;
                                 }
-                                html += `<td class="total-cell">${backTotal || '-'}</td></tr></tbody></table>`;
-                                
-                                // Total
-                                html += `<p style="margin-top: 10px; font-weight: bold;">Total: ${frontTotal + backTotal || '-'}</p>`;
+                                html += `<td><strong>${backTotal || '-'}</strong></td></tr></tbody></table>`;
+                                html += `<p style="margin-top: 10px; font-weight: bold;">Total: ${(frontTotal + backTotal) || '-'}</p>`;
                                 html += '</div></div>';
                             }
                         });
@@ -1306,7 +1269,7 @@
             document.getElementById('coursesContent').innerHTML = html;
         }
         
-        // Load players - FIXED
+        // Load players
         function loadPlayers() {
             let html = '<div class="player-grid">';
             players.forEach(player => {
@@ -1326,7 +1289,7 @@
             document.getElementById('playersContent').innerHTML = html;
         }
         
-        // Admin section with handicap editing - FIXED
+        // Admin section with handicap editing
         function loadAdmin() {
             let html = '';
             
