@@ -156,16 +156,35 @@
             font-size: 12px;
         }
         
-        .scorecard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 8px;
+        /* Updated scorecard styles for front/back 9 */
+        .scorecard-container {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 10px;
             margin: 15px 0;
         }
         
+        .nine-holes {
+            margin-bottom: 20px;
+        }
+        
+        .nine-holes h5 {
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .scorecard-grid {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        
         .hole-input {
-            background: #f7fafc;
-            padding: 10px;
+            background: white;
+            padding: 8px;
             border-radius: 8px;
             border: 2px solid #e2e8f0;
         }
@@ -180,15 +199,16 @@
             font-weight: bold;
             margin-bottom: 5px;
             color: #2d3748;
-            font-size: 12px;
+            font-size: 11px;
         }
         
         .hole-input input {
             width: 100%;
-            padding: 6px;
+            padding: 5px;
             border: 1px solid #cbd5e0;
             border-radius: 5px;
             font-size: 14px;
+            text-align: center;
         }
         
         button {
@@ -227,6 +247,54 @@
             font-size: 14px;
             width: 100%;
             margin: 10px 0;
+        }
+        
+        /* Updated table wrapper for better scorecard display */
+        .scorecard-table-wrapper {
+            background: white;
+            border-radius: 10px;
+            padding: 10px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        
+        .scorecard-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        
+        .scorecard-table th, .scorecard-table td {
+            padding: 6px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .scorecard-table th {
+            background: #f7fafc;
+            font-weight: bold;
+            color: #2d3748;
+        }
+        
+        .scorecard-table td:first-child, .scorecard-table th:first-child {
+            text-align: left;
+            font-weight: bold;
+            background: #f7fafc;
+            position: sticky;
+            left: 0;
+        }
+        
+        .hole-header {
+            background: #e6fffa !important;
+        }
+        
+        .par-row {
+            background: #f0fff4 !important;
+        }
+        
+        .total-cell {
+            background: #fef5e7 !important;
+            font-weight: bold;
         }
         
         /* Scrollable table wrapper */
@@ -370,6 +438,37 @@
             font-weight: bold;
         }
         
+        /* Handicap edit styles */
+        .handicap-edit-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .handicap-edit-item {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .handicap-edit-item label {
+            display: block;
+            font-size: 12px;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #2d3748;
+        }
+        
+        .handicap-edit-item input {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #cbd5e0;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
         @media (max-width: 768px) {
             .nav-grid {
                 grid-template-columns: repeat(2, 1fr);
@@ -387,12 +486,26 @@
                 font-size: 11px;
             }
             
+            .scorecard-grid {
+                grid-template-columns: repeat(5, 1fr);
+            }
+            
+            .hole-input label {
+                font-size: 10px;
+            }
+            
             table {
                 font-size: 11px;
             }
             
             th, td {
                 padding: 5px 3px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .scorecard-grid {
+                grid-template-columns: repeat(3, 1fr);
             }
         }
     </style>
@@ -486,8 +599,8 @@
     </div>
     
     <script>
-        // Data structure
-        const players = [
+        // Data structure - with updateable players array
+        let players = [
             { id: 1, name: 'Klaus', handicap: 18.1 },
             { id: 2, name: 'Ruben', handicap: 11 },
             { id: 3, name: 'Sigbjørn', handicap: 20.2 },
@@ -588,6 +701,12 @@
         let scrambleWinners = JSON.parse(localStorage.getItem('scrambleWinners2025') || '{}');
         let isAdmin = false;
         
+        // Load saved players if exists
+        const savedPlayers = localStorage.getItem('golfPlayers2025');
+        if (savedPlayers) {
+            players = JSON.parse(savedPlayers);
+        }
+        
         // Initialize with sync from server if available
         async function syncWithServer() {
             try {
@@ -598,10 +717,14 @@
                     scrambleScores = serverData.scrambleScores || scrambleScores;
                     awards = serverData.awards || awards;
                     scrambleWinners = serverData.scrambleWinners || scrambleWinners;
+                    if (serverData.players) {
+                        players = serverData.players;
+                    }
                     localStorage.setItem('golfScores2025', JSON.stringify(scores));
                     localStorage.setItem('scrambleScores2025', JSON.stringify(scrambleScores));
                     localStorage.setItem('golfAwards2025', JSON.stringify(awards));
                     localStorage.setItem('scrambleWinners2025', JSON.stringify(scrambleWinners));
+                    localStorage.setItem('golfPlayers2025', JSON.stringify(players));
                 }
             } catch (e) {
                 console.log('Using local storage only');
@@ -614,7 +737,7 @@
                 await fetch('/api/scores', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ scores, scrambleScores, awards, scrambleWinners })
+                    body: JSON.stringify({ scores, scrambleScores, awards, scrambleWinners, players })
                 });
             } catch (e) {
                 console.log('Saved locally only');
@@ -717,7 +840,7 @@
             document.getElementById('scheduleContent').innerHTML = html;
         }
         
-        // Scorecard functions (same as before)
+        // Scorecard functions with improved layout
         function loadScorecard() {
             let html = '<h3>Velg runde:</h3>';
             schedule.forEach(round => {
@@ -764,16 +887,31 @@
             let html = `<h3>${round.course} - ${round.date}</h3>
                 <h4>Lag ${teamIdx + 1}: ${team.join(' & ')}</h4>
                 <h4>Registrer lagscore:</h4>
-                <div class="scorecard-grid">`;
+                <div class="scorecard-container">`;
             
             const course = courses[round.course];
-            for (let i = 1; i <= 18; i++) {
+            
+            // Front 9
+            html += '<div class="nine-holes"><h5>Front 9</h5><div class="scorecard-grid">';
+            for (let i = 1; i <= 9; i++) {
                 const par = course.pars[i-1];
                 html += `<div class="hole-input">
-                    <label>Hull ${i} (Par ${par})</label>
-                    <input type="number" id="hole${i}" min="1" max="15" placeholder="Score">
+                    <label>Hull ${i}<br>Par ${par}</label>
+                    <input type="number" id="hole${i}" min="1" max="15" placeholder="-">
                 </div>`;
             }
+            html += '</div></div>';
+            
+            // Back 9
+            html += '<div class="nine-holes"><h5>Back 9</h5><div class="scorecard-grid">';
+            for (let i = 10; i <= 18; i++) {
+                const par = course.pars[i-1];
+                html += `<div class="hole-input">
+                    <label>Hull ${i}<br>Par ${par}</label>
+                    <input type="number" id="hole${i}" min="1" max="15" placeholder="-">
+                </div>`;
+            }
+            html += '</div></div>';
             
             html += `</div>
                 <button onclick="saveTeamScores(${roundId}, ${teamIdx})">Lagre Lagscore</button>
@@ -799,18 +937,35 @@
                 Banehandicap: ${courseHandicap}
             </div>
             <h4>Registrer score:</h4>
-            <div class="scorecard-grid">`;
+            <div class="scorecard-container">`;
             
-            for (let i = 1; i <= 18; i++) {
+            // Front 9
+            html += '<div class="nine-holes"><h5>Front 9</h5><div class="scorecard-grid">';
+            for (let i = 1; i <= 9; i++) {
                 const par = course.pars[i-1];
                 const hcpIndex = course.handicaps[i-1];
                 const hasStroke = hcpIndex <= courseHandicap;
                 
                 html += `<div class="hole-input ${hasStroke ? 'stroke' : ''}">
-                    <label>Hull ${i} (Par ${par}) ${hasStroke ? '+1' : ''}</label>
-                    <input type="number" id="hole${i}" min="1" max="15" placeholder="Score">
+                    <label>Hull ${i}<br>Par ${par}${hasStroke ? '+1' : ''}</label>
+                    <input type="number" id="hole${i}" min="1" max="15" placeholder="-">
                 </div>`;
             }
+            html += '</div></div>';
+            
+            // Back 9
+            html += '<div class="nine-holes"><h5>Back 9</h5><div class="scorecard-grid">';
+            for (let i = 10; i <= 18; i++) {
+                const par = course.pars[i-1];
+                const hcpIndex = course.handicaps[i-1];
+                const hasStroke = hcpIndex <= courseHandicap;
+                
+                html += `<div class="hole-input ${hasStroke ? 'stroke' : ''}">
+                    <label>Hull ${i}<br>Par ${par}${hasStroke ? '+1' : ''}</label>
+                    <input type="number" id="hole${i}" min="1" max="15" placeholder="-">
+                </div>`;
+            }
+            html += '</div></div>';
             
             html += `</div>
                 <button onclick="saveScores(${playerId}, ${roundId})">Lagre Score</button>
@@ -930,7 +1085,7 @@
             document.getElementById('leaderboardContent').innerHTML = html;
         }
         
-        // Load courses with scrollable tables
+        // Load courses with improved table layout
         function loadCourses() {
             let html = '';
             
@@ -945,25 +1100,62 @@
                     html += `<h4>${round.date} - ${round.time} (${round.type})</h4>`;
                     
                     if (round.type === 'Individuell') {
-                        html += '<div class="table-wrapper"><table><thead><tr><th>Spiller</th>';
-                        for (let i = 1; i <= 18; i++) {
-                            html += `<th>${i}</th>`;
-                        }
-                        html += '<th>Tot</th></tr></thead><tbody>';
+                        html += '<div class="scorecard-table-wrapper">';
+                        html += '<table class="scorecard-table"><thead><tr><th>Spiller</th>';
                         
+                        // Header row with hole numbers
+                        for (let i = 1; i <= 9; i++) {
+                            html += `<th class="hole-header">${i}</th>`;
+                        }
+                        html += '<th class="total-cell">Out</th>';
+                        for (let i = 10; i <= 18; i++) {
+                            html += `<th class="hole-header">${i}</th>`;
+                        }
+                        html += '<th class="total-cell">In</th>';
+                        html += '<th class="total-cell">Tot</th></tr>';
+                        
+                        // Par row
+                        html += '<tr class="par-row"><td>Par</td>';
+                        let frontPar = 0, backPar = 0;
+                        for (let i = 0; i < 9; i++) {
+                            html += `<td>${courseData.pars[i]}</td>`;
+                            frontPar += courseData.pars[i];
+                        }
+                        html += `<td class="total-cell">${frontPar}</td>`;
+                        for (let i = 9; i < 18; i++) {
+                            html += `<td>${courseData.pars[i]}</td>`;
+                            backPar += courseData.pars[i];
+                        }
+                        html += `<td class="total-cell">${backPar}</td>`;
+                        html += `<td class="total-cell">${frontPar + backPar}</td></tr>`;
+                        
+                        html += '</thead><tbody>';
+                        
+                        // Player scores
                         players.forEach(player => {
                             const scoreKey = `${round.id}_${player.id}`;
                             const roundScores = scores[scoreKey];
                             
                             if (roundScores && Object.keys(roundScores).length > 0) {
                                 html += `<tr><td>${player.name}</td>`;
-                                let total = 0;
-                                for (let i = 1; i <= 18; i++) {
+                                let frontTotal = 0, backTotal = 0;
+                                
+                                // Front 9
+                                for (let i = 1; i <= 9; i++) {
                                     const score = roundScores[i] || '-';
                                     html += `<td>${score}</td>`;
-                                    if (score !== '-') total += score;
+                                    if (score !== '-') frontTotal += score;
                                 }
-                                html += `<td><strong>${total}</strong></td></tr>`;
+                                html += `<td class="total-cell">${frontTotal || '-'}</td>`;
+                                
+                                // Back 9
+                                for (let i = 10; i <= 18; i++) {
+                                    const score = roundScores[i] || '-';
+                                    html += `<td>${score}</td>`;
+                                    if (score !== '-') backTotal += score;
+                                }
+                                html += `<td class="total-cell">${backTotal || '-'}</td>`;
+                                html += `<td class="total-cell"><strong>${frontTotal + backTotal || '-'}</strong></td></tr>`;
                             }
                         });
                         
@@ -997,19 +1189,33 @@
                             if (teamScores && Object.keys(teamScores).length > 0) {
                                 html += `<div class="${isWinner ? 'winner' : ''}">
                                     <h5>${isWinner ? '🏆 ' : ''}Lag ${teamIdx + 1}: ${team.join(' & ')}</h5>`;
-                                html += '<div class="table-wrapper"><table><thead><tr>';
-                                for (let i = 1; i <= 18; i++) {
+                                html += '<div class="scorecard-table-wrapper">';
+                                html += '<table class="scorecard-table"><thead><tr>';
+                                
+                                for (let i = 1; i <= 9; i++) {
                                     html += `<th>${i}</th>`;
                                 }
-                                html += '<th>Tot</th></tr></thead><tbody><tr>';
+                                html += '<th class="total-cell">Out</th>';
+                                for (let i = 10; i <= 18; i++) {
+                                    html += `<th>${i}</th>`;
+                                }
+                                html += '<th class="total-cell">In</th>';
+                                html += '<th class="total-cell">Tot</th></tr></thead><tbody><tr>';
                                 
-                                let total = 0;
-                                for (let i = 1; i <= 18; i++) {
+                                let frontTotal = 0, backTotal = 0;
+                                for (let i = 1; i <= 9; i++) {
                                     const score = teamScores[i] || '-';
                                     html += `<td>${score}</td>`;
-                                    if (score !== '-') total += score;
+                                    if (score !== '-') frontTotal += score;
                                 }
-                                html += `<td><strong>${total}</strong></td></tr></tbody></table></div></div>`;
+                                html += `<td class="total-cell">${frontTotal || '-'}</td>`;
+                                for (let i = 10; i <= 18; i++) {
+                                    const score = teamScores[i] || '-';
+                                    html += `<td>${score}</td>`;
+                                    if (score !== '-') backTotal += score;
+                                }
+                                html += `<td class="total-cell">${backTotal || '-'}</td>`;
+                                html += `<td class="total-cell"><strong>${frontTotal + backTotal || '-'}</strong></td></tr></tbody></table></div></div>`;
                             }
                         });
                         html += '</div>';
@@ -1042,7 +1248,7 @@
             document.getElementById('playersContent').innerHTML = html;
         }
         
-        // Admin section
+        // Admin section with handicap editing
         function loadAdmin() {
             let html = '';
             
@@ -1057,6 +1263,21 @@
                 html = `<div class="admin-section">
                     <h3>Administrator Panel</h3>
                     <button onclick="logoutAdmin()" style="background: #fc8181;">Logg ut</button>
+                    
+                    <h4>Rediger Handicap</h4>
+                    <div class="handicap-edit-grid">`;
+                
+                players.forEach(player => {
+                    html += `<div class="handicap-edit-item">
+                        <label>${player.name}</label>
+                        <input type="number" step="0.1" id="hcp_${player.id}" value="${player.handicap}" 
+                               onchange="updateHandicap(${player.id}, this.value)">
+                    </div>`;
+                });
+                
+                html += `</div>
+                    <button onclick="saveHandicaps()" style="margin-top: 10px;">Lagre Handicap</button>
+                    <div id="handicapMessage"></div>
                     
                     <h4>Scramble Vinnere</h4>`;
                 
@@ -1131,6 +1352,22 @@
         function logoutAdmin() {
             isAdmin = false;
             loadAdmin();
+        }
+        
+        function updateHandicap(playerId, newHandicap) {
+            const player = players.find(p => p.id === playerId);
+            if (player) {
+                player.handicap = parseFloat(newHandicap);
+            }
+        }
+        
+        function saveHandicaps() {
+            localStorage.setItem('golfPlayers2025', JSON.stringify(players));
+            saveToServer();
+            document.getElementById('handicapMessage').innerHTML = '<div class="success-message">Handicap lagret!</div>';
+            setTimeout(() => {
+                document.getElementById('handicapMessage').innerHTML = '';
+            }, 3000);
         }
         
         function setScrambleWinner(roundId, teamIdx) {
