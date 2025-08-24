@@ -463,7 +463,7 @@
         <span id="langBtn">🇬🇧 EN</span>
     </div>
     
-    <div class="version-badge">v3.04</div>
+    <div class="version-badge">v3.05</div>
     
     <div class="container">
         <div class="header">
@@ -1316,25 +1316,77 @@
                             const teamScores = scrambleScores[scoreKey];
                             const isWinner = scrambleWinners[round.id] === teamIdx;
                             
+                            html += '<div class="' + (isWinner ? 'winner' : '') + '" style="margin-bottom: 20px;">';
+                            html += '<h5>' + (isWinner ? '🏆 ' : '') + 'Lag ' + (teamIdx + 1) + ': ' + team.join(' & ') + '</h5>';
+                            
                             if (teamScores && Object.keys(teamScores).length > 0) {
-                                html += '<div class="' + (isWinner ? 'winner' : '') + '">';
-                                html += '<h5>' + (isWinner ? '🏆 ' : '') + 'Lag ' + (teamIdx + 1) + ': ' + team.join(' & ') + '</h5>';
+                                // Front 9 table
                                 html += '<div class="table-wrapper">';
+                                html += '<h6>Front 9</h6>';
                                 html += '<table><thead><tr>';
-                                
-                                for (let i = 1; i <= 18; i++) {
+                                for (let i = 1; i <= 9; i++) {
                                     html += '<th>' + i + '</th>';
                                 }
-                                html += '<th>Tot</th></tr></thead><tbody><tr>';
+                                html += '<th style="background: #fef5e7;"><strong>Out</strong></th></tr>';
                                 
-                                let total = 0;
-                                for (let i = 1; i <= 18; i++) {
+                                // Par row
+                                html += '<tr><td colspan="1" style="text-align: left;"><strong>Par</strong></td>';
+                                let frontPar = 0;
+                                for (let i = 0; i < 9; i++) {
+                                    html += '<td>' + courseData.pars[i] + '</td>';
+                                    frontPar += courseData.pars[i];
+                                }
+                                html += '<td style="background: #fef5e7;"><strong>' + frontPar + '</strong></td></tr>';
+                                
+                                // Score row
+                                html += '<tr><td colspan="1" style="text-align: left;"><strong>Score</strong></td>';
+                                let frontTotal = 0;
+                                for (let i = 1; i <= 9; i++) {
                                     const score = teamScores[i] || '-';
                                     html += '<td>' + score + '</td>';
-                                    if (score !== '-') total += score;
+                                    if (score !== '-') frontTotal += score;
                                 }
-                                html += '<td><strong>' + (total || '-') + '</strong></td></tr></tbody></table></div></div>';
+                                html += '<td style="background: #fef5e7;"><strong>' + (frontTotal || '-') + '</strong></td></tr>';
+                                html += '</tbody></table>';
+                                
+                                // Back 9 table
+                                html += '<h6>Back 9</h6>';
+                                html += '<table><thead><tr>';
+                                for (let i = 10; i <= 18; i++) {
+                                    html += '<th>' + i + '</th>';
+                                }
+                                html += '<th style="background: #fef5e7;"><strong>In</strong></th></tr>';
+                                
+                                // Par row
+                                html += '<tr><td colspan="1" style="text-align: left;"><strong>Par</strong></td>';
+                                let backPar = 0;
+                                for (let i = 9; i < 18; i++) {
+                                    html += '<td>' + courseData.pars[i] + '</td>';
+                                    backPar += courseData.pars[i];
+                                }
+                                html += '<td style="background: #fef5e7;"><strong>' + backPar + '</strong></td></tr>';
+                                
+                                // Score row
+                                html += '<tr><td colspan="1" style="text-align: left;"><strong>Score</strong></td>';
+                                let backTotal = 0;
+                                for (let i = 10; i <= 18; i++) {
+                                    const score = teamScores[i] || '-';
+                                    html += '<td>' + score + '</td>';
+                                    if (score !== '-') backTotal += score;
+                                }
+                                html += '<td style="background: #fef5e7;"><strong>' + (backTotal || '-') + '</strong></td></tr>';
+                                html += '</tbody></table>';
+                                
+                                // Total summary
+                                const total = frontTotal + backTotal;
+                                const diff = total - (frontPar + backPar);
+                                const diffStr = diff === 0 ? 'E' : (diff > 0 ? '+' + diff : diff.toString());
+                                html += '<p style="margin-top: 10px; font-size: 16px;"><strong>Total: ' + (total || '-') + ' (' + diffStr + ')</strong></p>';
+                                html += '</div>';
+                            } else {
+                                html += '<p style="color: #718096;">Ingen score registrert</p>';
                             }
+                            html += '</div>';
                         });
                         html += '</div>';
                     }
