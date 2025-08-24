@@ -684,13 +684,6 @@
             }
         }
         
-        // Scramble handicap percentage (default 25% of combined, adjustable in admin)
-        var scrambleHandicapPercentage = 25;
-        var savedScramblePercentage = localStorage.getItem('scrambleHandicapPercentage2025');
-        if (savedScramblePercentage) {
-            scrambleHandicapPercentage = parseInt(savedScramblePercentage);
-        }
-        
         var schedule = [
             { 
                 id: 1, 
@@ -802,18 +795,30 @@
         // Function to calculate scramble team handicap
         function calculateScrambleHandicap(teamMembers, courseName) {
             var course = courses[courseName];
-            var totalHandicap = 0;
+            var courseHandicaps = [];
             
             teamMembers.forEach(function(memberName) {
                 var player = players.find(function(p) { return p.name === memberName; });
                 if (player) {
                     var courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
-                    totalHandicap += courseHandicap;
+                    courseHandicaps.push(courseHandicap);
                 }
             });
             
-            // Return team handicap based on percentage (default 25% of combined)
-            return Math.round(totalHandicap * (scrambleHandicapPercentage / 100));
+            // Sort to find lowest and highest
+            courseHandicaps.sort(function(a, b) { return a - b; });
+            
+            if (courseHandicaps.length >= 2) {
+                // 70% of lowest + 30% of highest
+                var lowest = courseHandicaps[0];
+                var highest = courseHandicaps[courseHandicaps.length - 1];
+                return Math.round((lowest * 0.7) + (highest * 0.3));
+            } else if (courseHandicaps.length === 1) {
+                // If only one player (shouldn't happen in scramble)
+                return courseHandicaps[0];
+            }
+            
+            return 0;
         }
         
         // Initialize with sync from server if available
@@ -838,9 +843,6 @@
                     if (serverData.whiskyCollection && Array.isArray(serverData.whiskyCollection) && serverData.whiskyCollection.length > 0) {
                         whiskyCollection = serverData.whiskyCollection;
                     }
-                    if (serverData.scrambleHandicapPercentage) {
-                        scrambleHandicapPercentage = serverData.scrambleHandicapPercentage;
-                    }
                     localStorage.setItem('golfScores2025', JSON.stringify(scores));
                     localStorage.setItem('scrambleScores2025', JSON.stringify(scrambleScores));
                     localStorage.setItem('golfAwards2025', JSON.stringify(awards));
@@ -849,7 +851,6 @@
                     localStorage.setItem('golfSchedule2025', JSON.stringify(schedule));
                     localStorage.setItem('playedCourses2025', JSON.stringify(playedCourses));
                     localStorage.setItem('whiskyCollection2025', JSON.stringify(whiskyCollection));
-                    localStorage.setItem('scrambleHandicapPercentage2025', scrambleHandicapPercentage.toString());
                 }
             } catch (e) {
                 console.log('Using local storage only');
@@ -870,8 +871,7 @@
                         players, 
                         schedule, 
                         playedCourses, 
-                        whiskyCollection,
-                        scrambleHandicapPercentage 
+                        whiskyCollection
                     })
                 });
             } catch (e) {
@@ -1061,14 +1061,27 @@
             // Show scramble handicap info
             html += '<div class="scramble-handicap-info">';
             html += '<h5>Scramble Handicap Beregning</h5>';
+            
+            var courseHandicaps = [];
             team.forEach(function(memberName) {
                 var player = players.find(function(p) { return p.name === memberName; });
                 if (player) {
                     var courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
+                    courseHandicaps.push({ name: memberName, handicap: courseHandicap });
                     html += '<p>' + memberName + ': HCP ' + player.handicap + ' → Bane HCP ' + courseHandicap + '</p>';
                 }
             });
-            html += '<p><strong>Team Handicap: ' + teamHandicap + ' (' + scrambleHandicapPercentage + '% av kombinert)</strong></p>';
+            
+            // Sort to show calculation
+            courseHandicaps.sort(function(a, b) { return a.handicap - b.handicap; });
+            if (courseHandicaps.length >= 2) {
+                var lowest = courseHandicaps[0].handicap;
+                var highest = courseHandicaps[courseHandicaps.length - 1].handicap;
+                html += '<p style="margin-top: 10px; color: #4299e1;">Laveste HCP: ' + lowest + ' × 70% = ' + (lowest * 0.7).toFixed(1) + '</p>';
+                html += '<p style="color: #4299e1;">Høyeste HCP: ' + highest + ' × 30% = ' + (highest * 0.3).toFixed(1) + '</p>';
+            }
+            
+            html += '<p><strong>Team Handicap: ' + teamHandicap + ' slag</strong></p>';
             html += '<p style="color: #718096; font-size: 12px;">Netto score = Brutto - ' + teamHandicap + '</p>';
             html += '</div>';
             
@@ -1577,7 +1590,7 @@
                                 
                                 html += '<div style="margin-bottom: 30px; padding: 15px; background: #f7fafc; border-radius: 10px;">';
                                 html += '<h5>Lag ' + (teamIdx + 1) + ': ' + team.join(' & ') + '</h5>';
-                                html += '<p style="color: #4299e1;">Team Handicap: ' + teamHandicap + ' (' + scrambleHandicapPercentage + '% av kombinert)</p>';
+                                html += '<p style="color: #4299e1;">Team Handicap: ' + teamHandicap + ' (70% laveste + 30% høyeste)</p>';
                                 
                                 if (teamScores && Object.keys(teamScores).length > 0) {
                                     // Front 9
@@ -1836,8 +1849,8 @@
             // Add scramble handicap info
             html += '<div style="margin-top: 30px; padding: 20px; background: #e6f4ff; border-radius: 10px;">';
             html += '<h3>Scramble Handicap Info</h3>';
-            html += '<p>I scramble runder bruker vi <strong>' + scrambleHandicapPercentage + '%</strong> av lagets kombinerte handicap.</p>';
-            html += '<p style="margin-top: 10px;">Eksempel beregning for hvert lag:</p>';
+            html += '<p>I scramble runder bruker vi <strong>70% av laveste handicap + 30% av høyeste handicap</strong>.</p>';
+            html += '<p style="margin-top: 10px;">Beregning for hvert lag:</p>';
             
             // Show scramble handicaps for each round
             schedule.forEach(function(round) {
@@ -1846,7 +1859,24 @@
                     html += '<h4>' + round.date + ' - ' + round.course + '</h4>';
                     round.teams.forEach(function(team, idx) {
                         var teamHandicap = calculateScrambleHandicap(team, round.course);
-                        html += '<p>Lag ' + (idx + 1) + ' (' + team.join(' & ') + '): <strong>' + teamHandicap + ' slag</strong></p>';
+                        
+                        // Get individual course handicaps for display
+                        var course = courses[round.course];
+                        var handicaps = [];
+                        team.forEach(function(memberName) {
+                            var player = players.find(function(p) { return p.name === memberName; });
+                            if (player) {
+                                var courseHcp = Math.round((player.handicap * course.slopeRating) / 113);
+                                handicaps.push(courseHcp);
+                            }
+                        });
+                        handicaps.sort(function(a, b) { return a - b; });
+                        
+                        html += '<p>Lag ' + (idx + 1) + ' (' + team.join(' & ') + '): ';
+                        if (handicaps.length >= 2) {
+                            html += 'HCP ' + handicaps[0] + ' & ' + handicaps[handicaps.length - 1];
+                            html += ' → <strong>' + teamHandicap + ' slag</strong></p>';
+                        }
                     });
                     html += '</div>';
                 }
@@ -1871,15 +1901,6 @@
                 html = '<div class="admin-section">';
                 html += '<h3>Administrator Panel</h3>';
                 html += '<button onclick="logoutAdmin()" style="background: #fc8181;">Logg ut</button>';
-                
-                // Scramble handicap percentage setting
-                html += '<h4>Scramble Handicap Prosent</h4>';
-                html += '<div style="background: #e6f4ff; padding: 15px; border-radius: 10px; margin: 15px 0;">';
-                html += '<p>Angi prosent av kombinert handicap for scramble lag (standard er 25%):</p>';
-                html += '<input type="number" id="scramblePercentage" value="' + scrambleHandicapPercentage + '" min="10" max="50" style="width: 100px; margin: 10px 0;">';
-                html += '<span> %</span><br>';
-                html += '<button onclick="saveScramblePercentage()">Lagre Prosent</button>';
-                html += '</div>';
                 
                 // Handicap editing
                 html += '<h4>Rediger Handicap</h4>';
