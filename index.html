@@ -474,7 +474,7 @@
         <span id="langBtn">🇬🇧 EN</span>
     </div>
 
-    <div class="version-badge">v3.12</div>
+    <div class="version-badge">v3.13</div>
 
     <div class="container">
         <div class="header">
@@ -674,6 +674,8 @@
                 time: 'Morgen', 
                 course: 'Cullen Links', 
                 type: 'Scramble',
+                longestDrive: [5, 15],
+                closestToPin: [2, 13],
                 teams: [
                     ['Klaus', 'Ruben'],
                     ['Sigbjørn', 'Bjørn'],
@@ -714,6 +716,8 @@
                 time: 'Ettermiddag', 
                 course: 'Garmouth & Kingston', 
                 type: 'Scramble',
+                longestDrive: [8],
+                closestToPin: [3],
                 teams: [
                     ['Truls', 'Roar'],
                     ['Klaus', 'Sigbjørn'],
@@ -728,8 +732,8 @@
                 time: 'Hele dagen', 
                 course: 'Strathlene', 
                 type: 'Individuell',
-                longestDrive: [8, 14],
-                closestToPin: [7, 13],
+                longestDrive: [8],
+                closestToPin: [7],
                 flights: [
                     { time: '', players: ['Klaus', 'Dag', 'Roar', 'Truls'] },
                     { time: '', players: ['Ruben', 'Sigbjørn', 'Tor Espen', 'Bjørn'] }
@@ -1770,74 +1774,70 @@
                 html += '<div style="background: #f7fafc; padding: 15px; border-radius: 10px; margin: 15px 0;">';
                 
                 schedule.forEach(function(round) {
-                    if (round.type === 'Individuell') {
-                        html += '<div style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 8px;">';
-                        html += '<h5>' + round.date + ' - ' + round.course + '</h5>';
-                        
-                        // Longest Drive
-                        html += '<div style="margin: 10px 0;">';
-                        html += '<label style="display: block; margin-bottom: 5px; font-size: 12px;">Longest Drive hull (kommaseparert, f.eks: 5,15):</label>';
-                        var ldValue = round.longestDrive ? round.longestDrive.join(',') : '';
-                        html += '<input type="text" id="ld_' + round.id + '" value="' + ldValue + '" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
-                        html += '</div>';
-                        
-                        // Closest to Pin
-                        html += '<div style="margin: 10px 0;">';
-                        html += '<label style="display: block; margin-bottom: 5px; font-size: 12px;">Closest to Pin hull (kommaseparert, f.eks: 2,13):</label>';
-                        var ctpValue = round.closestToPin ? round.closestToPin.join(',') : '';
-                        html += '<input type="text" id="ctp_' + round.id + '" value="' + ctpValue + '" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
-                        html += '</div>';
-                        
-                        html += '</div>';
-                    }
+                    html += '<div style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 8px;">';
+                    html += '<h5>' + round.date + ' - ' + round.course + ' (' + round.type + ')</h5>';
+                    
+                    // Longest Drive
+                    html += '<div style="margin: 10px 0;">';
+                    html += '<label style="display: block; margin-bottom: 5px; font-size: 12px;">Longest Drive hull (kommaseparert, f.eks: 5,15):</label>';
+                    var ldValue = round.longestDrive ? round.longestDrive.join(',') : '';
+                    html += '<input type="text" id="ld_' + round.id + '" value="' + ldValue + '" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
+                    html += '</div>';
+                    
+                    // Closest to Pin
+                    html += '<div style="margin: 10px 0;">';
+                    html += '<label style="display: block; margin-bottom: 5px; font-size: 12px;">Closest to Pin hull (kommaseparert, f.eks: 2,13):</label>';
+                    var ctpValue = round.closestToPin ? round.closestToPin.join(',') : '';
+                    html += '<input type="text" id="ctp_' + round.id + '" value="' + ctpValue + '" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
+                    html += '</div>';
+                    
+                    html += '</div>';
                 });
                 
                 html += '<button onclick="saveCompetitionHoles()">Lagre hull</button>';
                 html += '</div>';
                 
-                // Award winners
+                // Award winners - updated for all rounds
                 html += '<h4>Konkurransevinnere</h4>';
                 html += '<div style="background: #f7fafc; padding: 15px; border-radius: 10px; margin: 15px 0;">';
                 
                 schedule.forEach(function(round) {
-                    if (round.type === 'Individuell') {
-                        html += '<div style="margin-bottom: 20px;">';
-                        html += '<h5>' + round.date + ' - ' + round.course + '</h5>';
-                        html += '<div class="award-select">';
-                        
-                        if (round.longestDrive) {
-                            round.longestDrive.forEach(function(hole) {
-                                html += '<div class="award-input">';
-                                html += '<label>Longest Drive Hull ' + hole + ':</label>';
-                                html += '<select id="award_' + round.id + '_ld_' + hole + '">';
-                                html += '<option value="">-- Velg vinner --</option>';
-                                players.forEach(function(player) {
-                                    var selected = awards[round.id + '_ld_' + hole] === player.name ? 'selected' : '';
-                                    html += '<option value="' + player.name + '" ' + selected + '>' + player.name + '</option>';
-                                });
-                                html += '</select>';
-                                html += '</div>';
+                    html += '<div style="margin-bottom: 20px;">';
+                    html += '<h5>' + round.date + ' - ' + round.course + ' (' + round.type + ')</h5>';
+                    html += '<div class="award-select">';
+                    
+                    if (round.longestDrive) {
+                        round.longestDrive.forEach(function(hole) {
+                            html += '<div class="award-input">';
+                            html += '<label>Longest Drive Hull ' + hole + ':</label>';
+                            html += '<select id="award_' + round.id + '_ld_' + hole + '">';
+                            html += '<option value="">-- Velg vinner --</option>';
+                            players.forEach(function(player) {
+                                var selected = awards[round.id + '_ld_' + hole] === player.name ? 'selected' : '';
+                                html += '<option value="' + player.name + '" ' + selected + '>' + player.name + '</option>';
                             });
-                        }
-                        
-                        if (round.closestToPin) {
-                            round.closestToPin.forEach(function(hole) {
-                                html += '<div class="award-input">';
-                                html += '<label>Closest to Pin Hull ' + hole + ':</label>';
-                                html += '<select id="award_' + round.id + '_ctp_' + hole + '">';
-                                html += '<option value="">-- Velg vinner --</option>';
-                                players.forEach(function(player) {
-                                    var selected = awards[round.id + '_ctp_' + hole] === player.name ? 'selected' : '';
-                                    html += '<option value="' + player.name + '" ' + selected + '>' + player.name + '</option>';
-                                });
-                                html += '</select>';
-                                html += '</div>';
-                            });
-                        }
-                        
-                        html += '</div>';
-                        html += '</div>';
+                            html += '</select>';
+                            html += '</div>';
+                        });
                     }
+                    
+                    if (round.closestToPin) {
+                        round.closestToPin.forEach(function(hole) {
+                            html += '<div class="award-input">';
+                            html += '<label>Closest to Pin Hull ' + hole + ':</label>';
+                            html += '<select id="award_' + round.id + '_ctp_' + hole + '">';
+                            html += '<option value="">-- Velg vinner --</option>';
+                            players.forEach(function(player) {
+                                var selected = awards[round.id + '_ctp_' + hole] === player.name ? 'selected' : '';
+                                html += '<option value="' + player.name + '" ' + selected + '>' + player.name + '</option>';
+                            });
+                            html += '</select>';
+                            html += '</div>';
+                        });
+                    }
+                    
+                    html += '</div>';
+                    html += '</div>';
                 });
                 
                 html += '<button onclick="saveAwards()">Lagre vinnere</button>';
