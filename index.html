@@ -1139,14 +1139,14 @@
                         if (round.longestDrive) {
                             round.longestDrive.forEach(hole => {
                                 const winner = awards[round.id + '_ld_' + hole] || 'Ikke satt';
-                                html += '<div>🚀 Lengste drive hull ' + hole + ': <strong>' + winner + '</strong></div>';
+                                html += '<div>🚀 Longest drive ' + hole + ': <strong>' + winner + '</strong></div>';
                             });
                         }
                         
                         if (round.closestToPin) {
                             round.closestToPin.forEach(hole => {
                                 const winner = awards[round.id + '_ctp_' + hole] || 'Ikke satt';
-                                html += '<div>🎯 Nærmest pinnen hull ' + hole + ': <strong>' + winner + '</strong></div>';
+                                html += '<div>🎯 Closest to pin ' + hole + ': <strong>' + winner + '</strong></div>';
                             });
                         }
                         
@@ -1297,13 +1297,13 @@
                             if (round.longestDrive) {
                                 round.longestDrive.forEach(hole => {
                                     const winner = awards[round.id + '_ld_' + hole] || 'Ikke satt';
-                                    html += '<div>🚀 Lengste drive hull ' + hole + ': ' + winner + '</div>';
+                                    html += '<div>🚀 Longest drive ' + hole + ': ' + winner + '</div>';
                                 });
                             }
                             if (round.closestToPin) {
                                 round.closestToPin.forEach(hole => {
                                     const winner = awards[round.id + '_ctp_' + hole] || 'Ikke satt';
-                                    html += '<div>🎯 Nærmest pinnen hull ' + hole + ': ' + winner + '</div>';
+                                    html += '<div>🎯 Closest to pin ' + hole + ': ' + winner + '</div>';
                                 });
                             }
                             html += '</div>';
