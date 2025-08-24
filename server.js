@@ -14,13 +14,14 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// API endpoint to get all scores
+// API endpoint to get all scores and data
 app.get('/api/scores', (req, res) => {
     try {
         if (fs.existsSync(dataFile)) {
             const data = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
             res.json(data);
         } else {
+            // Return empty structure if file doesn't exist
             res.json({
                 scores: {},
                 scrambleScores: {},
@@ -28,16 +29,26 @@ app.get('/api/scores', (req, res) => {
                 scrambleWinners: {},
                 players: [],
                 schedule: [],
-                playedCourses: []  // Added this
+                playedCourses: [],
+                whiskyCollection: []
             });
         }
     } catch (error) {
         console.error('Error reading scores:', error);
-        res.json({});
+        res.json({
+            scores: {},
+            scrambleScores: {},
+            awards: {},
+            scrambleWinners: {},
+            players: [],
+            schedule: [],
+            playedCourses: [],
+            whiskyCollection: []
+        });
     }
 });
 
-// API endpoint to save scores
+// API endpoint to save all data
 app.post('/api/scores', (req, res) => {
     try {
         const data = {
@@ -47,9 +58,11 @@ app.post('/api/scores', (req, res) => {
             scrambleWinners: req.body.scrambleWinners || {},
             players: req.body.players || [],
             schedule: req.body.schedule || [],
-            playedCourses: req.body.playedCourses || []  // Added this
+            playedCourses: req.body.playedCourses || [],
+            whiskyCollection: req.body.whiskyCollection || []
         };
         
+        // Write data to file with pretty formatting
         fs.writeFileSync(dataFile, JSON.stringify(data, null, 2));
         res.json({ success: true });
     } catch (error) {
@@ -60,4 +73,5 @@ app.post('/api/scores', (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+    console.log(`Access the app at http://localhost:${PORT}`);
 });
