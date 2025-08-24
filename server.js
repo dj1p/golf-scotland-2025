@@ -2,16 +2,19 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const app = express();
+const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
+app.use(express.static(__dirname));
 
-// Serve static files
-app.use(express.static('.'));
-
-// Data file path
 const dataFile = path.join(__dirname, 'golf-data.json');
 
-// Get scores endpoint
+// Serve the main HTML file
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// API endpoint to get all scores
 app.get('/api/scores', (req, res) => {
     try {
         if (fs.existsSync(dataFile)) {
@@ -23,7 +26,9 @@ app.get('/api/scores', (req, res) => {
                 scrambleScores: {},
                 awards: {},
                 scrambleWinners: {},
-                players: [] // Add this
+                players: [],
+                schedule: [],
+                playedCourses: []  // Added this
             });
         }
     } catch (error) {
@@ -32,23 +37,27 @@ app.get('/api/scores', (req, res) => {
     }
 });
 
-// Save scores endpoint
+// API endpoint to save scores
 app.post('/api/scores', (req, res) => {
     try {
-        fs.writeFileSync(dataFile, JSON.stringify(req.body, null, 2));
+        const data = {
+            scores: req.body.scores || {},
+            scrambleScores: req.body.scrambleScores || {},
+            awards: req.body.awards || {},
+            scrambleWinners: req.body.scrambleWinners || {},
+            players: req.body.players || [],
+            schedule: req.body.schedule || [],
+            playedCourses: req.body.playedCourses || []  // Added this
+        };
+        
+        fs.writeFileSync(dataFile, JSON.stringify(data, null, 2));
         res.json({ success: true });
     } catch (error) {
         console.error('Error saving scores:', error);
-        res.status(500).json({ error: 'Failed to save' });
+        res.status(500).json({ error: 'Failed to save scores' });
     }
 });
 
-// Serve index.html for root
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Golf app running on port ${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });
