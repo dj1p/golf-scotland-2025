@@ -496,7 +496,7 @@
     <div class="container">
         <div class="header">
             <h1 id="appTitle">Cullen 2025</h1>
-            <p id="appSubtitle">Årlig golftur til Skottland</p>
+            <p id="appSubtitle"></p>
         </div>
         
         <div id="homeView" class="view">
@@ -534,7 +534,7 @@
                 <div class="nav-card" onclick="showView('history')">
                     <div class="icon" style="font-size: 40px;">&#128218;</div>
                     <h3 id="historyTitle">Historie</h3>
-                    <p id="historyDesc">Spillte baner</p>
+                    <p id="historyDesc">Spilte baner</p>
                 </div>
                 
                 <div class="nav-card" onclick="showView('whisky')">
@@ -583,7 +583,7 @@
         
         <div id="historyView" class="content">
             <button class="back-btn" onclick="showView('home')">← Tilbake</button>
-            <h2>Spillte Baner Gjennom Årene</h2>
+            <h2>Spilte Baner Gjennom Årene</h2>
             <div id="historyContent"></div>
         </div>
         
@@ -908,7 +908,7 @@
             var texts = {
                 no: {
                     appTitle: 'Cullen 2025',
-                    appSubtitle: 'Årlig golftur til Skottland',
+                    appSubtitle: '',
                     scheduleTitle: 'Timeplan',
                     scheduleDesc: 'Se runder',
                     scorecardTitle: 'Registrer',
@@ -920,7 +920,7 @@
                     playersTitle: 'Spillere',
                     playersDesc: 'Handicap',
                     historyTitle: 'Historie',
-                    historyDesc: 'Spillte baner',
+                    historyDesc: 'Spilte baner',
                     whiskyTitle: 'Whisky',
                     whiskyDesc: 'Samlingen',
                     adminTitle: 'Admin',
@@ -1688,7 +1688,7 @@
             allYears.sort(function(a, b) { return b - a; }); // Sort years descending
             
             var html = '<div style="margin-bottom: 20px;">';
-            html += '<h3>Skottland Golfturer - Spillte Baner</h3>';
+            html += '<h3>Skottland Golfturer - Spilte Baner</h3>';
             html += '<p style="color: #718096;">Totalt ' + playedCourses.length + ' forskjellige baner siden 2010</p>';
             html += '</div>';
             
@@ -2049,7 +2049,7 @@
                 html += '</div>';
                 
                 // Played Courses Management
-                html += '<h4>Administrer Spillte Baner</h4>';
+                html += '<h4>Administrer Spilte Baner</h4>';
                 html += '<div style="background: #f7fafc; padding: 15px; border-radius: 10px; margin: 15px 0;">';
                 
                 html += '<h5>Legg til ny bane</h5>';
