@@ -7,7 +7,14 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(__dirname));
 
-const dataFile = path.join(__dirname, 'golf-data.json');
+// Use persistent storage path
+const dataDir = '/app/data';  // This matches the Mount Path in Coolify
+const dataFile = path.join(dataDir, 'golf-data.json');
+
+// Ensure data directory exists
+if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+}
 
 // Serve the main HTML file
 app.get('/', (req, res) => {
@@ -21,7 +28,6 @@ app.get('/api/scores', (req, res) => {
             const data = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
             res.json(data);
         } else {
-            // Return empty structure if file doesn't exist
             res.json({
                 scores: {},
                 scrambleScores: {},
@@ -59,12 +65,12 @@ app.post('/api/scores', (req, res) => {
             players: req.body.players || [],
             schedule: req.body.schedule || [],
             playedCourses: req.body.playedCourses || [],
-            whiskyCollection: req.body.whiskyCollection || [],
-            scrambleHandicapPercentage: req.body.scrambleHandicapPercentage || 25
+            whiskyCollection: req.body.whiskyCollection || []
         };
         
         // Write data to file with pretty formatting
         fs.writeFileSync(dataFile, JSON.stringify(data, null, 2));
+        console.log('Data saved to:', dataFile);
         res.json({ success: true });
     } catch (error) {
         console.error('Error saving scores:', error);
@@ -74,5 +80,5 @@ app.post('/api/scores', (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
-    console.log(`Access the app at http://localhost:${PORT}`);
+    console.log(`Data will be stored in: ${dataFile}`);
 });
