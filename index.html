@@ -474,7 +474,7 @@
         <span id="langBtn">🇬🇧 EN</span>
     </div>
 
-    <div class="version-badge">v3.10</div>
+    <div class="version-badge">v3.12</div>
 
     <div class="container">
         <div class="header">
@@ -520,6 +520,12 @@
                     <p id="historyDesc">Spillte baner</p>
                 </div>
                 
+                <div class="nav-card" onclick="showView('whisky')">
+                    <div class="icon" style="font-size: 40px;">&#129347;</div>
+                    <h3 id="whiskyTitle">Whisky</h3>
+                    <p id="whiskyDesc">Samlingen</p>
+                </div>
+                
                 <div class="nav-card" onclick="showView('admin')">
                     <div class="icon" style="font-size: 40px;">&#128272;</div>
                     <h3 id="adminTitle">Admin</h3>
@@ -562,6 +568,12 @@
             <button class="back-btn" onclick="showView('home')">← Tilbake</button>
             <h2>Spillte Baner Gjennom Årene</h2>
             <div id="historyContent"></div>
+        </div>
+        
+        <div id="whiskyView" class="content">
+            <button class="back-btn" onclick="showView('home')">← Tilbake</button>
+            <h2>Whisky Samlingen</h2>
+            <div id="whiskyContent"></div>
         </div>
         
         <div id="adminView" class="content">
@@ -627,6 +639,31 @@
                 }
             } catch (e) {
                 console.log('Using default played courses');
+            }
+        }
+        
+        // Whisky collection data
+        var whiskyCollection = [
+            { id: 1, owner: 'Ruben', primary: '', reserve: '' },
+            { id: 2, owner: 'Dag', primary: 'Glenmorangie', reserve: '' },
+            { id: 3, owner: 'Bjørn', primary: 'Highland Park', reserve: '' },
+            { id: 4, owner: 'Sigbjørn', primary: 'MacAllan', reserve: '' },
+            { id: 5, owner: 'Truls', primary: 'Dalmore', reserve: 'Old Pultney' },
+            { id: 6, owner: 'Olav', primary: 'Dalwhinnie', reserve: '' },
+            { id: 7, owner: 'Tor Espen', primary: 'Ben Nevis', reserve: '' },
+            { id: 8, owner: 'Klaus', primary: 'Balvenie', reserve: '' }
+        ];
+        
+        // Load saved whisky collection if exists
+        var savedWhisky = localStorage.getItem('whiskyCollection2025');
+        if (savedWhisky) {
+            try {
+                var parsed = JSON.parse(savedWhisky);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    whiskyCollection = parsed;
+                }
+            } catch (e) {
+                console.log('Using default whisky collection');
             }
         }
         
@@ -753,6 +790,9 @@
                     if (serverData.playedCourses && Array.isArray(serverData.playedCourses) && serverData.playedCourses.length > 0) {
                         playedCourses = serverData.playedCourses;
                     }
+                    if (serverData.whiskyCollection && Array.isArray(serverData.whiskyCollection) && serverData.whiskyCollection.length > 0) {
+                        whiskyCollection = serverData.whiskyCollection;
+                    }
                     localStorage.setItem('golfScores2025', JSON.stringify(scores));
                     localStorage.setItem('scrambleScores2025', JSON.stringify(scrambleScores));
                     localStorage.setItem('golfAwards2025', JSON.stringify(awards));
@@ -760,6 +800,7 @@
                     localStorage.setItem('golfPlayers2025', JSON.stringify(players));
                     localStorage.setItem('golfSchedule2025', JSON.stringify(schedule));
                     localStorage.setItem('playedCourses2025', JSON.stringify(playedCourses));
+                    localStorage.setItem('whiskyCollection2025', JSON.stringify(whiskyCollection));
                 }
             } catch (e) {
                 console.log('Using local storage only');
@@ -780,6 +821,7 @@
                 if (viewName === 'courses') loadCourses();
                 if (viewName === 'players') loadPlayers();
                 if (viewName === 'history') loadHistory();
+                if (viewName === 'whisky') loadWhisky();
                 if (viewName === 'admin') loadAdmin();
             }
         }
@@ -807,6 +849,8 @@
                     playersDesc: 'Handicap',
                     historyTitle: 'Historie',
                     historyDesc: 'Spillte baner',
+                    whiskyTitle: 'Whisky',
+                    whiskyDesc: 'Samlingen',
                     adminTitle: 'Admin',
                     adminDesc: 'Administrer'
                 },
@@ -825,6 +869,8 @@
                     playersDesc: 'Handicaps',
                     historyTitle: 'History',
                     historyDesc: 'Played courses',
+                    whiskyTitle: 'Whisky',
+                    whiskyDesc: 'Collection',
                     adminTitle: 'Admin',
                     adminDesc: 'Manage'
                 }
@@ -1550,6 +1596,90 @@
             document.getElementById('historyContent').innerHTML = html;
         }
         
+        function loadWhisky() {
+            var html = '<div style="margin-bottom: 20px;">';
+            html += '<h3>🥃 Whisky Collection 2025</h3>';
+            html += '<p style="color: #718096;">Hver deltaker tar med sin whisky til turen</p>';
+            html += '</div>';
+            
+            html += '<div class="table-wrapper">';
+            html += '<table>';
+            html += '<thead>';
+            html += '<tr>';
+            html += '<th>Deltaker</th>';
+            html += '<th>Hoved Whisky</th>';
+            html += '<th>Reserve Whisky</th>';
+            html += '<th>Status</th>';
+            html += '</tr>';
+            html += '</thead>';
+            html += '<tbody>';
+            
+            whiskyCollection.forEach(function(entry) {
+                html += '<tr>';
+                html += '<td><strong>' + entry.owner + '</strong></td>';
+                html += '<td>' + (entry.primary || '<span style="color: #cbd5e0;">Ikke valgt</span>') + '</td>';
+                html += '<td>' + (entry.reserve || '<span style="color: #cbd5e0;">-</span>') + '</td>';
+                
+                // Status indicator
+                if (entry.primary) {
+                    html += '<td><span style="color: #48bb78;">✓ Klar</span></td>';
+                } else {
+                    html += '<td><span style="color: #f56565;">Venter</span></td>';
+                }
+                
+                html += '</tr>';
+            });
+            
+            html += '</tbody>';
+            html += '</table>';
+            html += '</div>';
+            
+            // Summary statistics
+            var totalWhiskies = 0;
+            var readyCount = 0;
+            whiskyCollection.forEach(function(entry) {
+                if (entry.primary) {
+                    totalWhiskies++;
+                    readyCount++;
+                }
+                if (entry.reserve) {
+                    totalWhiskies++;
+                }
+            });
+            
+            html += '<div style="margin-top: 30px; padding: 20px; background: #f7fafc; border-radius: 10px;">';
+            html += '<h4>Statistikk</h4>';
+            html += '<p>Antall deltakere: ' + whiskyCollection.length + '</p>';
+            html += '<p>Antall som har valgt whisky: ' + readyCount + ' av ' + whiskyCollection.length + '</p>';
+            html += '<p>Totalt antall whiskyer: ' + totalWhiskies + '</p>';
+            html += '</div>';
+            
+            // List of unique whiskies
+            var uniqueWhiskies = [];
+            whiskyCollection.forEach(function(entry) {
+                if (entry.primary && uniqueWhiskies.indexOf(entry.primary) === -1) {
+                    uniqueWhiskies.push(entry.primary);
+                }
+                if (entry.reserve && uniqueWhiskies.indexOf(entry.reserve) === -1) {
+                    uniqueWhiskies.push(entry.reserve);
+                }
+            });
+            uniqueWhiskies.sort();
+            
+            if (uniqueWhiskies.length > 0) {
+                html += '<div style="margin-top: 20px; padding: 20px; background: #fef5e7; border-radius: 10px;">';
+                html += '<h4>Whisky Merker (' + uniqueWhiskies.length + ' forskjellige)</h4>';
+                html += '<div style="columns: 2; column-gap: 20px;">';
+                uniqueWhiskies.forEach(function(whisky) {
+                    html += '<div style="padding: 3px 0;">• ' + whisky + '</div>';
+                });
+                html += '</div>';
+                html += '</div>';
+            }
+            
+            document.getElementById('whiskyContent').innerHTML = html;
+        }
+        
         function loadPlayers() {
             var html = '<div class="player-grid">';
             players.forEach(function(player) {
@@ -1601,24 +1731,35 @@
                 html += '<button onclick="saveHandicaps()" style="margin-top: 10px;">Lagre Handicap</button>';
                 html += '<div id="handicapMessage"></div>';
                 
-                // Flight times editing
-                html += '<h4>Starttider for Flights</h4>';
+                // Flight times editing for both Individual and Scramble
+                html += '<h4>Starttider for Flights og Scrambles</h4>';
                 html += '<div style="background: #f7fafc; padding: 15px; border-radius: 10px; margin: 15px 0;">';
                 
                 schedule.forEach(function(round) {
+                    html += '<div style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 8px;">';
+                    html += '<h5>' + round.date + ' - ' + round.course + ' (' + round.type + ')</h5>';
+                    
                     if (round.type === 'Individuell' && round.flights) {
-                        html += '<div style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 8px;">';
-                        html += '<h5>' + round.date + ' - ' + round.course + '</h5>';
-                        
                         round.flights.forEach(function(flight, idx) {
                             html += '<div style="margin: 10px 0;">';
                             html += '<label style="display: block; margin-bottom: 5px; font-size: 12px;">Flight ' + (idx + 1) + ' (' + flight.players.join(', ') + '):</label>';
                             html += '<input type="time" id="flight_' + round.id + '_' + idx + '" value="' + (flight.time || '') + '" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
                             html += '</div>';
                         });
-                        
-                        html += '</div>';
+                    } else if (round.type === 'Scramble' && round.teams) {
+                        // Add time inputs for scramble teams
+                        if (!round.teamTimes) {
+                            round.teamTimes = [];
+                        }
+                        round.teams.forEach(function(team, idx) {
+                            html += '<div style="margin: 10px 0;">';
+                            html += '<label style="display: block; margin-bottom: 5px; font-size: 12px;">Lag ' + (idx + 1) + ' (' + team.join(' & ') + '):</label>';
+                            html += '<input type="time" id="scramble_time_' + round.id + '_' + idx + '" value="' + (round.teamTimes && round.teamTimes[idx] ? round.teamTimes[idx] : '') + '" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
+                            html += '</div>';
+                        });
                     }
+                    
+                    html += '</div>';
                 });
                 
                 html += '<button onclick="saveFlightTimes()">Lagre starttider</button>';
@@ -1757,6 +1898,34 @@
                 html += '</div>';
                 html += '</div>';
                 
+                // Whisky Management
+                html += '<h4>Administrer Whisky Samling</h4>';
+                html += '<div style="background: #f7fafc; padding: 15px; border-radius: 10px; margin: 15px 0;">';
+                
+                whiskyCollection.forEach(function(entry) {
+                    html += '<div style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 8px;">';
+                    html += '<h5>' + entry.owner + '</h5>';
+                    html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">';
+                    
+                    html += '<div>';
+                    html += '<label style="display: block; font-size: 12px; margin-bottom: 5px;">Hoved Whisky:</label>';
+                    html += '<input type="text" id="whisky_primary_' + entry.id + '" value="' + (entry.primary || '') + '" ';
+                    html += 'placeholder="F.eks. Glenmorangie" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
+                    html += '</div>';
+                    
+                    html += '<div>';
+                    html += '<label style="display: block; font-size: 12px; margin-bottom: 5px;">Reserve Whisky:</label>';
+                    html += '<input type="text" id="whisky_reserve_' + entry.id + '" value="' + (entry.reserve || '') + '" ';
+                    html += 'placeholder="Valgfritt" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
+                    html += '</div>';
+                    
+                    html += '</div>';
+                    html += '</div>';
+                });
+                
+                html += '<button onclick="saveWhisky()">Lagre Whisky Samling</button>';
+                html += '</div>';
+                
                 html += '</div>';
             }
             
@@ -1802,10 +1971,21 @@
                             flight.time = input.value;
                         }
                     });
+                } else if (round.type === 'Scramble' && round.teams) {
+                    if (!round.teamTimes) {
+                        round.teamTimes = [];
+                    }
+                    round.teams.forEach(function(team, idx) {
+                        var input = document.getElementById('scramble_time_' + round.id + '_' + idx);
+                        if (input) {
+                            round.teamTimes[idx] = input.value;
+                        }
+                    });
                 }
             });
             
             localStorage.setItem('golfSchedule2025', JSON.stringify(schedule));
+            saveToServer();
             alert('Starttider lagret!');
         }
         
@@ -1954,6 +2134,25 @@
                 loadAdmin();
                 alert('Bane slettet!');
             }
+        }
+        
+        function saveWhisky() {
+            whiskyCollection.forEach(function(entry) {
+                var primaryInput = document.getElementById('whisky_primary_' + entry.id);
+                var reserveInput = document.getElementById('whisky_reserve_' + entry.id);
+                
+                if (primaryInput) {
+                    entry.primary = primaryInput.value;
+                }
+                if (reserveInput) {
+                    entry.reserve = reserveInput.value;
+                }
+            });
+            
+            localStorage.setItem('whiskyCollection2025', JSON.stringify(whiskyCollection));
+            saveToServer();
+            alert('Whisky samling lagret!');
+            loadAdmin();
         }
         
         // Initialize on load
