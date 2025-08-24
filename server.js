@@ -59,7 +59,8 @@ app.post('/api/scores', (req, res) => {
             players: req.body.players || [],
             schedule: req.body.schedule || [],
             playedCourses: req.body.playedCourses || [],
-            whiskyCollection: req.body.whiskyCollection || []
+            whiskyCollection: req.body.whiskyCollection || [],
+            scrambleHandicapPercentage: req.body.scrambleHandicapPercentage || 25
         };
         
         // Write data to file with pretty formatting
