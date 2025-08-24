@@ -10,7 +10,7 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -145,6 +145,21 @@
             font-size: 14px;
         }
         
+        .flight-section {
+            background: #edf2f7;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        .flight-item {
+            background: white;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 5px;
+            font-size: 13px;
+        }
+        
         .player-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -170,7 +185,6 @@
             font-size: 12px;
         }
         
-        /* Updated scorecard grid for better mobile layout */
         .scorecard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
@@ -244,7 +258,6 @@
             margin: 10px 0;
         }
         
-        /* Scrollable table wrapper */
         .table-wrapper {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
@@ -385,7 +398,6 @@
             font-weight: bold;
         }
         
-        /* Handicap edit styles */
         .handicap-edit-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -416,7 +428,6 @@
             font-size: 14px;
         }
         
-        /* Front 9 / Back 9 layout */
         .nine-section {
             margin-bottom: 20px;
         }
@@ -462,49 +473,49 @@
     <div class="lang-toggle" onclick="toggleLanguage()">
         <span id="langBtn">🇬🇧 EN</span>
     </div>
-    
-    <div class="version-badge">v3.05</div>
-    
+
+    <div class="version-badge">v3.08</div>
+
     <div class="container">
         <div class="header">
             <h1 id="appTitle">Cullen 2025</h1>
-            <p id="appSubtitle"></p>
+            <p id="appSubtitle">Årlig golftur til Skottland</p>
         </div>
         
         <div id="homeView" class="view">
             <div class="nav-grid">
                 <div class="nav-card" onclick="showView('schedule')">
-                    <div class="icon">📅</div>
+                    <div class="icon" style="font-size: 40px;">&#128197;</div>
                     <h3 id="scheduleTitle">Timeplan</h3>
                     <p id="scheduleDesc">Se runder</p>
                 </div>
                 
                 <div class="nav-card" onclick="showView('scorecard')">
-                    <div class="icon">⛳</div>
+                    <div class="icon" style="font-size: 40px;">&#9971;</div>
                     <h3 id="scorecardTitle">Registrer</h3>
                     <p id="scorecardDesc">Legg inn score</p>
                 </div>
                 
                 <div class="nav-card" onclick="showView('leaderboard')">
-                    <div class="icon">🏆</div>
+                    <div class="icon" style="font-size: 40px;">&#127942;</div>
                     <h3 id="leaderboardTitle">Resultater</h3>
                     <p id="leaderboardDesc">Live stilling</p>
                 </div>
                 
                 <div class="nav-card" onclick="showView('courses')">
-                    <div class="icon">🏌️</div>
+                    <div class="icon" style="font-size: 40px;">&#127948;</div>
                     <h3 id="coursesTitle">Baner</h3>
                     <p id="coursesDesc">Scorekort</p>
                 </div>
                 
                 <div class="nav-card" onclick="showView('players')">
-                    <div class="icon">👥</div>
-                    <h3 id="playersTitle">Hull</h3>
+                    <div class="icon" style="font-size: 40px;">&#128101;</div>
+                    <h3 id="playersTitle">Spillere</h3>
                     <p id="playersDesc">Handicap</p>
                 </div>
                 
                 <div class="nav-card" onclick="showView('admin')">
-                    <div class="icon">🔐</div>
+                    <div class="icon" style="font-size: 40px;">&#128272;</div>
                     <h3 id="adminTitle">Admin</h3>
                     <p id="adminDesc">Administrer</p>
                 </div>
@@ -547,10 +558,10 @@
             <div id="adminContent"></div>
         </div>
     </div>
-    
+
     <script>
-        // Data structure
-        let players = [
+        // Complete Golf App JavaScript
+        var players = [
             { id: 1, name: 'Klaus', handicap: 18.1 },
             { id: 2, name: 'Ruben', handicap: 11 },
             { id: 3, name: 'Sigbjørn', handicap: 20.2 },
@@ -561,7 +572,7 @@
             { id: 8, name: 'Roar', handicap: 25.9 }
         ];
         
-        let schedule = [
+        var schedule = [
             { 
                 id: 1, 
                 date: 'Fredag 29. aug', 
@@ -573,7 +584,8 @@
                     ['Sigbjørn', 'Bjørn'],
                     ['Truls', 'Tor Espen'],
                     ['Dag', 'Roar']
-                ]
+                ],
+                flights: []
             },
             { 
                 id: 2, 
@@ -582,7 +594,11 @@
                 course: 'Cullen Links', 
                 type: 'Individuell',
                 longestDrive: [5, 15],
-                closestToPin: [2, 13]
+                closestToPin: [2, 13],
+                flights: [
+                    { time: '', players: ['Klaus', 'Ruben', 'Roar', 'Sigbjørn'] },
+                    { time: '', players: ['Dag', 'Tor Espen', 'Truls', 'Bjørn'] }
+                ]
             },
             { 
                 id: 3, 
@@ -591,7 +607,11 @@
                 course: 'Spey Bay', 
                 type: 'Individuell',
                 longestDrive: [5, 16],
-                closestToPin: [4, 15]
+                closestToPin: [4, 15],
+                flights: [
+                    { time: '', players: ['Klaus', 'Tor Espen', 'Sigbjørn', 'Bjørn'] },
+                    { time: '', players: ['Dag', 'Ruben', 'Truls', 'Roar'] }
+                ]
             },
             { 
                 id: 4, 
@@ -604,7 +624,8 @@
                     ['Klaus', 'Sigbjørn'],
                     ['Bjørn', 'Dag'],
                     ['Ruben', 'Tor Espen']
-                ]
+                ],
+                flights: []
             },
             { 
                 id: 5, 
@@ -613,24 +634,15 @@
                 course: 'Strathlene', 
                 type: 'Individuell',
                 longestDrive: [8, 14],
-                closestToPin: [7, 13]
+                closestToPin: [7, 13],
+                flights: [
+                    { time: '', players: ['Klaus', 'Dag', 'Roar', 'Truls'] },
+                    { time: '', players: ['Ruben', 'Sigbjørn', 'Tor Espen', 'Bjørn'] }
+                ]
             }
         ];
         
-        // Load saved schedule if exists
-        const savedSchedule = localStorage.getItem('golfSchedule2025');
-        if (savedSchedule) {
-            try {
-                const parsed = JSON.parse(savedSchedule);
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                    schedule = parsed;
-                }
-            } catch (e) {
-                console.log('Using default schedule');
-            }
-        }
-        
-        const courses = {
+        var courses = {
             'Cullen Links': { 
                 slopeRating: 113, 
                 par: 63,
@@ -657,64 +669,40 @@
             }
         };
         
-        let language = 'no';
-        let scores = JSON.parse(localStorage.getItem('golfScores2025') || '{}');
-        let scrambleScores = JSON.parse(localStorage.getItem('scrambleScores2025') || '{}');
-        let awards = JSON.parse(localStorage.getItem('golfAwards2025') || '{}');
-        let scrambleWinners = JSON.parse(localStorage.getItem('scrambleWinners2025') || '{}');
-        let isAdmin = false;
+        var language = 'no';
+        var scores = {};
+        var scrambleScores = {};
+        var awards = {};
+        var scrambleWinners = {};
+        var isAdmin = false;
         
-        // Load saved players if exists
-        const savedPlayers = localStorage.getItem('golfPlayers2025');
-        if (savedPlayers) {
-            try {
-                const parsed = JSON.parse(savedPlayers);
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                    players = parsed;
-                }
-            } catch (e) {
-                console.log('Using default players');
+        // Initialize from localStorage
+        try {
+            scores = JSON.parse(localStorage.getItem('golfScores2025') || '{}');
+            scrambleScores = JSON.parse(localStorage.getItem('scrambleScores2025') || '{}');
+            awards = JSON.parse(localStorage.getItem('golfAwards2025') || '{}');
+            scrambleWinners = JSON.parse(localStorage.getItem('scrambleWinners2025') || '{}');
+        } catch (e) {
+            console.log('Error loading data');
+        }
+        
+        function showView(viewName) {
+            document.querySelectorAll('.content').forEach(function(el) {
+                el.classList.remove('active');
+            });
+            document.getElementById('homeView').style.display = viewName === 'home' ? 'block' : 'none';
+            
+            if (viewName !== 'home') {
+                document.getElementById(viewName + 'View').classList.add('active');
+                if (viewName === 'schedule') loadSchedule();
+                if (viewName === 'scorecard') loadScorecard();
+                if (viewName === 'leaderboard') loadLeaderboard();
+                if (viewName === 'courses') loadCourses();
+                if (viewName === 'players') loadPlayers();
+                if (viewName === 'admin') loadAdmin();
             }
         }
         
-        // Initialize with sync from server if available
-        async function syncWithServer() {
-            try {
-                const response = await fetch('/api/scores');
-                if (response.ok) {
-                    const serverData = await response.json();
-                    scores = serverData.scores || scores;
-                    scrambleScores = serverData.scrambleScores || scrambleScores;
-                    awards = serverData.awards || awards;
-                    scrambleWinners = serverData.scrambleWinners || scrambleWinners;
-                    if (serverData.players && Array.isArray(serverData.players) && serverData.players.length > 0) {
-                        players = serverData.players;
-                    }
-                    localStorage.setItem('golfScores2025', JSON.stringify(scores));
-                    localStorage.setItem('scrambleScores2025', JSON.stringify(scrambleScores));
-                    localStorage.setItem('golfAwards2025', JSON.stringify(awards));
-                    localStorage.setItem('scrambleWinners2025', JSON.stringify(scrambleWinners));
-                    localStorage.setItem('golfPlayers2025', JSON.stringify(players));
-                }
-            } catch (e) {
-                console.log('Using local storage only');
-            }
-        }
-        
-        // Save to server
-        async function saveToServer() {
-            try {
-                await fetch('/api/scores', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ scores, scrambleScores, awards, scrambleWinners, players })
-                });
-            } catch (e) {
-                console.log('Saved locally only');
-            }
-        }
-        
-        // Language toggle
         function toggleLanguage() {
             language = language === 'no' ? 'en' : 'no';
             document.getElementById('langBtn').textContent = language === 'no' ? '🇬🇧 EN' : '🇳🇴 NO';
@@ -722,10 +710,10 @@
         }
         
         function updateLanguage() {
-            const texts = {
+            var texts = {
                 no: {
                     appTitle: 'Cullen 2025',
-                    appSubtitle: '',
+                    appSubtitle: 'Årlig golftur til Skottland',
                     scheduleTitle: 'Timeplan',
                     scheduleDesc: 'Se runder',
                     scorecardTitle: 'Registrer',
@@ -757,43 +745,36 @@
                 }
             };
             
-            const t = texts[language];
-            Object.keys(t).forEach(key => {
-                const el = document.getElementById(key);
+            var t = texts[language];
+            Object.keys(t).forEach(function(key) {
+                var el = document.getElementById(key);
                 if (el) el.textContent = t[key];
             });
         }
         
-        // View management
-        function showView(viewName) {
-            document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
-            document.getElementById('homeView').style.display = viewName === 'home' ? 'block' : 'none';
-            
-            if (viewName !== 'home') {
-                document.getElementById(viewName + 'View').classList.add('active');
-                
-                if (viewName === 'schedule') loadSchedule();
-                if (viewName === 'scorecard') loadScorecard();
-                if (viewName === 'leaderboard') loadLeaderboard();
-                if (viewName === 'courses') loadCourses();
-                if (viewName === 'players') loadPlayers();
-                if (viewName === 'admin') loadAdmin();
-            }
-        }
-        
-        // Load schedule
         function loadSchedule() {
-            let html = '';
-            schedule.forEach(round => {
+            var html = '';
+            schedule.forEach(function(round) {
                 html += '<div class="schedule-item">';
                 html += '<strong>' + round.date + ' - ' + round.time + '</strong><br>';
                 html += round.course + '<br>';
                 html += '<span style="color: #4299e1;">' + round.type + '</span>';
                 
+                if (round.type === 'Individuell' && round.flights && round.flights.length > 0) {
+                    html += '<div class="flight-section"><strong>Flights:</strong>';
+                    round.flights.forEach(function(flight, j) {
+                        html += '<div class="flight-item">';
+                        html += '<strong>Flight ' + (j + 1) + ':</strong> ';
+                        html += flight.players.join(', ');
+                        html += '</div>';
+                    });
+                    html += '</div>';
+                }
+                
                 if (round.teams) {
                     html += '<div class="team-section"><strong>Lag:</strong><br>';
-                    round.teams.forEach((team, idx) => {
-                        html += '<div>Lag ' + (idx + 1) + ': ' + team.join(' & ') + '</div>';
+                    round.teams.forEach(function(team, j) {
+                        html += '<div>Lag ' + (j + 1) + ': ' + team.join(' & ') + '</div>';
                     });
                     html += '</div>';
                 }
@@ -810,65 +791,9 @@
             document.getElementById('scheduleContent').innerHTML = html;
         }
         
-        // Auto-save functions
-        function autoSaveScore(playerId, roundId, hole) {
-            const scoreKey = roundId + '_' + playerId;
-            const value = document.getElementById('hole' + hole).value;
-            
-            if (!scores[scoreKey]) {
-                scores[scoreKey] = {};
-            }
-            
-            if (value === '' || value === null) {
-                delete scores[scoreKey][hole];
-            } else {
-                scores[scoreKey][hole] = parseInt(value);
-            }
-            
-            localStorage.setItem('golfScores2025', JSON.stringify(scores));
-            saveToServer();
-            
-            // Visual feedback
-            const input = document.getElementById('hole' + hole);
-            if (input) {
-                input.style.backgroundColor = '#c6f6d5';
-                setTimeout(function() {
-                    input.style.backgroundColor = '';
-                }, 500);
-            }
-        }
-        
-        function autoSaveTeamScore(roundId, teamIdx, hole) {
-            const scoreKey = roundId + '_team_' + teamIdx;
-            const value = document.getElementById('hole' + hole).value;
-            
-            if (!scrambleScores[scoreKey]) {
-                scrambleScores[scoreKey] = {};
-            }
-            
-            if (value === '' || value === null) {
-                delete scrambleScores[scoreKey][hole];
-            } else {
-                scrambleScores[scoreKey][hole] = parseInt(value);
-            }
-            
-            localStorage.setItem('scrambleScores2025', JSON.stringify(scrambleScores));
-            saveToServer();
-            
-            // Visual feedback
-            const input = document.getElementById('hole' + hole);
-            if (input) {
-                input.style.backgroundColor = '#c6f6d5';
-                setTimeout(function() {
-                    input.style.backgroundColor = '';
-                }, 500);
-            }
-        }
-        
-        // Scorecard functions
         function loadScorecard() {
-            let html = '<h3>Velg runde:</h3>';
-            schedule.forEach(round => {
+            var html = '<h3>Velg runde:</h3>';
+            schedule.forEach(function(round) {
                 html += '<div class="round-select" onclick="selectRound(' + round.id + ')">';
                 html += '<strong>' + round.date + ' - ' + round.time + '</strong><br>';
                 html += round.course + ' (' + round.type + ')';
@@ -879,12 +804,12 @@
         }
         
         function selectRound(roundId) {
-            const round = schedule.find(r => r.id === roundId);
-            let html = '<h3>' + round.course + ' - ' + round.date + '</h3>';
+            var round = schedule.find(function(r) { return r.id === roundId; });
+            var html = '<h3>' + round.course + ' - ' + round.date + '</h3>';
             
             if (round.type === 'Scramble') {
                 html += '<h4>Velg lag:</h4>';
-                round.teams.forEach((team, idx) => {
+                round.teams.forEach(function(team, idx) {
                     html += '<div class="team-select" onclick="selectTeam(' + roundId + ', ' + idx + ')">';
                     html += '<strong>Lag ' + (idx + 1) + '</strong><br>';
                     html += team.join(' & ');
@@ -894,7 +819,7 @@
                 html += '<h4>Velg spiller:</h4>';
                 html += '<select id="playerSelect" onchange="loadScorecardForm()">';
                 html += '<option value="">-- Velg spiller --</option>';
-                players.forEach(player => {
+                players.forEach(function(player) {
                     html += '<option value="' + player.id + '">' + player.name + '</option>';
                 });
                 html += '</select>';
@@ -906,199 +831,251 @@
         }
         
         function selectTeam(roundId, teamIdx) {
-            const round = schedule.find(r => r.id === roundId);
-            const team = round.teams[teamIdx];
-            const course = courses[round.course];
-            const scoreKey = roundId + '_team_' + teamIdx;
-            const existingScores = scrambleScores[scoreKey] || {};
+            var round = schedule.find(function(r) { return r.id === roundId; });
+            var team = round.teams[teamIdx];
+            var course = courses[round.course];
+            var scoreKey = roundId + '_team_' + teamIdx;
+            var existingScores = scrambleScores[scoreKey] || {};
             
-            let html = '<h3>' + round.course + ' - ' + round.date + '</h3>';
+            var html = '<h3>' + round.course + ' - ' + round.date + '</h3>';
             html += '<h4>Lag ' + (teamIdx + 1) + ': ' + team.join(' & ') + '</h4>';
             html += '<h4>Registrer lagscore:</h4>';
             
-            // Front 9
             html += '<div class="nine-section">';
             html += '<h5>Front 9</h5>';
             html += '<div class="scorecard-grid">';
-            for (let i = 1; i <= 9; i++) {
-                const par = course.pars[i-1];
-                const value = existingScores[i] || '';
+            for (var i = 1; i <= 9; i++) {
+                var par = course.pars[i-1];
+                var value = existingScores[i] || '';
                 html += '<div class="hole-input">';
                 html += '<label>Hull ' + i + ' (Par ' + par + ')</label>';
                 html += '<input type="number" id="hole' + i + '" min="1" max="15" value="' + value + '" ';
-                html += 'onblur="autoSaveTeamScore(' + roundId + ', ' + teamIdx + ', ' + i + ')">';
+                html += 'onchange="autoSaveTeamScore(' + roundId + ', ' + teamIdx + ', ' + i + ')">';
                 html += '</div>';
             }
             html += '</div></div>';
             
-            // Back 9
             html += '<div class="nine-section">';
             html += '<h5>Back 9</h5>';
             html += '<div class="scorecard-grid">';
-            for (let i = 10; i <= 18; i++) {
-                const par = course.pars[i-1];
-                const value = existingScores[i] || '';
+            for (var i = 10; i <= 18; i++) {
+                var par = course.pars[i-1];
+                var value = existingScores[i] || '';
                 html += '<div class="hole-input">';
                 html += '<label>Hull ' + i + ' (Par ' + par + ')</label>';
                 html += '<input type="number" id="hole' + i + '" min="1" max="15" value="' + value + '" ';
-                html += 'onblur="autoSaveTeamScore(' + roundId + ', ' + teamIdx + ', ' + i + ')">';
+                html += 'onchange="autoSaveTeamScore(' + roundId + ', ' + teamIdx + ', ' + i + ')">';
                 html += '</div>';
             }
             html += '</div></div>';
-            
-            html += '<div id="saveMessage"></div>';
             
             document.getElementById('scorecardForm').innerHTML = html;
         }
         
         function loadScorecardForm() {
-            const playerId = document.getElementById('playerSelect').value;
-            const roundId = document.getElementById('selectedRound').value;
+            var playerId = document.getElementById('playerSelect').value;
+            var roundId = document.getElementById('selectedRound').value;
             
             if (!playerId) return;
             
-            const player = players.find(p => p.id == playerId);
-            const round = schedule.find(r => r.id == roundId);
-            const course = courses[round.course];
-            const courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
-            const scoreKey = roundId + '_' + playerId;
-            const existingScores = scores[scoreKey] || {};
+            var player = players.find(function(p) { return p.id == playerId; });
+            var round = schedule.find(function(r) { return r.id == roundId; });
+            var course = courses[round.course];
+            var courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
+            var scoreKey = roundId + '_' + playerId;
+            var existingScores = scores[scoreKey] || {};
             
-            let html = '<div style="margin: 20px 0; padding: 15px; background: #edf2f7; border-radius: 10px;">';
+            var html = '<div style="margin: 20px 0; padding: 15px; background: #edf2f7; border-radius: 10px;">';
             html += '<strong>' + player.name + '</strong><br>';
             html += 'Handicap: ' + player.handicap + '<br>';
             html += 'Banehandicap: ' + courseHandicap;
             html += '</div>';
-            html += '<h4>Registrer score:</h4>';
             
-            // Front 9
             html += '<div class="nine-section">';
             html += '<h5>Front 9</h5>';
             html += '<div class="scorecard-grid">';
-            for (let i = 1; i <= 9; i++) {
-                const par = course.pars[i-1];
-                const hcpIndex = course.handicaps[i-1];
-                const hasStroke = hcpIndex <= courseHandicap;
-                const value = existingScores[i] || '';
+            for (var i = 1; i <= 9; i++) {
+                var par = course.pars[i-1];
+                var hcpIndex = course.handicaps[i-1];
+                var hasStroke = hcpIndex <= courseHandicap;
+                var value = existingScores[i] || '';
                 
                 html += '<div class="hole-input ' + (hasStroke ? 'stroke' : '') + '">';
                 html += '<label>Hull ' + i + ' (Par ' + par + (hasStroke ? '+1' : '') + ')</label>';
                 html += '<input type="number" id="hole' + i + '" min="1" max="15" value="' + value + '" ';
-                html += 'onblur="autoSaveScore(' + playerId + ', ' + roundId + ', ' + i + ')">';
+                html += 'onchange="autoSaveScore(' + playerId + ', ' + roundId + ', ' + i + ')">';
                 html += '</div>';
             }
             html += '</div></div>';
             
-            // Back 9
             html += '<div class="nine-section">';
             html += '<h5>Back 9</h5>';
             html += '<div class="scorecard-grid">';
-            for (let i = 10; i <= 18; i++) {
-                const par = course.pars[i-1];
-                const hcpIndex = course.handicaps[i-1];
-                const hasStroke = hcpIndex <= courseHandicap;
-                const value = existingScores[i] || '';
+            for (var i = 10; i <= 18; i++) {
+                var par = course.pars[i-1];
+                var hcpIndex = course.handicaps[i-1];
+                var hasStroke = hcpIndex <= courseHandicap;
+                var value = existingScores[i] || '';
                 
                 html += '<div class="hole-input ' + (hasStroke ? 'stroke' : '') + '">';
                 html += '<label>Hull ' + i + ' (Par ' + par + (hasStroke ? '+1' : '') + ')</label>';
                 html += '<input type="number" id="hole' + i + '" min="1" max="15" value="' + value + '" ';
-                html += 'onblur="autoSaveScore(' + playerId + ', ' + roundId + ', ' + i + ')">';
+                html += 'onchange="autoSaveScore(' + playerId + ', ' + roundId + ', ' + i + ')">';
                 html += '</div>';
             }
             html += '</div></div>';
-            
-            html += '<div id="saveMessage"></div>';
             
             document.getElementById('holesForm').innerHTML = html;
         }
         
-        // Load leaderboard with complete round-by-round results
+        function autoSaveScore(playerId, roundId, hole) {
+            var scoreKey = roundId + '_' + playerId;
+            var value = document.getElementById('hole' + hole).value;
+            
+            if (!scores[scoreKey]) scores[scoreKey] = {};
+            
+            if (value === '') {
+                delete scores[scoreKey][hole];
+            } else {
+                scores[scoreKey][hole] = parseInt(value);
+            }
+            
+            localStorage.setItem('golfScores2025', JSON.stringify(scores));
+            
+            var input = document.getElementById('hole' + hole);
+            input.style.backgroundColor = '#c6f6d5';
+            setTimeout(function() {
+                input.style.backgroundColor = '';
+            }, 500);
+        }
+        
+        function autoSaveTeamScore(roundId, teamIdx, hole) {
+            var scoreKey = roundId + '_team_' + teamIdx;
+            var value = document.getElementById('hole' + hole).value;
+            
+            if (!scrambleScores[scoreKey]) scrambleScores[scoreKey] = {};
+            
+            if (value === '') {
+                delete scrambleScores[scoreKey][hole];
+            } else {
+                scrambleScores[scoreKey][hole] = parseInt(value);
+            }
+            
+            localStorage.setItem('scrambleScores2025', JSON.stringify(scrambleScores));
+            
+            var input = document.getElementById('hole' + hole);
+            input.style.backgroundColor = '#c6f6d5';
+            setTimeout(function() {
+                input.style.backgroundColor = '';
+            }, 500);
+        }
+        
         function loadLeaderboard() {
-            let html = '<div class="overall-section"><h3>⭐ SAMMENLAGT STILLING ⭐</h3>';
+            var html = '<div class="overall-section"><h3>⭐ SAMMENLAGT STILLING ⭐</h3>';
             html += '<div class="overall-table"><div class="table-wrapper">';
             html += '<table><thead><tr><th>Spiller</th><th>Total Brutto</th><th>Total Netto</th></tr></thead><tbody>';
             
-            const overallScores = {};
-            players.forEach(player => {
+            var overallScores = {};
+            players.forEach(function(player) {
                 overallScores[player.name] = { gross: 0, net: 0, rounds: 0 };
             });
             
-            // Calculate overall scores
-            schedule.filter(r => r.type === 'Individuell').forEach(round => {
-                players.forEach(player => {
-                    const scoreKey = round.id + '_' + player.id;
-                    const roundScores = scores[scoreKey];
-                    
-                    if (roundScores && Object.keys(roundScores).length > 0) {
-                        const gross = Object.values(roundScores).reduce((sum, s) => sum + s, 0);
-                        const course = courses[round.course];
-                        const courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
-                        const net = gross - courseHandicap;
+            // Calculate individual round scores
+            schedule.forEach(function(round) {
+                if (round.type === 'Individuell') {
+                    players.forEach(function(player) {
+                        var scoreKey = round.id + '_' + player.id;
+                        var roundScores = scores[scoreKey];
                         
-                        overallScores[player.name].gross += gross;
-                        overallScores[player.name].net += net;
-                        overallScores[player.name].rounds++;
-                    }
-                });
-            });
-            
-            // Add scramble scores to overall
-            schedule.filter(r => r.type === 'Scramble').forEach(round => {
-                round.teams.forEach((team, teamIdx) => {
-                    const scoreKey = round.id + '_team_' + teamIdx;
-                    const teamScores = scrambleScores[scoreKey];
-                    
-                    if (teamScores && Object.keys(teamScores).length > 0) {
-                        const teamGross = Object.values(teamScores).reduce((sum, s) => sum + s, 0);
-                        
-                        team.forEach(playerName => {
-                            const player = players.find(p => p.name === playerName);
-                            const course = courses[round.course];
-                            const courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
+                        if (roundScores && Object.keys(roundScores).length > 0) {
+                            var gross = 0;
+                            Object.values(roundScores).forEach(function(s) { gross += s; });
                             
-                            overallScores[playerName].gross += teamGross / 2;
-                            overallScores[playerName].net += (teamGross / 2) - (courseHandicap / 2);
-                            overallScores[playerName].rounds++;
-                        });
-                    }
-                });
+                            var course = courses[round.course];
+                            var courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
+                            var net = gross - courseHandicap;
+                            
+                            overallScores[player.name].gross += gross;
+                            overallScores[player.name].net += net;
+                            overallScores[player.name].rounds++;
+                        }
+                    });
+                }
             });
             
-            const sortedOverall = Object.entries(overallScores)
-                .filter(([name, scores]) => scores.rounds > 0)
-                .sort((a, b) => a[1].net - b[1].net);
+            // Calculate scramble scores
+            schedule.forEach(function(round) {
+                if (round.type === 'Scramble' && round.teams) {
+                    round.teams.forEach(function(team, teamIdx) {
+                        var scoreKey = round.id + '_team_' + teamIdx;
+                        var teamScores = scrambleScores[scoreKey];
+                        
+                        if (teamScores && Object.keys(teamScores).length > 0) {
+                            var teamGross = 0;
+                            Object.values(teamScores).forEach(function(s) { teamGross += s; });
+                            
+                            team.forEach(function(playerName) {
+                                var player = players.find(function(p) { return p.name === playerName; });
+                                if (player) {
+                                    var course = courses[round.course];
+                                    var courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
+                                    
+                                    overallScores[playerName].gross += teamGross / 2;
+                                    overallScores[playerName].net += (teamGross / 2) - (courseHandicap / 2);
+                                    overallScores[playerName].rounds++;
+                                }
+                            });
+                        }
+                    });
+                }
+            });
             
-            sortedOverall.forEach(([name, playerScores], idx) => {
+            // Sort and display
+            var sortedOverall = [];
+            Object.keys(overallScores).forEach(function(name) {
+                if (overallScores[name].rounds > 0) {
+                    sortedOverall.push({
+                        name: name,
+                        gross: overallScores[name].gross,
+                        net: overallScores[name].net
+                    });
+                }
+            });
+            
+            sortedOverall.sort(function(a, b) { return a.net - b.net; });
+            
+            sortedOverall.forEach(function(player, idx) {
                 html += '<tr>';
-                html += '<td>' + (idx === 0 ? '<span class="trophy">🏆</span>' : '') + name + '</td>';
-                html += '<td>' + Math.round(playerScores.gross) + '</td>';
-                html += '<td><strong>' + Math.round(playerScores.net) + '</strong></td>';
+                html += '<td>' + (idx === 0 ? '<span class="trophy">🏆</span>' : '') + player.name + '</td>';
+                html += '<td>' + Math.round(player.gross) + '</td>';
+                html += '<td><strong>' + Math.round(player.net) + '</strong></td>';
                 html += '</tr>';
             });
             
             html += '</tbody></table></div></div></div>';
             
-            // Add detailed results per round
-            html += '<h2 style="margin-top: 30px; margin-bottom: 20px;">Resultater per Runde</h2>';
+            // Add round-by-round results
+            html += '<h2 style="margin-top: 30px;">Resultater per Runde</h2>';
             
-            schedule.forEach(round => {
-                const course = courses[round.course];
+            schedule.forEach(function(round) {
+                var course = courses[round.course];
                 html += '<div class="course-section">';
                 html += '<h3>' + round.date + ' - ' + round.time + '</h3>';
                 html += '<h4>' + round.course + ' (Par ' + course.par + ')</h4>';
                 
                 if (round.type === 'Individuell') {
-                    // Individual round results
-                    const roundResults = [];
+                    var roundResults = [];
                     
-                    players.forEach(player => {
-                        const scoreKey = round.id + '_' + player.id;
-                        const roundScores = scores[scoreKey];
+                    players.forEach(function(player) {
+                        var scoreKey = round.id + '_' + player.id;
+                        var roundScores = scores[scoreKey];
                         
                         if (roundScores && Object.keys(roundScores).length > 0) {
-                            const gross = Object.values(roundScores).reduce((sum, s) => sum + s, 0);
-                            const courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
-                            const net = gross - courseHandicap;
+                            var gross = 0;
+                            Object.values(roundScores).forEach(function(s) { gross += s; });
+                            
+                            var courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
+                            var net = gross - courseHandicap;
                             
                             roundResults.push({
                                 name: player.name,
@@ -1110,15 +1087,14 @@
                     });
                     
                     if (roundResults.length > 0) {
-                        // Sort by net score
-                        roundResults.sort((a, b) => a.net - b.net);
+                        roundResults.sort(function(a, b) { return a.net - b.net; });
                         
                         html += '<div class="table-wrapper">';
                         html += '<table><thead><tr>';
                         html += '<th>Plass</th><th>Spiller</th><th>Brutto</th><th>HCP</th><th>Netto</th>';
                         html += '</tr></thead><tbody>';
                         
-                        roundResults.forEach((result, idx) => {
+                        roundResults.forEach(function(result, idx) {
                             html += '<tr>';
                             html += '<td>' + (idx + 1) + (idx === 0 ? ' 🥇' : idx === 1 ? ' 🥈' : idx === 2 ? ' 🥉' : '') + '</td>';
                             html += '<td>' + result.name + '</td>';
@@ -1137,32 +1113,33 @@
                         html += '<strong>Konkurranser:</strong><br>';
                         
                         if (round.longestDrive) {
-                            round.longestDrive.forEach(hole => {
-                                const winner = awards[round.id + '_ld_' + hole] || 'Ikke satt';
-                                html += '<div>🚀 Longest drive hull ' + hole + ': <strong>' + winner + '</strong></div>';
+                            round.longestDrive.forEach(function(hole) {
+                                var winner = awards[round.id + '_ld_' + hole] || 'Ikke satt';
+                                html += '<div>🚀 Lengste drive hull ' + hole + ': <strong>' + winner + '</strong></div>';
                             });
                         }
                         
                         if (round.closestToPin) {
-                            round.closestToPin.forEach(hole => {
-                                const winner = awards[round.id + '_ctp_' + hole] || 'Ikke satt';
-                                html += '<div>🎯 Closest to pin hull ' + hole + ': <strong>' + winner + '</strong></div>';
+                            round.closestToPin.forEach(function(hole) {
+                                var winner = awards[round.id + '_ctp_' + hole] || 'Ikke satt';
+                                html += '<div>🎯 Nærmest pinnen hull ' + hole + ': <strong>' + winner + '</strong></div>';
                             });
                         }
                         
                         html += '</div>';
                     }
-                    
                 } else {
-                    // Scramble round results
-                    const teamResults = [];
+                    // Scramble results
+                    var teamResults = [];
                     
-                    round.teams.forEach((team, teamIdx) => {
-                        const scoreKey = round.id + '_team_' + teamIdx;
-                        const teamScores = scrambleScores[scoreKey];
+                    round.teams.forEach(function(team, teamIdx) {
+                        var scoreKey = round.id + '_team_' + teamIdx;
+                        var teamScores = scrambleScores[scoreKey];
                         
                         if (teamScores && Object.keys(teamScores).length > 0) {
-                            const total = Object.values(teamScores).reduce((sum, s) => sum + s, 0);
+                            var total = 0;
+                            Object.values(teamScores).forEach(function(s) { total += s; });
+                            
                             teamResults.push({
                                 teamIdx: teamIdx,
                                 members: team.join(' & '),
@@ -1172,8 +1149,7 @@
                     });
                     
                     if (teamResults.length > 0) {
-                        // Sort by score
-                        teamResults.sort((a, b) => a.score - b.score);
+                        teamResults.sort(function(a, b) { return a.score - b.score; });
                         
                         html += '<h5>Scramble Resultater</h5>';
                         html += '<div class="table-wrapper">';
@@ -1181,9 +1157,9 @@
                         html += '<th>Plass</th><th>Lag</th><th>Score</th><th>+/-</th>';
                         html += '</tr></thead><tbody>';
                         
-                        teamResults.forEach((result, idx) => {
-                            const diff = result.score - course.par;
-                            const diffStr = diff === 0 ? 'E' : (diff > 0 ? '+' + diff : diff.toString());
+                        teamResults.forEach(function(result, idx) {
+                            var diff = result.score - course.par;
+                            var diffStr = diff === 0 ? 'E' : (diff > 0 ? '+' + diff : diff.toString());
                             
                             html += '<tr' + (idx === 0 ? ' class="winner"' : '') + '>';
                             html += '<td>' + (idx + 1) + (idx === 0 ? ' 🏆' : '') + '</td>';
@@ -1194,8 +1170,6 @@
                         });
                         
                         html += '</tbody></table></div>';
-                    } else {
-                        html += '<p style="color: #718096;">Ingen resultater registrert ennå</p>';
                     }
                 }
                 
@@ -1205,190 +1179,92 @@
             document.getElementById('leaderboardContent').innerHTML = html;
         }
         
-        // Load courses with Front 9 / Back 9 layout
         function loadCourses() {
-            let html = '';
+            var html = '';
             
-            Object.entries(courses).forEach(([courseName, courseData]) => {
+            Object.keys(courses).forEach(function(courseName) {
+                var courseData = courses[courseName];
                 html += '<div class="course-section">';
                 html += '<h3>' + courseName + '</h3>';
                 html += '<p>Par: ' + courseData.par + ' | Slope: ' + courseData.slopeRating + '</p>';
                 
-                const courseRounds = schedule.filter(r => r.course === courseName);
-                
-                courseRounds.forEach(round => {
-                    html += '<h4>' + round.date + ' - ' + round.time + ' (' + round.type + ')</h4>';
-                    
-                    if (round.type === 'Individuell') {
-                        // Front 9 table
-                        html += '<div class="table-wrapper">';
-                        html += '<h5>Front 9</h5>';
-                        html += '<table><thead><tr><th>Spiller</th>';
-                        for (let i = 1; i <= 9; i++) {
-                            html += '<th>' + i + '</th>';
-                        }
-                        html += '<th>Out</th></tr></thead><tbody>';
+                schedule.forEach(function(round) {
+                    if (round.course === courseName) {
+                        html += '<h4>' + round.date + ' - ' + round.time + ' (' + round.type + ')</h4>';
                         
-                        // Par row
-                        html += '<tr><td>Par</td>';
-                        let frontPar = 0;
-                        for (let i = 0; i < 9; i++) {
-                            html += '<td>' + courseData.pars[i] + '</td>';
-                            frontPar += courseData.pars[i];
-                        }
-                        html += '<td><strong>' + frontPar + '</strong></td></tr>';
-                        
-                        // Player scores
-                        players.forEach(player => {
-                            const scoreKey = round.id + '_' + player.id;
-                            const roundScores = scores[scoreKey];
+                        if (round.type === 'Individuell') {
+                            // Show individual scorecards
+                            html += '<div class="table-wrapper">';
+                            html += '<table><thead><tr><th>Spiller</th>';
+                            for (var i = 1; i <= 18; i++) {
+                                html += '<th>' + i + '</th>';
+                            }
+                            html += '<th>Total</th></tr></thead><tbody>';
                             
-                            if (roundScores && Object.keys(roundScores).length > 0) {
-                                html += '<tr><td>' + player.name + '</td>';
-                                let frontTotal = 0;
-                                for (let i = 1; i <= 9; i++) {
-                                    const score = roundScores[i] || '-';
-                                    html += '<td>' + score + '</td>';
-                                    if (score !== '-') frontTotal += score;
+                            // Par row
+                            html += '<tr><td>Par</td>';
+                            courseData.pars.forEach(function(par) {
+                                html += '<td>' + par + '</td>';
+                            });
+                            html += '<td><strong>' + courseData.par + '</strong></td></tr>';
+                            
+                            // Player scores
+                            players.forEach(function(player) {
+                                var scoreKey = round.id + '_' + player.id;
+                                var roundScores = scores[scoreKey];
+                                
+                                if (roundScores && Object.keys(roundScores).length > 0) {
+                                    html += '<tr><td>' + player.name + '</td>';
+                                    var total = 0;
+                                    for (var i = 1; i <= 18; i++) {
+                                        var score = roundScores[i] || '-';
+                                        html += '<td>' + score + '</td>';
+                                        if (score !== '-') total += score;
+                                    }
+                                    html += '<td><strong>' + (total || '-') + '</strong></td></tr>';
                                 }
-                                html += '<td><strong>' + (frontTotal || '-') + '</strong></td></tr>';
-                            }
-                        });
-                        html += '</tbody></table>';
-                        
-                        // Back 9 table
-                        html += '<h5>Back 9</h5>';
-                        html += '<table><thead><tr><th>Spiller</th>';
-                        for (let i = 10; i <= 18; i++) {
-                            html += '<th>' + i + '</th>';
-                        }
-                        html += '<th>In</th></tr></thead><tbody>';
-                        
-                        // Par row
-                        html += '<tr><td>Par</td>';
-                        let backPar = 0;
-                        for (let i = 9; i < 18; i++) {
-                            html += '<td>' + courseData.pars[i] + '</td>';
-                            backPar += courseData.pars[i];
-                        }
-                        html += '<td><strong>' + backPar + '</strong></td></tr>';
-                        
-                        // Player scores
-                        players.forEach(player => {
-                            const scoreKey = round.id + '_' + player.id;
-                            const roundScores = scores[scoreKey];
+                            });
                             
-                            if (roundScores && Object.keys(roundScores).length > 0) {
-                                html += '<tr><td>' + player.name + '</td>';
-                                let backTotal = 0;
-                                for (let i = 10; i <= 18; i++) {
-                                    const score = roundScores[i] || '-';
-                                    html += '<td>' + score + '</td>';
-                                    if (score !== '-') backTotal += score;
-                                }
-                                html += '<td><strong>' + (backTotal || '-') + '</strong></td></tr>';
-                            }
-                        });
-                        html += '</tbody></table></div>';
-                        
-                        // Show awards
-                        if (round.longestDrive || round.closestToPin) {
-                            html += '<div class="team-section"><strong>Konkurranser:</strong><br>';
-                            if (round.longestDrive) {
-                                round.longestDrive.forEach(hole => {
-                                    const winner = awards[round.id + '_ld_' + hole] || 'Ikke satt';
-                                    html += '<div>🚀 Longest drive hull ' + hole + ': ' + winner + '</div>';
-                                });
-                            }
-                            if (round.closestToPin) {
-                                round.closestToPin.forEach(hole => {
-                                    const winner = awards[round.id + '_ctp_' + hole] || 'Ikke satt';
-                                    html += '<div>🎯 Closest to pin hull ' + hole + ': ' + winner + '</div>';
-                                });
-                            }
-                            html += '</div>';
-                        }
-                    } else {
-                        // Scramble scores
-                        html += '<div class="team-section">';
-                        round.teams.forEach((team, teamIdx) => {
-                            const scoreKey = round.id + '_team_' + teamIdx;
-                            const teamScores = scrambleScores[scoreKey];
-                            const isWinner = scrambleWinners[round.id] === teamIdx;
-                            
-                            html += '<div class="' + (isWinner ? 'winner' : '') + '" style="margin-bottom: 20px;">';
-                            html += '<h5>' + (isWinner ? '🏆 ' : '') + 'Lag ' + (teamIdx + 1) + ': ' + team.join(' & ') + '</h5>';
-                            
-                            if (teamScores && Object.keys(teamScores).length > 0) {
-                                // Front 9 table
+                            html += '</tbody></table></div>';
+                        } else {
+                            // Show scramble scorecards
+                            html += '<div class="team-section">';
+                            round.teams.forEach(function(team, teamIdx) {
+                                var scoreKey = round.id + '_team_' + teamIdx;
+                                var teamScores = scrambleScores[scoreKey];
+                                
+                                html += '<div style="margin-bottom: 20px;">';
+                                html += '<h5>Lag ' + (teamIdx + 1) + ': ' + team.join(' & ') + '</h5>';
+                                
                                 html += '<div class="table-wrapper">';
-                                html += '<h6>Front 9</h6>';
-                                html += '<table><thead><tr>';
-                                for (let i = 1; i <= 9; i++) {
+                                html += '<table><thead><tr><th></th>';
+                                for (var i = 1; i <= 18; i++) {
                                     html += '<th>' + i + '</th>';
                                 }
-                                html += '<th style="background: #fef5e7;"><strong>Out</strong></th></tr>';
+                                html += '<th>Total</th></tr></thead><tbody>';
                                 
                                 // Par row
-                                html += '<tr><td colspan="1" style="text-align: left;"><strong>Par</strong></td>';
-                                let frontPar = 0;
-                                for (let i = 0; i < 9; i++) {
-                                    html += '<td>' + courseData.pars[i] + '</td>';
-                                    frontPar += courseData.pars[i];
-                                }
-                                html += '<td style="background: #fef5e7;"><strong>' + frontPar + '</strong></td></tr>';
+                                html += '<tr><td>Par</td>';
+                                courseData.pars.forEach(function(par) {
+                                    html += '<td>' + par + '</td>';
+                                });
+                                html += '<td><strong>' + courseData.par + '</strong></td></tr>';
                                 
-                                // Score row
-                                html += '<tr><td colspan="1" style="text-align: left;"><strong>Score</strong></td>';
-                                let frontTotal = 0;
-                                for (let i = 1; i <= 9; i++) {
-                                    const score = teamScores[i] || '-';
+                                // Team scores
+                                html += '<tr><td>Score</td>';
+                                var total = 0;
+                                for (var i = 1; i <= 18; i++) {
+                                    var score = teamScores && teamScores[i] ? teamScores[i] : '-';
                                     html += '<td>' + score + '</td>';
-                                    if (score !== '-') frontTotal += score;
+                                    if (score !== '-') total += score;
                                 }
-                                html += '<td style="background: #fef5e7;"><strong>' + (frontTotal || '-') + '</strong></td></tr>';
-                                html += '</tbody></table>';
+                                html += '<td><strong>' + (total || '-') + '</strong></td></tr>';
                                 
-                                // Back 9 table
-                                html += '<h6>Back 9</h6>';
-                                html += '<table><thead><tr>';
-                                for (let i = 10; i <= 18; i++) {
-                                    html += '<th>' + i + '</th>';
-                                }
-                                html += '<th style="background: #fef5e7;"><strong>In</strong></th></tr>';
-                                
-                                // Par row
-                                html += '<tr><td colspan="1" style="text-align: left;"><strong>Par</strong></td>';
-                                let backPar = 0;
-                                for (let i = 9; i < 18; i++) {
-                                    html += '<td>' + courseData.pars[i] + '</td>';
-                                    backPar += courseData.pars[i];
-                                }
-                                html += '<td style="background: #fef5e7;"><strong>' + backPar + '</strong></td></tr>';
-                                
-                                // Score row
-                                html += '<tr><td colspan="1" style="text-align: left;"><strong>Score</strong></td>';
-                                let backTotal = 0;
-                                for (let i = 10; i <= 18; i++) {
-                                    const score = teamScores[i] || '-';
-                                    html += '<td>' + score + '</td>';
-                                    if (score !== '-') backTotal += score;
-                                }
-                                html += '<td style="background: #fef5e7;"><strong>' + (backTotal || '-') + '</strong></td></tr>';
-                                html += '</tbody></table>';
-                                
-                                // Total summary
-                                const total = frontTotal + backTotal;
-                                const diff = total - (frontPar + backPar);
-                                const diffStr = diff === 0 ? 'E' : (diff > 0 ? '+' + diff : diff.toString());
-                                html += '<p style="margin-top: 10px; font-size: 16px;"><strong>Total: ' + (total || '-') + ' (' + diffStr + ')</strong></p>';
+                                html += '</tbody></table></div>';
                                 html += '</div>';
-                            } else {
-                                html += '<p style="color: #718096;">Ingen score registrert</p>';
-                            }
+                            });
                             html += '</div>';
-                        });
-                        html += '</div>';
+                        }
                     }
                 });
                 
@@ -1398,18 +1274,18 @@
             document.getElementById('coursesContent').innerHTML = html;
         }
         
-        // Load players
         function loadPlayers() {
-            let html = '<div class="player-grid">';
-            players.forEach(player => {
+            var html = '<div class="player-grid">';
+            players.forEach(function(player) {
                 html += '<div class="player-card">';
                 html += '<h4>' + player.name + '</h4>';
                 html += '<p>Handicap: ' + player.handicap + '</p>';
                 html += '<p style="font-size: 12px; margin-top: 10px;">Banehandicap:</p>';
                 
-                Object.entries(courses).forEach(([name, course]) => {
-                    const courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
-                    html += '<p style="font-size: 11px;">' + name + ': ' + courseHandicap + '</p>';
+                Object.keys(courses).forEach(function(courseName) {
+                    var course = courses[courseName];
+                    var courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
+                    html += '<p style="font-size: 11px;">' + courseName + ': ' + courseHandicap + '</p>';
                 });
                 
                 html += '</div>';
@@ -1418,9 +1294,8 @@
             document.getElementById('playersContent').innerHTML = html;
         }
         
-        // Admin section with handicap editing
         function loadAdmin() {
-            let html = '';
+            var html = '';
             
             if (!isAdmin) {
                 html = '<div class="admin-section">';
@@ -1434,10 +1309,11 @@
                 html += '<h3>Administrator Panel</h3>';
                 html += '<button onclick="logoutAdmin()" style="background: #fc8181;">Logg ut</button>';
                 
+                // Handicap editing
                 html += '<h4>Rediger Handicap</h4>';
                 html += '<div class="handicap-edit-grid">';
                 
-                players.forEach(player => {
+                players.forEach(function(player) {
                     html += '<div class="handicap-edit-item">';
                     html += '<label>' + player.name + '</label>';
                     html += '<input type="number" step="0.1" id="hcp_' + player.id + '" value="' + player.handicap + '" ';
@@ -1449,95 +1325,127 @@
                 html += '<button onclick="saveHandicaps()" style="margin-top: 10px;">Lagre Handicap</button>';
                 html += '<div id="handicapMessage"></div>';
                 
+                // Flight times editing
+                html += '<h4>Starttider for Flights</h4>';
+                html += '<div style="background: #f7fafc; padding: 15px; border-radius: 10px; margin: 15px 0;">';
+                
+                schedule.forEach(function(round) {
+                    if (round.type === 'Individuell' && round.flights) {
+                        html += '<div style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 8px;">';
+                        html += '<h5>' + round.date + ' - ' + round.course + '</h5>';
+                        
+                        round.flights.forEach(function(flight, idx) {
+                            html += '<div style="margin: 10px 0;">';
+                            html += '<label style="display: block; margin-bottom: 5px; font-size: 12px;">Flight ' + (idx + 1) + ' (' + flight.players.join(', ') + '):</label>';
+                            html += '<input type="time" id="flight_' + round.id + '_' + idx + '" value="' + (flight.time || '') + '" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
+                            html += '</div>';
+                        });
+                        
+                        html += '</div>';
+                    }
+                });
+                
+                html += '<button onclick="saveFlightTimes()">Lagre starttider</button>';
+                html += '</div>';
+                
+                // Competition holes editing
                 html += '<h4>Konkurransehull (Longest Drive / Closest to Pin)</h4>';
                 html += '<div style="background: #f7fafc; padding: 15px; border-radius: 10px; margin: 15px 0;">';
                 
-                schedule.filter(r => r.type === 'Individuell').forEach(round => {
-                    html += '<div style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 8px;">';
-                    html += '<h5>' + round.date + ' - ' + round.course + '</h5>';
-                    
-                    // Longest Drive
-                    html += '<div style="margin: 10px 0;">';
-                    html += '<label style="display: block; margin-bottom: 5px; font-weight: bold;">🚀 Longest Drive hull (kommaseparert, f.eks: 5,15):</label>';
-                    const ldValue = round.longestDrive ? round.longestDrive.join(',') : '';
-                    html += '<input type="text" id="ld_' + round.id + '" value="' + ldValue + '" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
-                    html += '</div>';
-                    
-                    // Closest to Pin
-                    html += '<div style="margin: 10px 0;">';
-                    html += '<label style="display: block; margin-bottom: 5px; font-weight: bold;">🎯 Closest to Pin hull (kommaseparert, f.eks: 2,13):</label>';
-                    const ctpValue = round.closestToPin ? round.closestToPin.join(',') : '';
-                    html += '<input type="text" id="ctp_' + round.id + '" value="' + ctpValue + '" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
-                    html += '</div>';
-                    
-                    html += '<button onclick="saveCompetitionHoles(' + round.id + ')" style="background: #4299e1; font-size: 12px; padding: 6px 12px;">Lagre hull</button>';
-                    html += '</div>';
+                schedule.forEach(function(round) {
+                    if (round.type === 'Individuell') {
+                        html += '<div style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 8px;">';
+                        html += '<h5>' + round.date + ' - ' + round.course + '</h5>';
+                        
+                        // Longest Drive
+                        html += '<div style="margin: 10px 0;">';
+                        html += '<label style="display: block; margin-bottom: 5px; font-size: 12px;">Longest Drive hull (kommaseparert, f.eks: 5,15):</label>';
+                        var ldValue = round.longestDrive ? round.longestDrive.join(',') : '';
+                        html += '<input type="text" id="ld_' + round.id + '" value="' + ldValue + '" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
+                        html += '</div>';
+                        
+                        // Closest to Pin
+                        html += '<div style="margin: 10px 0;">';
+                        html += '<label style="display: block; margin-bottom: 5px; font-size: 12px;">Closest to Pin hull (kommaseparert, f.eks: 2,13):</label>';
+                        var ctpValue = round.closestToPin ? round.closestToPin.join(',') : '';
+                        html += '<input type="text" id="ctp_' + round.id + '" value="' + ctpValue + '" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
+                        html += '</div>';
+                        
+                        html += '</div>';
+                    }
                 });
                 
+                html += '<button onclick="saveCompetitionHoles()">Lagre hull</button>';
                 html += '</div>';
                 
+                // Award winners
+                html += '<h4>Konkurransevinnere</h4>';
+                html += '<div style="background: #f7fafc; padding: 15px; border-radius: 10px; margin: 15px 0;">';
+                
+                schedule.forEach(function(round) {
+                    if (round.type === 'Individuell') {
+                        html += '<div style="margin-bottom: 20px;">';
+                        html += '<h5>' + round.date + ' - ' + round.course + '</h5>';
+                        html += '<div class="award-select">';
+                        
+                        if (round.longestDrive) {
+                            round.longestDrive.forEach(function(hole) {
+                                html += '<div class="award-input">';
+                                html += '<label>Longest Drive Hull ' + hole + ':</label>';
+                                html += '<select id="award_' + round.id + '_ld_' + hole + '">';
+                                html += '<option value="">-- Velg vinner --</option>';
+                                players.forEach(function(player) {
+                                    var selected = awards[round.id + '_ld_' + hole] === player.name ? 'selected' : '';
+                                    html += '<option value="' + player.name + '" ' + selected + '>' + player.name + '</option>';
+                                });
+                                html += '</select>';
+                                html += '</div>';
+                            });
+                        }
+                        
+                        if (round.closestToPin) {
+                            round.closestToPin.forEach(function(hole) {
+                                html += '<div class="award-input">';
+                                html += '<label>Closest to Pin Hull ' + hole + ':</label>';
+                                html += '<select id="award_' + round.id + '_ctp_' + hole + '">';
+                                html += '<option value="">-- Velg vinner --</option>';
+                                players.forEach(function(player) {
+                                    var selected = awards[round.id + '_ctp_' + hole] === player.name ? 'selected' : '';
+                                    html += '<option value="' + player.name + '" ' + selected + '>' + player.name + '</option>';
+                                });
+                                html += '</select>';
+                                html += '</div>';
+                            });
+                        }
+                        
+                        html += '</div>';
+                        html += '</div>';
+                    }
+                });
+                
+                html += '<button onclick="saveAwards()">Lagre vinnere</button>';
+                html += '</div>';
+                
+                // Scramble winners
                 html += '<h4>Scramble Vinnere</h4>';
+                html += '<div style="background: #f7fafc; padding: 15px; border-radius: 10px; margin: 15px 0;">';
                 
-                schedule.filter(r => r.type === 'Scramble').forEach(round => {
-                    html += '<div class="award-input">';
-                    html += '<label>' + round.date + ' - ' + round.course + '</label>';
-                    html += '<select onchange="setScrambleWinner(' + round.id + ', this.value)">';
-                    html += '<option value="">-- Velg vinner --</option>';
-                    
-                    round.teams.forEach((team, idx) => {
-                        const selected = scrambleWinners[round.id] === idx ? 'selected' : '';
-                        html += '<option value="' + idx + '" ' + selected + '>Lag ' + (idx + 1) + ': ' + team.join(' & ') + '</option>';
-                    });
-                    
-                    html += '</select></div>';
-                });
-                
-                html += '<h4>Individuelle Konkurranser</h4><div class="award-select">';
-                
-                schedule.filter(r => r.type === 'Individuell').forEach(round => {
-                    if (round.longestDrive) {
-                        round.longestDrive.forEach(hole => {
-                            const awardKey = round.id + '_ld_' + hole;
-                            html += '<div class="award-input">';
-                            html += '<label>Lengste drive - ' + round.date + ' Hull ' + hole + '</label>';
-                            html += '<select onchange="setAward(\'' + awardKey + '\', this.value)">';
-                            html += '<option value="">-- Velg vinner --</option>';
-                            
-                            players.forEach(player => {
-                                const selected = awards[awardKey] === player.name ? 'selected' : '';
-                                html += '<option value="' + player.name + '" ' + selected + '>' + player.name + '</option>';
-                            });
-                            
-                            html += '</select></div>';
+                schedule.forEach(function(round) {
+                    if (round.type === 'Scramble') {
+                        html += '<div style="margin-bottom: 15px;">';
+                        html += '<h5>' + round.date + ' - ' + round.course + '</h5>';
+                        html += '<select id="scramble_' + round.id + '">';
+                        html += '<option value="">-- Velg vinnende lag --</option>';
+                        round.teams.forEach(function(team, idx) {
+                            var selected = scrambleWinners[round.id] === idx ? 'selected' : '';
+                            html += '<option value="' + idx + '" ' + selected + '>Lag ' + (idx + 1) + ': ' + team.join(' & ') + '</option>';
                         });
-                    }
-                    
-                    if (round.closestToPin) {
-                        round.closestToPin.forEach(hole => {
-                            const awardKey = round.id + '_ctp_' + hole;
-                            html += '<div class="award-input">';
-                            html += '<label>Nærmest pinnen - ' + round.date + ' Hull ' + hole + '</label>';
-                            html += '<select onchange="setAward(\'' + awardKey + '\', this.value)">';
-                            html += '<option value="">-- Velg vinner --</option>';
-                            
-                            players.forEach(player => {
-                                const selected = awards[awardKey] === player.name ? 'selected' : '';
-                                html += '<option value="' + player.name + '" ' + selected + '>' + player.name + '</option>';
-                            });
-                            
-                            html += '</select></div>';
-                        });
+                        html += '</select>';
+                        html += '</div>';
                     }
                 });
                 
-                html += '</div>';
-                
-                html += '<h4 style="color: #c53030; margin-top: 30px;">Nullstill Data</h4>';
-                html += '<div style="background: #fff5f5; padding: 15px; border-radius: 10px; border: 2px solid #fc8181;">';
-                html += '<p style="margin-bottom: 10px;">Velg hva du vil nullstille:</p>';
-                html += '<button onclick="resetScores()" style="background: #f56565; margin: 5px;">Nullstill alle scores</button>';
-                html += '<button onclick="resetAwards()" style="background: #f56565; margin: 5px;">Nullstill konkurranser</button>';
-                html += '<button onclick="resetAll()" style="background: #c53030; margin: 5px;">Nullstill ALT</button>';
+                html += '<button onclick="saveScrambleWinners()">Lagre scramble vinnere</button>';
                 html += '</div>';
                 
                 html += '</div>';
@@ -1547,7 +1455,7 @@
         }
         
         function loginAdmin() {
-            const password = document.getElementById('adminPassword').value;
+            var password = document.getElementById('adminPassword').value;
             if (password === 'golf') {
                 isAdmin = true;
                 loadAdmin();
@@ -1561,140 +1469,117 @@
             loadAdmin();
         }
         
-        function updateHandicap(playerId, newHandicap) {
-            const player = players.find(p => p.id === playerId);
+        function updateHandicap(playerId, value) {
+            var player = players.find(function(p) { return p.id === playerId; });
             if (player) {
-                player.handicap = parseFloat(newHandicap);
+                player.handicap = parseFloat(value);
             }
         }
         
         function saveHandicaps() {
             localStorage.setItem('golfPlayers2025', JSON.stringify(players));
-            saveToServer();
             document.getElementById('handicapMessage').innerHTML = '<div class="success-message">Handicap lagret!</div>';
-            setTimeout(() => {
+            setTimeout(function() {
                 document.getElementById('handicapMessage').innerHTML = '';
             }, 3000);
         }
         
-        function saveCompetitionHoles(roundId) {
-            const round = schedule.find(r => r.id === roundId);
-            if (round) {
-                // Get longest drive holes
-                const ldInput = document.getElementById('ld_' + roundId).value;
-                if (ldInput.trim()) {
-                    const ldHoles = ldInput.split(',').map(h => parseInt(h.trim())).filter(h => h >= 1 && h <= 18);
-                    round.longestDrive = ldHoles;
-                } else {
-                    delete round.longestDrive;
+        function saveFlightTimes() {
+            schedule.forEach(function(round) {
+                if (round.type === 'Individuell' && round.flights) {
+                    round.flights.forEach(function(flight, idx) {
+                        var input = document.getElementById('flight_' + round.id + '_' + idx);
+                        if (input) {
+                            flight.time = input.value;
+                        }
+                    });
                 }
-                
-                // Get closest to pin holes
-                const ctpInput = document.getElementById('ctp_' + roundId).value;
-                if (ctpInput.trim()) {
-                    const ctpHoles = ctpInput.split(',').map(h => parseInt(h.trim())).filter(h => h >= 1 && h <= 18);
-                    round.closestToPin = ctpHoles;
-                } else {
-                    delete round.closestToPin;
-                }
-                
-                // Save to localStorage (we need to save schedule changes)
-                localStorage.setItem('golfSchedule2025', JSON.stringify(schedule));
-                
-                // Reload admin to show updated competition winners
-                loadAdmin();
-                
-                // Show success message
-                alert('Konkurransehull oppdatert!');
-            }
+            });
+            
+            localStorage.setItem('golfSchedule2025', JSON.stringify(schedule));
+            alert('Starttider lagret!');
         }
         
-        function setScrambleWinner(roundId, teamIdx) {
-            if (teamIdx === '') {
-                delete scrambleWinners[roundId];
-            } else {
-                scrambleWinners[roundId] = parseInt(teamIdx);
-            }
-            localStorage.setItem('scrambleWinners2025', JSON.stringify(scrambleWinners));
-            saveToServer();
+        function saveCompetitionHoles() {
+            schedule.forEach(function(round) {
+                if (round.type === 'Individuell') {
+                    var ldInput = document.getElementById('ld_' + round.id);
+                    var ctpInput = document.getElementById('ctp_' + round.id);
+                    
+                    if (ldInput) {
+                        var ldValue = ldInput.value;
+                        if (ldValue) {
+                            round.longestDrive = ldValue.split(',').map(function(h) { 
+                                return parseInt(h.trim()); 
+                            });
+                        } else {
+                            round.longestDrive = [];
+                        }
+                    }
+                    
+                    if (ctpInput) {
+                        var ctpValue = ctpInput.value;
+                        if (ctpValue) {
+                            round.closestToPin = ctpValue.split(',').map(function(h) { 
+                                return parseInt(h.trim()); 
+                            });
+                        } else {
+                            round.closestToPin = [];
+                        }
+                    }
+                }
+            });
+            
+            localStorage.setItem('golfSchedule2025', JSON.stringify(schedule));
+            alert('Konkurransehull lagret!');
+            loadAdmin(); // Reload to update award selectors
         }
         
-        function setAward(awardKey, winner) {
-            if (winner === '') {
-                delete awards[awardKey];
-            } else {
-                awards[awardKey] = winner;
-            }
+        function saveAwards() {
+            schedule.forEach(function(round) {
+                if (round.type === 'Individuell') {
+                    if (round.longestDrive) {
+                        round.longestDrive.forEach(function(hole) {
+                            var select = document.getElementById('award_' + round.id + '_ld_' + hole);
+                            if (select) {
+                                awards[round.id + '_ld_' + hole] = select.value;
+                            }
+                        });
+                    }
+                    
+                    if (round.closestToPin) {
+                        round.closestToPin.forEach(function(hole) {
+                            var select = document.getElementById('award_' + round.id + '_ctp_' + hole);
+                            if (select) {
+                                awards[round.id + '_ctp_' + hole] = select.value;
+                            }
+                        });
+                    }
+                }
+            });
+            
             localStorage.setItem('golfAwards2025', JSON.stringify(awards));
-            saveToServer();
+            alert('Vinnere lagret!');
         }
         
-        // Reset functions
-        function resetScores() {
-            if (confirm('Er du sikker på at du vil nullstille ALLE scores? Dette kan ikke angres!')) {
-                scores = {};
-                scrambleScores = {};
-                localStorage.setItem('golfScores2025', JSON.stringify(scores));
-                localStorage.setItem('scrambleScores2025', JSON.stringify(scrambleScores));
-                saveToServer();
-                alert('Alle scores er nullstilt!');
-                loadAdmin();
-            }
-        }
-        
-        function resetAwards() {
-            if (confirm('Er du sikker på at du vil nullstille alle konkurransevinnere?')) {
-                awards = {};
-                scrambleWinners = {};
-                localStorage.setItem('golfAwards2025', JSON.stringify(awards));
-                localStorage.setItem('scrambleWinners2025', JSON.stringify(scrambleWinners));
-                saveToServer();
-                alert('Alle konkurranser er nullstilt!');
-                loadAdmin();
-            }
-        }
-        
-        function resetAll() {
-            if (confirm('ADVARSEL: Dette vil slette ALT - scores, konkurranser, og tilbakestille handicap. Er du helt sikker?')) {
-                if (confirm('Siste sjanse - vil du virkelig slette ALT?')) {
-                    // Reset everything
-                    scores = {};
-                    scrambleScores = {};
-                    awards = {};
-                    scrambleWinners = {};
-                    
-                    // Reset to default players
-                    players = [
-                        { id: 1, name: 'Klaus', handicap: 18.1 },
-                        { id: 2, name: 'Ruben', handicap: 11 },
-                        { id: 3, name: 'Sigbjørn', handicap: 20.2 },
-                        { id: 4, name: 'Bjørn', handicap: 23.8 },
-                        { id: 5, name: 'Truls', handicap: 36 },
-                        { id: 6, name: 'Tor Espen', handicap: 27 },
-                        { id: 7, name: 'Dag', handicap: 19.4 },
-                        { id: 8, name: 'Roar', handicap: 25.9 }
-                    ];
-                    
-                    // Clear all localStorage
-                    localStorage.setItem('golfScores2025', JSON.stringify(scores));
-                    localStorage.setItem('scrambleScores2025', JSON.stringify(scrambleScores));
-                    localStorage.setItem('golfAwards2025', JSON.stringify(awards));
-                    localStorage.setItem('scrambleWinners2025', JSON.stringify(scrambleWinners));
-                    localStorage.setItem('golfPlayers2025', JSON.stringify(players));
-                    
-                    // Clear schedule changes
-                    localStorage.removeItem('golfSchedule2025');
-                    
-                    saveToServer();
-                    alert('Alt er nullstilt til standard!');
-                    location.reload(); // Reload the page to reset everything
+        function saveScrambleWinners() {
+            schedule.forEach(function(round) {
+                if (round.type === 'Scramble') {
+                    var select = document.getElementById('scramble_' + round.id);
+                    if (select && select.value !== '') {
+                        scrambleWinners[round.id] = parseInt(select.value);
+                    }
                 }
-            }
+            });
+            
+            localStorage.setItem('scrambleWinners2025', JSON.stringify(scrambleWinners));
+            alert('Scramble vinnere lagret!');
         }
         
-        // Initialize
-        updateLanguage();
-        syncWithServer();
+        // Initialize on load
+        window.onload = function() {
+            updateLanguage();
+        };
     </script>
 </body>
 </html>
