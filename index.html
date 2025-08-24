@@ -474,7 +474,7 @@
         <span id="langBtn">🇬🇧 EN</span>
     </div>
 
-    <div class="version-badge">v3.08</div>
+    <div class="version-badge">v3.09</div>
 
     <div class="container">
         <div class="header">
@@ -512,6 +512,12 @@
                     <div class="icon" style="font-size: 40px;">&#128101;</div>
                     <h3 id="playersTitle">Spillere</h3>
                     <p id="playersDesc">Handicap</p>
+                </div>
+                
+                <div class="nav-card" onclick="showView('history')">
+                    <div class="icon" style="font-size: 40px;">&#128218;</div>
+                    <h3 id="historyTitle">Historie</h3>
+                    <p id="historyDesc">Spillte baner</p>
                 </div>
                 
                 <div class="nav-card" onclick="showView('admin')">
@@ -552,6 +558,12 @@
             <div id="playersContent"></div>
         </div>
         
+        <div id="historyView" class="content">
+            <button class="back-btn" onclick="showView('home')">← Tilbake</button>
+            <h2>Spillte Baner Gjennom Årene</h2>
+            <div id="historyContent"></div>
+        </div>
+        
         <div id="adminView" class="content">
             <button class="back-btn" onclick="showView('home')">← Tilbake</button>
             <h2>Administrator</h2>
@@ -571,6 +583,52 @@
             { id: 7, name: 'Dag', handicap: 19.4 },
             { id: 8, name: 'Roar', handicap: 25.9 }
         ];
+        
+        // Historical played courses data
+        var playedCourses = [
+            { id: 1, name: 'Murryshall GC - Old Course', years: [2010, 2014, 2018] },
+            { id: 2, name: 'Murryshall GC - New Course', years: [2010, 2014, 2018] },
+            { id: 3, name: 'Newmacher GC - Hawkshill', years: [2010, 2011, 2012, 2018, 2022] },
+            { id: 4, name: 'Newmacher GC - Swailend', years: [2013] },
+            { id: 5, name: 'Cruden Bay', years: [2011, 2013, 2015] },
+            { id: 6, name: 'Criff GC', years: [2010] },
+            { id: 7, name: 'Gleneagle GC - Kings Course', years: [2010] },
+            { id: 8, name: 'Royal Aberdeen GC', years: [2012] },
+            { id: 9, name: 'Craibstone GC', years: [2011, 2016] },
+            { id: 10, name: 'Hazelhead GC - Bane 1', years: [2012] },
+            { id: 11, name: 'Hazelhead GC - Bane 2', years: [2012] },
+            { id: 12, name: 'Newburgh on Ythan GC', years: [2013] },
+            { id: 13, name: 'Meldrum', years: [2015] },
+            { id: 14, name: 'Cullen GC', years: [2016] },
+            { id: 15, name: 'Duff House Royal GC', years: [2016] },
+            { id: 16, name: 'Lundin GC', years: [2017] },
+            { id: 17, name: 'Craighead Links', years: [2017] },
+            { id: 18, name: 'Balcomie Links', years: [2017] },
+            { id: 19, name: 'St. Andrew Eden Course', years: [2017] },
+            { id: 20, name: 'St. Andrew GC', years: [2019] },
+            { id: 21, name: 'Crail Golf Society', years: [2021] },
+            { id: 22, name: 'Stonehaven GC', years: [2021] },
+            { id: 23, name: 'Leven GC', years: [2021] },
+            { id: 24, name: 'Nairn Golf Club', years: [2022] },
+            { id: 25, name: 'Nairn Dunbar Golf Club', years: [2022] },
+            { id: 26, name: 'Cullen Links', years: [2023, 2024] },
+            { id: 27, name: 'Spey Bay', years: [2023, 2024] },
+            { id: 28, name: 'Strathlene', years: [2023, 2024] },
+            { id: 29, name: 'Garmouth & Kingston', years: [2023, 2024] }
+        ];
+        
+        // Load saved played courses if exists
+        var savedPlayedCourses = localStorage.getItem('playedCourses2025');
+        if (savedPlayedCourses) {
+            try {
+                var parsed = JSON.parse(savedPlayedCourses);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    playedCourses = parsed;
+                }
+            } catch (e) {
+                console.log('Using default played courses');
+            }
+        }
         
         var schedule = [
             { 
@@ -676,14 +734,36 @@
         var scrambleWinners = {};
         var isAdmin = false;
         
-        // Initialize from localStorage
-        try {
-            scores = JSON.parse(localStorage.getItem('golfScores2025') || '{}');
-            scrambleScores = JSON.parse(localStorage.getItem('scrambleScores2025') || '{}');
-            awards = JSON.parse(localStorage.getItem('golfAwards2025') || '{}');
-            scrambleWinners = JSON.parse(localStorage.getItem('scrambleWinners2025') || '{}');
-        } catch (e) {
-            console.log('Error loading data');
+        // Initialize with sync from server if available
+        async function syncWithServer() {
+            try {
+                var response = await fetch('/api/scores');
+                if (response.ok) {
+                    var serverData = await response.json();
+                    scores = serverData.scores || scores;
+                    scrambleScores = serverData.scrambleScores || scrambleScores;
+                    awards = serverData.awards || awards;
+                    scrambleWinners = serverData.scrambleWinners || scrambleWinners;
+                    if (serverData.players && Array.isArray(serverData.players) && serverData.players.length > 0) {
+                        players = serverData.players;
+                    }
+                    if (serverData.schedule && Array.isArray(serverData.schedule) && serverData.schedule.length > 0) {
+                        schedule = serverData.schedule;
+                    }
+                    if (serverData.playedCourses && Array.isArray(serverData.playedCourses) && serverData.playedCourses.length > 0) {
+                        playedCourses = serverData.playedCourses;
+                    }
+                    localStorage.setItem('golfScores2025', JSON.stringify(scores));
+                    localStorage.setItem('scrambleScores2025', JSON.stringify(scrambleScores));
+                    localStorage.setItem('golfAwards2025', JSON.stringify(awards));
+                    localStorage.setItem('scrambleWinners2025', JSON.stringify(scrambleWinners));
+                    localStorage.setItem('golfPlayers2025', JSON.stringify(players));
+                    localStorage.setItem('golfSchedule2025', JSON.stringify(schedule));
+                    localStorage.setItem('playedCourses2025', JSON.stringify(playedCourses));
+                }
+            } catch (e) {
+                console.log('Using local storage only');
+            }
         }
         
         function showView(viewName) {
@@ -699,6 +779,7 @@
                 if (viewName === 'leaderboard') loadLeaderboard();
                 if (viewName === 'courses') loadCourses();
                 if (viewName === 'players') loadPlayers();
+                if (viewName === 'history') loadHistory();
                 if (viewName === 'admin') loadAdmin();
             }
         }
@@ -724,6 +805,8 @@
                     coursesDesc: 'Scorekort',
                     playersTitle: 'Spillere',
                     playersDesc: 'Handicap',
+                    historyTitle: 'Historie',
+                    historyDesc: 'Spillte baner',
                     adminTitle: 'Admin',
                     adminDesc: 'Administrer'
                 },
@@ -740,6 +823,8 @@
                     coursesDesc: 'Scorecards',
                     playersTitle: 'Players',
                     playersDesc: 'Handicaps',
+                    historyTitle: 'History',
+                    historyDesc: 'Played courses',
                     adminTitle: 'Admin',
                     adminDesc: 'Manage'
                 }
@@ -1274,6 +1359,75 @@
             document.getElementById('coursesContent').innerHTML = html;
         }
         
+        function loadHistory() {
+            // Get all unique years
+            var allYears = [];
+            playedCourses.forEach(function(course) {
+                course.years.forEach(function(year) {
+                    if (allYears.indexOf(year) === -1) {
+                        allYears.push(year);
+                    }
+                });
+            });
+            allYears.sort(function(a, b) { return b - a; }); // Sort years descending
+            
+            var html = '<div style="margin-bottom: 20px;">';
+            html += '<h3>Skottland Golfturer - Spillte Baner</h3>';
+            html += '<p style="color: #718096;">Totalt ' + playedCourses.length + ' forskjellige baner siden 2010</p>';
+            html += '</div>';
+            
+            // Statistics
+            var coursesByYear = {};
+            allYears.forEach(function(year) {
+                coursesByYear[year] = [];
+            });
+            
+            playedCourses.forEach(function(course) {
+                course.years.forEach(function(year) {
+                    coursesByYear[year].push(course.name);
+                });
+            });
+            
+            // Year by year breakdown
+            html += '<div style="margin-bottom: 30px;">';
+            allYears.forEach(function(year) {
+                if (coursesByYear[year] && coursesByYear[year].length > 0) {
+                    html += '<div class="course-section" style="margin-bottom: 20px;">';
+                    html += '<h4 style="color: #2d3748; margin-bottom: 10px;">' + year;
+                    if (year === 2019) html += ' (Jubileumstur!)';
+                    html += '</h4>';
+                    html += '<div style="background: #f7fafc; padding: 15px; border-radius: 10px;">';
+                    coursesByYear[year].forEach(function(courseName) {
+                        html += '<div style="padding: 5px 0;">• ' + courseName + '</div>';
+                    });
+                    html += '</div>';
+                    html += '</div>';
+                }
+            });
+            html += '</div>';
+            
+            // All courses alphabetically
+            html += '<h3 style="margin-top: 40px; margin-bottom: 20px;">Alle Baner (Alfabetisk)</h3>';
+            html += '<div class="table-wrapper">';
+            html += '<table><thead><tr><th>Bane</th><th>År Spilt</th><th>Antall Ganger</th></tr></thead><tbody>';
+            
+            var sortedCourses = playedCourses.slice().sort(function(a, b) {
+                return a.name.localeCompare(b.name);
+            });
+            
+            sortedCourses.forEach(function(course) {
+                html += '<tr>';
+                html += '<td>' + course.name + '</td>';
+                html += '<td>' + course.years.join(', ') + '</td>';
+                html += '<td>' + course.years.length + '</td>';
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table></div>';
+            
+            document.getElementById('historyContent').innerHTML = html;
+        }
+        
         function loadPlayers() {
             var html = '<div class="player-grid">';
             players.forEach(function(player) {
@@ -1448,6 +1602,39 @@
                 html += '<button onclick="saveScrambleWinners()">Lagre scramble vinnere</button>';
                 html += '</div>';
                 
+                // Played Courses Management
+                html += '<h4>Administrer Spillte Baner</h4>';
+                html += '<div style="background: #f7fafc; padding: 15px; border-radius: 10px; margin: 15px 0;">';
+                
+                html += '<h5>Legg til ny bane</h5>';
+                html += '<div style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 10px; margin-bottom: 15px;">';
+                html += '<input type="text" id="newCourseName" placeholder="Banenavn" style="padding: 8px; border: 1px solid #cbd5e0; border-radius: 5px;">';
+                html += '<input type="number" id="newCourseYear" placeholder="År" min="2010" max="2030" style="padding: 8px; border: 1px solid #cbd5e0; border-radius: 5px;">';
+                html += '<button onclick="addPlayedCourse()">Legg til</button>';
+                html += '</div>';
+                
+                html += '<h5>Eksisterende baner</h5>';
+                html += '<div style="max-height: 300px; overflow-y: auto; background: white; padding: 10px; border-radius: 8px;">';
+                
+                playedCourses.forEach(function(course) {
+                    html += '<div style="margin-bottom: 10px; padding: 10px; background: #f7fafc; border-radius: 5px;">';
+                    html += '<div style="display: flex; justify-content: space-between; align-items: center;">';
+                    html += '<div>';
+                    html += '<strong>' + course.name + '</strong><br>';
+                    html += '<span style="font-size: 12px; color: #718096;">År: ' + course.years.join(', ') + '</span>';
+                    html += '</div>';
+                    html += '<button onclick="removePlayedCourse(' + course.id + ')" style="background: #fc8181; padding: 5px 10px; font-size: 12px;">Slett</button>';
+                    html += '</div>';
+                    html += '<div style="margin-top: 5px;">';
+                    html += '<input type="number" id="addYear_' + course.id + '" placeholder="Legg til år" min="2010" max="2030" style="width: 100px; padding: 4px; margin-right: 5px; border: 1px solid #cbd5e0; border-radius: 3px;">';
+                    html += '<button onclick="addYearToCourse(' + course.id + ')" style="padding: 4px 8px; font-size: 12px;">+ År</button>';
+                    html += '</div>';
+                    html += '</div>';
+                });
+                
+                html += '</div>';
+                html += '</div>';
+                
                 html += '</div>';
             }
             
@@ -1576,8 +1763,80 @@
             alert('Scramble vinnere lagret!');
         }
         
+        function addPlayedCourse() {
+            var name = document.getElementById('newCourseName').value;
+            var year = parseInt(document.getElementById('newCourseYear').value);
+            
+            if (!name || !year) {
+                alert('Vennligst fyll inn både banenavn og år');
+                return;
+            }
+            
+            // Check if course already exists
+            var existingCourse = playedCourses.find(function(c) { 
+                return c.name.toLowerCase() === name.toLowerCase(); 
+            });
+            
+            if (existingCourse) {
+                // Add year to existing course if not already there
+                if (existingCourse.years.indexOf(year) === -1) {
+                    existingCourse.years.push(year);
+                    existingCourse.years.sort();
+                }
+            } else {
+                // Add new course
+                var newId = Math.max.apply(null, playedCourses.map(function(c) { return c.id; })) + 1;
+                playedCourses.push({
+                    id: newId,
+                    name: name,
+                    years: [year]
+                });
+            }
+            
+            localStorage.setItem('playedCourses2025', JSON.stringify(playedCourses));
+            saveToServer(); // Add this line
+            document.getElementById('newCourseName').value = '';
+            document.getElementById('newCourseYear').value = '';
+            loadAdmin();
+            alert('Bane lagt til!');
+        }
+        
+        function addYearToCourse(courseId) {
+            var year = parseInt(document.getElementById('addYear_' + courseId).value);
+            
+            if (!year) {
+                alert('Vennligst oppgi år');
+                return;
+            }
+            
+            var course = playedCourses.find(function(c) { return c.id === courseId; });
+            if (course) {
+                if (course.years.indexOf(year) === -1) {
+                    course.years.push(year);
+                    course.years.sort();
+                    localStorage.setItem('playedCourses2025', JSON.stringify(playedCourses));
+                    saveToServer(); // Add this line
+                    loadAdmin();
+                    alert('År lagt til!');
+                } else {
+                    alert('Dette året er allerede registrert for denne banen');
+                }
+            }
+        }
+        
+        function removePlayedCourse(courseId) {
+            if (confirm('Er du sikker på at du vil slette denne banen?')) {
+                playedCourses = playedCourses.filter(function(c) { return c.id !== courseId; });
+                localStorage.setItem('playedCourses2025', JSON.stringify(playedCourses));
+                saveToServer(); // Add this line
+                loadAdmin();
+                alert('Bane slettet!');
+            }
+        }
+        
         // Initialize on load
         window.onload = function() {
+            syncWithServer();
             updateLanguage();
         };
     </script>
