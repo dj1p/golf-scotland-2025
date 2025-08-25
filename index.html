@@ -601,7 +601,7 @@
         
         <div id="weatherView" class="content">
             <button class="back-btn" onclick="showView('home')">← Tilbake</button>
-            <h2>Værmelding Cullen</h2>
+            <h2>Værmelding for alle baner</h2>
             <div id="weatherContent"></div>
         </div>
         
@@ -2338,23 +2338,67 @@
         
         function loadWeather() {
             var html = '<div style="margin-bottom: 20px;">';
-            html += '<p style="color: #718096;">Værmelding for Cullen, Scotland</p>';
+            html += '<p style="color: #718096;">Værmelding for alle golfbaner</p>';
             html += '</div>';
             
-            // yr.no weather widget iframe
+            // Cullen Links weather
+            html += '<div style="margin-bottom: 30px;">';
+            html += '<h3 style="color: #2d3748; margin-bottom: 10px;">Cullen Links</h3>';
+            html += '<p style="color: #718096; font-size: 14px; margin-bottom: 10px;">Ved kysten, kan være vindfullt</p>';
             html += '<div style="width: 100%; background: #f7fafc; padding: 10px; border-radius: 10px;">';
             html += '<iframe src="https://www.yr.no/nb/innhold/2-2651752/table.html" ';
-            html += 'width="100%" height="600" frameborder="0" ';
+            html += 'width="100%" height="450" frameborder="0" ';
             html += 'style="border: none; border-radius: 10px; background: white;">';
             html += '</iframe>';
             html += '</div>';
+            html += '</div>';
             
-            html += '<div style="margin-top: 20px; padding: 15px; background: #e6f4ff; border-radius: 10px;">';
-            html += '<h4>Golfbaner i området</h4>';
-            html += '<p><strong>Cullen Links:</strong> Ved kysten, kan være vindfullt</p>';
-            html += '<p><strong>Spey Bay:</strong> Også kystnært, lignende forhold</p>';
-            html += '<p><strong>Strathlene:</strong> Litt mer beskyttet fra vind</p>';
-            html += '<p><strong>Garmouth & Kingston:</strong> Innlandsforhold, ofte roligere</p>';
+            // Spey Bay weather
+            html += '<div style="margin-bottom: 30px;">';
+            html += '<h3 style="color: #2d3748; margin-bottom: 10px;">Spey Bay</h3>';
+            html += '<p style="color: #718096; font-size: 14px; margin-bottom: 10px;">Også kystnært, lignende forhold som Cullen</p>';
+            html += '<div style="width: 100%; background: #f7fafc; padding: 10px; border-radius: 10px;">';
+            html += '<iframe src="https://www.yr.no/nb/innhold/2-12266629/table.html" ';
+            html += 'width="100%" height="450" frameborder="0" ';
+            html += 'style="border: none; border-radius: 10px; background: white;">';
+            html += '</iframe>';
+            html += '</div>';
+            html += '</div>';
+            
+            // Garmouth & Kingston weather
+            html += '<div style="margin-bottom: 30px;">';
+            html += '<h3 style="color: #2d3748; margin-bottom: 10px;">Garmouth & Kingston</h3>';
+            html += '<p style="color: #718096; font-size: 14px; margin-bottom: 10px;">Innlandsforhold, ofte roligere</p>';
+            html += '<div style="width: 100%; background: #f7fafc; padding: 10px; border-radius: 10px;">';
+            html += '<iframe src="https://www.yr.no/nb/innhold/2-2648866/table.html" ';
+            html += 'width="100%" height="450" frameborder="0" ';
+            html += 'style="border: none; border-radius: 10px; background: white;">';
+            html += '</iframe>';
+            html += '</div>';
+            html += '</div>';
+            
+            // Strathlene weather
+            html += '<div style="margin-bottom: 30px;">';
+            html += '<h3 style="color: #2d3748; margin-bottom: 10px;">Strathlene</h3>';
+            html += '<p style="color: #718096; font-size: 14px; margin-bottom: 10px;">Litt mer beskyttet fra vind</p>';
+            html += '<div style="width: 100%; background: #f7fafc; padding: 10px; border-radius: 10px;">';
+            html += '<iframe src="https://www.yr.no/nb/innhold/2-2654411/table.html" ';
+            html += 'width="100%" height="450" frameborder="0" ';
+            html += 'style="border: none; border-radius: 10px; background: white;">';
+            html += '</iframe>';
+            html += '</div>';
+            html += '</div>';
+            
+            // General weather tips
+            html += '<div style="margin-top: 30px; padding: 20px; background: #e6f4ff; border-radius: 10px;">';
+            html += '<h4>Værtips for Golf i Skottland</h4>';
+            html += '<ul style="margin-left: 20px; margin-top: 10px;">';
+            html += '<li style="margin-bottom: 8px;"><strong>Vind:</strong> Over 10 m/s påvirker ballflukten betydelig</li>';
+            html += '<li style="margin-bottom: 8px;"><strong>Regn:</strong> Ha alltid regnklær og ekstra hansker</li>';
+            html += '<li style="margin-bottom: 8px;"><strong>Temperatur:</strong> Kle deg i lag, været kan endre seg raskt</li>';
+            html += '<li style="margin-bottom: 8px;"><strong>Kystbaner:</strong> Cullen og Spey Bay har ofte mer vind</li>';
+            html += '<li style="margin-bottom: 8px;"><strong>Innlandsbaner:</strong> Garmouth og Strathlene er mer beskyttet</li>';
+            html += '</ul>';
             html += '</div>';
             
             document.getElementById('weatherContent').innerHTML = html;
