@@ -1067,7 +1067,6 @@
                 if (viewName === 'history') loadHistory();
                 if (viewName === 'whisky') loadWhisky();
                 if (viewName === 'weather') loadWeather();
-                if (viewName === 'admin') loadAdmin();
             }
             
             // Track page view
@@ -2311,7 +2310,9 @@
                 
                 html += '<button onclick="saveWhisky()">Lagre Whisky Samling</button>';
                 html += '</div>';
-                
+                // Banedata administrasjon
+                html += '<h4>🏌️ Administrer Banedata</h4>';
+                html += '<div class="course-management-section">';
                 html += '</div>';
             }
             
