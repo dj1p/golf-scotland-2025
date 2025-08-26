@@ -2176,7 +2176,7 @@
                 html += '<button onclick="saveCompetitionHoles()">Lagre hull</button>';
                 html += '</div>';
                 
-                // Award winners - updated for all rounds
+                // Award winners - for ALL rounds including scrambles
                 html += '<h4>Konkurransevinnere</h4>';
                 html += '<div style="background: #f7fafc; padding: 15px; border-radius: 10px; margin: 15px 0;">';
                 
@@ -2185,6 +2185,7 @@
                     html += '<h5>' + round.date + ' - ' + round.course + ' (' + round.type + ')</h5>';
                     html += '<div class="award-select">';
                     
+                    // Show competitions for ALL rounds (both Individual and Scramble)
                     if (round.longestDrive) {
                         round.longestDrive.forEach(function(hole) {
                             html += '<div class="award-input">';
@@ -2405,6 +2406,7 @@
         
         function saveAwards() {
             schedule.forEach(function(round) {
+                // Save awards for ALL rounds, including scrambles
                 if (round.longestDrive) {
                     round.longestDrive.forEach(function(hole) {
                         var select = document.getElementById('award_' + round.id + '_ld_' + hole);
