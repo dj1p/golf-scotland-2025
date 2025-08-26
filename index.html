@@ -1009,6 +1009,10 @@
                     if (serverData.whiskyCollection && Array.isArray(serverData.whiskyCollection) && serverData.whiskyCollection.length > 0) {
                         whiskyCollection = serverData.whiskyCollection;
                     }
+                    if (serverData.courses) {
+                courses = serverData.courses;
+                localStorage.setItem('golfCourses2025', JSON.stringify(courses));
+            }
                     localStorage.setItem('golfScores2025', JSON.stringify(scores));
                     localStorage.setItem('scrambleScores2025', JSON.stringify(scrambleScores));
                     localStorage.setItem('golfAwards2025', JSON.stringify(awards));
@@ -1017,6 +1021,7 @@
                     localStorage.setItem('golfSchedule2025', JSON.stringify(schedule));
                     localStorage.setItem('playedCourses2025', JSON.stringify(playedCourses));
                     localStorage.setItem('whiskyCollection2025', JSON.stringify(whiskyCollection));
+                    localStorage.setItem('golfCourses2025', JSON.stringify(courses));  // Add this line
                 }
             } catch (e) {
                 console.log('Using local storage only');
@@ -1037,7 +1042,8 @@
                         players, 
                         schedule, 
                         playedCourses, 
-                        whiskyCollection
+                        whiskyCollection,
+                        courses
                     })
                 });
             } catch (e) {
@@ -2310,6 +2316,14 @@
             }
             
             document.getElementById('adminContent').innerHTML = html;
+            // Load course data if admin
+            if (isAdmin) {
+                setTimeout(function() {
+                    if (document.getElementById('courseSelect')) {
+                        loadCourseDataForEdit();
+                    }
+                }, 100);
+            }
         }
         
         function loginAdmin() {
@@ -2580,6 +2594,43 @@
             html += '<li style="margin-bottom: 8px;"><strong>Kystbaner:</strong> Cullen og Spey Bay har ofte mer vind</li>';
             html += '<li style="margin-bottom: 8px;"><strong>Innlandsbaner:</strong> Garmouth og Strathlene er mer beskyttet</li>';
             html += '</ul>';
+            // Course Management Section
+                html += '<h4>🏌️ Administrer Banedata</h4>';
+                html += '<div class="course-management-section">';
+                html += '<div class="course-selector">';
+                html += '<label>Velg bane å redigere:</label>';
+                html += '<select id="courseSelect" onchange="loadCourseDataForEdit()">';
+                html += '<option value="Cullen Links">Cullen Links</option>';
+                html += '<option value="Spey Bay">Spey Bay</option>';
+                html += '<option value="Strathlene">Strathlene</option>';
+                html += '<option value="Garmouth & Kingston">Garmouth & Kingston</option>';
+                html += '</select>';
+                html += '</div>';
+                
+                html += '<div class="course-basic-info">';
+                html += '<div class="course-input-group">';
+                html += '<label>Slope Rating (55-155):</label>';
+                html += '<input type="number" id="slopeRating" min="55" max="155" step="1">';
+                html += '</div>';
+                html += '<div class="course-input-group">';
+                html += '<label>Course Rating:</label>';
+                html += '<input type="number" id="courseRating" step="0.1">';
+                html += '</div>';
+                html += '<div class="course-input-group">';
+                html += '<label>Total Par:</label>';
+                html += '<input type="number" id="totalPar" readonly style="background: #e2e8f0;">';
+                html += '</div>';
+                html += '</div>';
+                
+                html += '<h5 style="margin: 15px 0;">Hull 1-9 (Front 9)</h5>';
+                html += '<div class="holes-grid" id="front9Grid"></div>';
+                
+                html += '<h5 style="margin: 15px 0;">Hull 10-18 (Back 9)</h5>';
+                html += '<div class="holes-grid" id="back9Grid"></div>';
+                
+                html += '<button class="save-course-btn" onclick="saveCourseData()">Lagre Banedata</button>';
+                html += '<div id="courseMessage"></div>';
+                html += '</div>';
             html += '</div>';
             
             document.getElementById('weatherContent').innerHTML = html;
@@ -2603,7 +2654,101 @@
             alert('Whisky samling lagret!');
             loadAdmin();
         }
-        
+        // Course Management Functions
+        function loadCourseDataForEdit() {
+            var courseName = document.getElementById('courseSelect').value;
+            var course = courses[courseName];
+            
+            if (!course) return;
+            
+            document.getElementById('slopeRating').value = course.slopeRating;
+            document.getElementById('courseRating').value = course.courseRating || course.par;
+            
+            var front9HTML = '';
+            for (var i = 1; i <= 9; i++) {
+                front9HTML += '<div class="hole-card">';
+                front9HTML += '<h5>Hull ' + i + '</h5>';
+                front9HTML += '<div class="hole-input">';
+                front9HTML += '<label>Par:</label>';
+                front9HTML += '<input type="number" id="par_' + i + '" value="' + course.pars[i-1] + '" min="3" max="5" onchange="updateCoursePar()">';
+                front9HTML += '</div>';
+                front9HTML += '<div class="hole-input">';
+                front9HTML += '<label>Stroke Index:</label>';
+                front9HTML += '<input type="number" id="stroke_' + i + '" value="' + course.handicaps[i-1] + '" min="1" max="18">';
+                front9HTML += '</div>';
+                front9HTML += '</div>';
+            }
+            document.getElementById('front9Grid').innerHTML = front9HTML;
+            
+            var back9HTML = '';
+            for (var i = 10; i <= 18; i++) {
+                back9HTML += '<div class="hole-card">';
+                back9HTML += '<h5>Hull ' + i + '</h5>';
+                back9HTML += '<div class="hole-input">';
+                back9HTML += '<label>Par:</label>';
+                back9HTML += '<input type="number" id="par_' + i + '" value="' + course.pars[i-1] + '" min="3" max="5" onchange="updateCoursePar()">';
+                back9HTML += '</div>';
+                back9HTML += '<div class="hole-input">';
+                back9HTML += '<label>Stroke Index:</label>';
+                back9HTML += '<input type="number" id="stroke_' + i + '" value="' + course.handicaps[i-1] + '" min="1" max="18">';
+                back9HTML += '</div>';
+                back9HTML += '</div>';
+            }
+            document.getElementById('back9Grid').innerHTML = back9HTML;
+            
+            updateCoursePar();
+        }
+
+        function updateCoursePar() {
+            var total = 0;
+            for (var i = 1; i <= 18; i++) {
+                var parInput = document.getElementById('par_' + i);
+                if (parInput) {
+                    total += parseInt(parInput.value) || 0;
+                }
+            }
+            document.getElementById('totalPar').value = total;
+        }
+
+        function saveCourseData() {
+            var courseName = document.getElementById('courseSelect').value;
+            
+            courses[courseName].slopeRating = parseInt(document.getElementById('slopeRating').value);
+            courses[courseName].courseRating = parseFloat(document.getElementById('courseRating').value) || courses[courseName].par;
+            
+            var pars = [];
+            var handicaps = [];
+            
+            for (var i = 1; i <= 18; i++) {
+                pars.push(parseInt(document.getElementById('par_' + i).value));
+                handicaps.push(parseInt(document.getElementById('stroke_' + i).value));
+            }
+            
+            var strokeCheck = {};
+            for (var i = 0; i < handicaps.length; i++) {
+                if (handicaps[i] < 1 || handicaps[i] > 18) {
+                    alert('Stroke index må være mellom 1 og 18');
+                    return;
+                }
+                if (strokeCheck[handicaps[i]]) {
+                    alert('Stroke index ' + handicaps[i] + ' er brukt flere ganger');
+                    return;
+                }
+                strokeCheck[handicaps[i]] = true;
+            }
+            
+            courses[courseName].pars = pars;
+            courses[courseName].handicaps = handicaps;
+            courses[courseName].par = pars.reduce(function(a, b) { return a + b; }, 0);
+            
+            localStorage.setItem('golfCourses2025', JSON.stringify(courses));
+            saveToServer();
+            
+            document.getElementById('courseMessage').innerHTML = '<div class="success-message">Banedata lagret!</div>';
+            setTimeout(function() {
+                document.getElementById('courseMessage').innerHTML = '';
+            }, 3000);
+        }
         // Initialize on load
         window.onload = function() {
             syncWithServer();
