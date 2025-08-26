@@ -1524,265 +1524,243 @@ function toggleSection(element) {
         }
         
         function loadLeaderboard() {
-            var html = '<div class="overall-section"><h3>⭐ SAMMENLAGT STILLING ⭐</h3>';
-            html += '<div class="overall-table"><div class="table-wrapper">';
-            html += '<table><thead><tr><th>Spiller</th><th>Total Brutto</th><th>Total Netto</th></tr></thead><tbody>';
-            
-            var overallScores = {};
+    var html = '<div class="overall-section"><h3>⭐ SAMMENLAGT STILLING ⭐</h3>';
+    html += '<div class="overall-table"><div class="table-wrapper">';
+    html += '<table><thead><tr><th>Spiller</th><th>Total Brutto</th><th>Total Netto</th></tr></thead><tbody>';
+    
+    var overallScores = {};
+    players.forEach(function(player) {
+        overallScores[player.name] = { gross: 0, net: 0, rounds: 0 };
+    });
+    
+    // Calculate individual round scores
+    schedule.forEach(function(round) {
+        if (round.type === 'Individuell') {
             players.forEach(function(player) {
-                overallScores[player.name] = { gross: 0, net: 0, rounds: 0 };
-            });
-            
-            // Calculate individual round scores
-            schedule.forEach(function(round) {
-                if (round.type === 'Individuell') {
-                    players.forEach(function(player) {
-                        var scoreKey = round.id + '_' + player.id;
-                        var roundScores = scores[scoreKey];
-                        
-                        if (roundScores && Object.keys(roundScores).length > 0) {
-                            var gross = 0;
-                            Object.values(roundScores).forEach(function(s) { gross += s; });
-                            
-                            var course = courses[round.course];
-                            var courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
-                            var net = gross - courseHandicap;
-                            
-                            overallScores[player.name].gross += gross;
-                            overallScores[player.name].net += net;
-                            overallScores[player.name].rounds++;
-                        }
-                    });
-                }
-            });
-            
-            // Calculate scramble scores - using team handicap
-            schedule.forEach(function(round) {
-                if (round.type === 'Scramble' && round.teams) {
-                    round.teams.forEach(function(team, teamIdx) {
-                        var scoreKey = round.id + '_team_' + teamIdx;
-                        var teamScores = scrambleScores[scoreKey];
-                        
-                        if (teamScores && Object.keys(teamScores).length > 0) {
-                            var teamGross = 0;
-                            Object.values(teamScores).forEach(function(s) { teamGross += s; });
-                            
-                            var teamHandicap = calculateScrambleHandicap(team, round.course);
-                            var teamNet = teamGross - teamHandicap;
-                            
-                            // Distribute scores to team members
-                            team.forEach(function(playerName) {
-                                overallScores[playerName].gross += teamGross / 2;
-                                overallScores[playerName].net += teamNet / 2;
-                                overallScores[playerName].rounds++;
-                            });
-                        }
-                    });
-                }
-            });
-            
-            // Sort and display
-            var sortedOverall = [];
-            Object.keys(overallScores).forEach(function(name) {
-                if (overallScores[name].rounds > 0) {
-                    sortedOverall.push({
-                        name: name,
-                        gross: overallScores[name].gross,
-                        net: overallScores[name].net
-                    });
-                }
-            });
-            
-            sortedOverall.sort(function(a, b) { return a.net - b.net; });
-            
-            sortedOverall.forEach(function(player, idx) {
-                html += '<tr>';
-                html += '<td>' + (idx === 0 ? '<span class="trophy">🏆</span>' : '') + player.name + '</td>';
-                html += '<td>' + Math.round(player.gross) + '</td>';
-                html += '<td><strong>' + Math.round(player.net) + '</strong></td>';
-                html += '</tr>';
-            });
-            
-            html += '</tbody></table></div></div></div>';
-            
-            // Add round-by-round results
-            html += '<h2 style="margin-top: 30px;">Resultater per Runde</h2>';
-            
-            schedule.forEach(function(round) {
-                var course = courses[round.course];
-                html += '<div class="course-section">';
-                html += '<h3>' + round.date + ' - ' + round.time + '</h3>';
-                html += '<h4>' + round.course + ' (Par ' + course.par + ')</h4>';
+                var scoreKey = round.id + '_' + player.id;
+                var roundScores = scores[scoreKey];
                 
-                if (round.type === 'Individuell') {
-                    var roundResults = [];
+                if (roundScores && Object.keys(roundScores).length > 0) {
+                    var gross = 0;
+                    Object.values(roundScores).forEach(function(s) { gross += s; });
                     
-                    players.forEach(function(player) {
-                        var scoreKey = round.id + '_' + player.id;
-                        var roundScores = scores[scoreKey];
-                        
-                        if (roundScores && Object.keys(roundScores).length > 0) {
-                            var gross = 0;
-                            Object.values(roundScores).forEach(function(s) { gross += s; });
-                            
-                            var courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
-                            var net = gross - courseHandicap;
-                            
-                            roundResults.push({
-                                name: player.name,
-                                gross: gross,
-                                net: net,
-                                handicap: courseHandicap
-                            });
-                        }
+                    var course = courses[round.course];
+                    var courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
+                    var net = gross - courseHandicap;
+                    
+                    overallScores[player.name].gross += gross;
+                    overallScores[player.name].net += net;
+                    overallScores[player.name].rounds++;
+                }
+            });
+        }
+    });
+    
+    // Calculate scramble scores - using team handicap
+    schedule.forEach(function(round) {
+        if (round.type === 'Scramble' && round.teams) {
+            round.teams.forEach(function(team, teamIdx) {
+                var scoreKey = round.id + '_team_' + teamIdx;
+                var teamScores = scrambleScores[scoreKey];
+                
+                if (teamScores && Object.keys(teamScores).length > 0) {
+                    var teamGross = 0;
+                    Object.values(teamScores).forEach(function(s) { teamGross += s; });
+                    
+                    var teamHandicap = calculateScrambleHandicap(team, round.course);
+                    var teamNet = teamGross - teamHandicap;
+                    
+                    // Distribute scores to team members
+                    team.forEach(function(playerName) {
+                        overallScores[playerName].gross += teamGross / 2;
+                        overallScores[playerName].net += teamNet / 2;
+                        overallScores[playerName].rounds++;
                     });
+                }
+            });
+        }
+    });
+    
+    // Sort and display
+    var sortedOverall = [];
+    Object.keys(overallScores).forEach(function(name) {
+        if (overallScores[name].rounds > 0) {
+            sortedOverall.push({
+                name: name,
+                gross: overallScores[name].gross,
+                net: overallScores[name].net
+            });
+        }
+    });
+    
+    sortedOverall.sort(function(a, b) { return a.net - b.net; });
+    
+    sortedOverall.forEach(function(player, idx) {
+        html += '<tr>';
+        html += '<td>' + (idx === 0 ? '<span class="trophy">🏆</span>' : '') + player.name + '</td>';
+        html += '<td>' + Math.round(player.gross) + '</td>';
+        html += '<td><strong>' + Math.round(player.net) + '</strong></td>';
+        html += '</tr>';
+    });
+    
+    html += '</tbody></table></div></div></div>';
+    
+    // Add round-by-round results
+    html += '<h2 style="margin-top: 30px;">Resultater per Runde</h2>';
+    
+    schedule.forEach(function(round) {
+        var course = courses[round.course];
+        html += '<div class="course-section">';
+        html += '<h3>' + round.date + ' - ' + round.time + '</h3>';
+        html += '<h4>' + round.course + ' (Par ' + course.par + ')</h4>';
+        
+        if (round.type === 'Individuell') {
+            var roundResults = [];
+            
+            players.forEach(function(player) {
+                var scoreKey = round.id + '_' + player.id;
+                var roundScores = scores[scoreKey];
+                
+                if (roundScores && Object.keys(roundScores).length > 0) {
+                    var gross = 0;
+                    Object.values(roundScores).forEach(function(s) { gross += s; });
                     
-                    if (roundResults.length > 0) {
-                        roundResults.sort(function(a, b) { return a.net - b.net; });
-                        
-                        html += '<div class="table-wrapper">';
-                        html += '<table><thead><tr>';
-                        html += '<th>Plass</th><th>Spiller</th><th>Brutto</th><th>HCP</th><th>Netto</th>';
-                        html += '</tr></thead><tbody>';
-                        
-                        roundResults.forEach(function(result, idx) {
-                            html += '<tr>';
-                            html += '<td>' + (idx + 1) + (idx === 0 ? ' 🥇' : idx === 1 ? ' 🥈' : idx === 2 ? ' 🥉' : '') + '</td>';
-                            html += '<td>' + result.name + '</td>';
-                            html += '<td>' + result.gross + '</td>';
-                            html += '<td>' + result.handicap.toFixed(1) + '</td>';
-                            html += '<td><strong>' + result.net.toFixed(1) + '</strong></td>';
-                            html += '</tr>';
-                        });
-                        
-                        html += '</tbody></table></div>';
-                        
-                        // Show competition winners for scrambles
-                        if (round.longestDrive || round.closestToPin) {
-                            html += '<div class="team-section" style="margin-top: 10px;">';
-                            html += '<strong>Konkurranser:</strong><br>';
-                            
-                            if (round.longestDrive) {
-                                round.longestDrive.forEach(function(hole) {
-                                    var winner = awards[round.id + '_ld_' + hole] || 'Ikke satt';
-                                    html += '<div>🚀 Lengste drive hull ' + hole + ': <strong>' + winner + '</strong></div>';
-                                });
-                            }
-                            
-                            if (round.closestToPin) {
-                                round.closestToPin.forEach(function(hole) {
-                                    var winner = awards[round.id + '_ctp_' + hole] || 'Ikke satt';
-                                    html += '<div>🎯 Nærmest pinnen hull ' + hole + ': <strong>' + winner + '</strong></div>';
-                                });
-                            }
-                            
-                            html += '</div>';
-                        }
-                    }
+                    var courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
+                    var net = gross - courseHandicap;
                     
-                    // Show competition winners
-                    if (round.longestDrive || round.closestToPin) {
-                        html += '<div class="team-section" style="margin-top: 10px;">';
-                        html += '<strong>Konkurranser:</strong><br>';
-                        
-                        if (round.longestDrive) {
-                            round.longestDrive.forEach(function(hole) {
-                                var winner = awards[round.id + '_ld_' + hole] || 'Ikke satt';
-                                html += '<div>🚀 Lengste drive hull ' + hole + ': <strong>' + winner + '</strong></div>';
-                            });
-                        }
-                        
-                        if (round.closestToPin) {
-                            round.closestToPin.forEach(function(hole) {
-                                var winner = awards[round.id + '_ctp_' + hole] || 'Ikke satt';
-                                html += '<div>🎯 Nærmest pinnen hull ' + hole + ': <strong>' + winner + '</strong></div>';
-                            });
-                        }
-                        
-                        html += '</div>';
-                    }
-                } else {
-                    // Scramble results with team handicaps
-                    var teamResults = [];
-                    
-                    round.teams.forEach(function(team, teamIdx) {
-                        var scoreKey = round.id + '_team_' + teamIdx;
-                        var teamScores = scrambleScores[scoreKey];
-                        
-                        if (teamScores && Object.keys(teamScores).length > 0) {
-                            var total = 0;
-                            Object.values(teamScores).forEach(function(s) { total += s; });
-                            
-                            var teamHandicap = calculateScrambleHandicap(team, round.course);
-                            var netScore = total - teamHandicap;
-                            
-                            teamResults.push({
-                                teamIdx: teamIdx,
-                                members: team.join(' & '),
-                                gross: total,
-                                handicap: teamHandicap,
-                                net: netScore
-                            });
-                        }
+                    roundResults.push({
+                        name: player.name,
+                        gross: gross,
+                        net: net,
+                        handicap: courseHandicap
                     });
-                    
-                    if (teamResults.length > 0) {
-                        // Sort by net score
-                        teamResults.sort(function(a, b) { return a.net - b.net; });
-                        
-                        html += '<h5>Scramble Resultater</h5>';
-                        html += '<div class="table-wrapper">';
-                        html += '<table><thead><tr>';
-                        html += '<th>Plass</th><th>Lag</th><th>Brutto</th><th>HCP</th><th>Netto</th><th>+/-</th>';
-                        html += '</tr></thead><tbody>';
-                        
-                        teamResults.forEach(function(result, idx) {
-                            var diff = result.net - course.par;
-                            var diffStr = diff === 0 ? 'E' : (diff > 0 ? '+' + diff : diff.toString());
-                            
-                            html += '<tr' + (idx === 0 ? ' class="winner"' : '') + '>';
-                            html += '<td>' + (idx + 1) + (idx === 0 ? ' 🏆' : '') + '</td>';
-                            html += '<td>Lag ' + (result.teamIdx + 1) + ': ' + result.members + '</td>';
-                            html += '<td>' + result.gross + '</td>';
-                            html += '<td>' + result.handicap + '</td>';
-                            html += '<td><strong>' + result.net + '</strong></td>';
-                            html += '<td>' + diffStr + '</td>';
-                            html += '</tr>';
-                        });
-                        
-                        html += '</tbody></table></div>';
-                        
-                        // Show competition winners for scrambles
-                        if (round.longestDrive || round.closestToPin) {
-                            html += '<div class="team-section" style="margin-top: 10px;">';
-                            html += '<strong>Konkurranser:</strong><br>';
-                            
-                            if (round.longestDrive) {
-                                round.longestDrive.forEach(function(hole) {
-                                    var winner = awards[round.id + '_ld_' + hole] || 'Ikke satt';
-                                    html += '<div>🚀 Lengste drive hull ' + hole + ': <strong>' + winner + '</strong></div>';
-                                });
-                            }
-                            
-                            if (round.closestToPin) {
-                                round.closestToPin.forEach(function(hole) {
-                                    var winner = awards[round.id + '_ctp_' + hole] || 'Ikke satt';
-                                    html += '<div>🎯 Nærmest pinnen hull ' + hole + ': <strong>' + winner + '</strong></div>';
-                                });
-                            }
-                            
-                            html += '</div>';
-                        }
-                    } else {
-                        html += '<p style="color: #718096;">Ingen resultater registrert ennå</p>';
-                    }
+                }
+            });
+            
+            if (roundResults.length > 0) {
+                roundResults.sort(function(a, b) { return a.net - b.net; });
+                
+                html += '<div class="table-wrapper">';
+                html += '<table><thead><tr>';
+                html += '<th>Plass</th><th>Spiller</th><th>Brutto</th><th>HCP</th><th>Netto</th>';
+                html += '</tr></thead><tbody>';
+                
+                roundResults.forEach(function(result, idx) {
+                    html += '<tr>';
+                    html += '<td>' + (idx + 1) + (idx === 0 ? ' 🥇' : idx === 1 ? ' 🥈' : idx === 2 ? ' 🥉' : '') + '</td>';
+                    html += '<td>' + result.name + '</td>';
+                    html += '<td>' + result.gross + '</td>';
+                    html += '<td>' + result.handicap.toFixed(1) + '</td>';
+                    html += '<td><strong>' + result.net.toFixed(1) + '</strong></td>';
+                    html += '</tr>';
+                });
+                
+                html += '</tbody></table></div>';
+            }
+            
+            // Show competition winners for individual rounds
+            if (round.longestDrive || round.closestToPin) {
+                html += '<div class="team-section" style="margin-top: 10px;">';
+                html += '<strong>Konkurranser:</strong><br>';
+                
+                if (round.longestDrive) {
+                    round.longestDrive.forEach(function(hole) {
+                        var winner = awards[round.id + '_ld_' + hole] || 'Ikke satt';
+                        html += '<div>🚀 Lengste drive hull ' + hole + ': <strong>' + winner + '</strong></div>';
+                    });
+                }
+                
+                if (round.closestToPin) {
+                    round.closestToPin.forEach(function(hole) {
+                        var winner = awards[round.id + '_ctp_' + hole] || 'Ikke satt';
+                        html += '<div>🎯 Nærmest pinnen hull ' + hole + ': <strong>' + winner + '</strong></div>';
+                    });
                 }
                 
                 html += '</div>';
+            }
+        } else {
+            // Scramble results with team handicaps
+            var teamResults = [];
+            
+            round.teams.forEach(function(team, teamIdx) {
+                var scoreKey = round.id + '_team_' + teamIdx;
+                var teamScores = scrambleScores[scoreKey];
+                
+                if (teamScores && Object.keys(teamScores).length > 0) {
+                    var total = 0;
+                    Object.values(teamScores).forEach(function(s) { total += s; });
+                    
+                    var teamHandicap = calculateScrambleHandicap(team, round.course);
+                    var netScore = total - teamHandicap;
+                    
+                    teamResults.push({
+                        teamIdx: teamIdx,
+                        members: team.join(' & '),
+                        gross: total,
+                        handicap: teamHandicap,
+                        net: netScore
+                    });
+                }
             });
             
-            document.getElementById('leaderboardContent').innerHTML = html;
+            if (teamResults.length > 0) {
+                // Sort by net score
+                teamResults.sort(function(a, b) { return a.net - b.net; });
+                
+                html += '<h5>Scramble Resultater</h5>';
+                html += '<div class="table-wrapper">';
+                html += '<table><thead><tr>';
+                html += '<th>Plass</th><th>Lag</th><th>Brutto</th><th>HCP</th><th>Netto</th><th>+/-</th>';
+                html += '</tr></thead><tbody>';
+                
+                teamResults.forEach(function(result, idx) {
+                    var diff = result.net - course.par;
+                    var diffStr = diff === 0 ? 'E' : (diff > 0 ? '+' + diff : diff.toString());
+                    
+                    html += '<tr' + (idx === 0 ? ' class="winner"' : '') + '>';
+                    html += '<td>' + (idx + 1) + (idx === 0 ? ' 🏆' : '') + '</td>';
+                    html += '<td>Lag ' + (result.teamIdx + 1) + ': ' + result.members + '</td>';
+                    html += '<td>' + result.gross + '</td>';
+                    html += '<td>' + result.handicap + '</td>';
+                    html += '<td><strong>' + result.net + '</strong></td>';
+                    html += '<td>' + diffStr + '</td>';
+                    html += '</tr>';
+                });
+                
+                html += '</tbody></table></div>';
+            } else {
+                html += '<p style="color: #718096;">Ingen resultater registrert ennå</p>';
+            }
+            
+            // Show competition winners for scrambles
+            if (round.longestDrive || round.closestToPin) {
+                html += '<div class="team-section" style="margin-top: 10px;">';
+                html += '<strong>Konkurranser:</strong><br>';
+                
+                if (round.longestDrive) {
+                    round.longestDrive.forEach(function(hole) {
+                        var winner = awards[round.id + '_ld_' + hole] || 'Ikke satt';
+                        html += '<div>🚀 Lengste drive hull ' + hole + ': <strong>' + winner + '</strong></div>';
+                    });
+                }
+                
+                if (round.closestToPin) {
+                    round.closestToPin.forEach(function(hole) {
+                        var winner = awards[round.id + '_ctp_' + hole] || 'Ikke satt';
+                        html += '<div>🎯 Nærmest pinnen hull ' + hole + ': <strong>' + winner + '</strong></div>';
+                    });
+                }
+                
+                html += '</div>';
+            }
         }
+        
+        html += '</div>';
+    });
+    
+    document.getElementById('leaderboardContent').innerHTML = html;
+}
         
         function loadCourses() {
             var html = '';
