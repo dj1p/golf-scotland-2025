@@ -537,7 +537,7 @@
         <span id="langBtn">🇬🇧 EN</span>
     </div>
 
-    <div class="version-badge" onclick="toggleStats(event)">v3.15</div>
+    <div class="version-badge" onclick="toggleStats(event)">v3.16</div>
     
     <div class="stats-badge" id="statsBadge">
         <span class="close-stats" onclick="hideStats()">×</span>
@@ -974,10 +974,11 @@
             courseHandicaps.sort(function(a, b) { return a - b; });
             
             if (courseHandicaps.length >= 2) {
-                // 70% of lowest + 30% of highest
+                // 70% of lowest + 30% of highest - keep one decimal
                 var lowest = courseHandicaps[0];
                 var highest = courseHandicaps[courseHandicaps.length - 1];
-                return Math.round((lowest * 0.7) + (highest * 0.3));
+                var teamHandicap = (lowest * 0.7) + (highest * 0.3);
+                return Math.round(teamHandicap * 10) / 10; // Round to 1 decimal
             } else if (courseHandicaps.length === 1) {
                 // If only one player (shouldn't happen in scramble)
                 return courseHandicaps[0];
@@ -1157,7 +1158,7 @@
                         
                         // Show team handicap for scrambles
                         var teamHandicap = calculateScrambleHandicap(team, round.course);
-                        html += ' <span style="color: #718096; font-size: 12px;">(Team HCP: ' + teamHandicap + ')</span>';
+                        html += ' <span style="color: #718096; font-size: 12px;">(Team HCP: ' + teamHandicap.toFixed(1) + ')</span>';
                         
                         if (round.teamTimes && round.teamTimes[j]) {
                             html += ' - ' + round.teamTimes[j];
@@ -1202,7 +1203,7 @@
                     html += '<div class="team-select" onclick="selectTeam(' + roundId + ', ' + idx + ')">';
                     html += '<strong>Lag ' + (idx + 1) + '</strong><br>';
                     html += team.join(' & ');
-                    html += '<br><span style="color: #718096; font-size: 12px;">Team Handicap: ' + teamHandicap + '</span>';
+                    html += '<br><span style="color: #718096; font-size: 12px;">Team Handicap: ' + teamHandicap.toFixed(1) + '</span>';
                     html += '</div>';
                 });
             } else {
@@ -1254,8 +1255,8 @@
                 html += '<p style="color: #4299e1;">Høyeste HCP: ' + highest + ' × 30% = ' + (highest * 0.3).toFixed(1) + '</p>';
             }
             
-            html += '<p><strong>Team Handicap: ' + teamHandicap + ' slag</strong></p>';
-            html += '<p style="color: #718096; font-size: 12px;">Netto score = Brutto - ' + teamHandicap + '</p>';
+            html += '<p><strong>Team Handicap: ' + teamHandicap.toFixed(1) + ' slag</strong></p>';
+            html += '<p style="color: #718096; font-size: 12px;">Netto score = Brutto - ' + teamHandicap.toFixed(1) + '</p>';
             html += '</div>';
             
             html += '<h4>Registrer lagscore:</h4>';
@@ -1516,12 +1517,34 @@
                             html += '<td>' + (idx + 1) + (idx === 0 ? ' 🥇' : idx === 1 ? ' 🥈' : idx === 2 ? ' 🥉' : '') + '</td>';
                             html += '<td>' + result.name + '</td>';
                             html += '<td>' + result.gross + '</td>';
-                            html += '<td>' + result.handicap + '</td>';
-                            html += '<td><strong>' + result.net + '</strong></td>';
+                            html += '<td>' + result.handicap.toFixed(1) + '</td>';
+                            html += '<td><strong>' + result.net.toFixed(1) + '</strong></td>';
                             html += '</tr>';
                         });
                         
                         html += '</tbody></table></div>';
+                        
+                        // Show competition winners for scrambles
+                        if (round.longestDrive || round.closestToPin) {
+                            html += '<div class="team-section" style="margin-top: 10px;">';
+                            html += '<strong>Konkurranser:</strong><br>';
+                            
+                            if (round.longestDrive) {
+                                round.longestDrive.forEach(function(hole) {
+                                    var winner = awards[round.id + '_ld_' + hole] || 'Ikke satt';
+                                    html += '<div>🚀 Lengste drive hull ' + hole + ': <strong>' + winner + '</strong></div>';
+                                });
+                            }
+                            
+                            if (round.closestToPin) {
+                                round.closestToPin.forEach(function(hole) {
+                                    var winner = awards[round.id + '_ctp_' + hole] || 'Ikke satt';
+                                    html += '<div>🎯 Nærmest pinnen hull ' + hole + ': <strong>' + winner + '</strong></div>';
+                                });
+                            }
+                            
+                            html += '</div>';
+                        }
                     }
                     
                     // Show competition winners
@@ -1763,7 +1786,7 @@
                                 
                                 html += '<div style="margin-bottom: 30px; padding: 15px; background: #f7fafc; border-radius: 10px;">';
                                 html += '<h5>Lag ' + (teamIdx + 1) + ': ' + team.join(' & ') + '</h5>';
-                                html += '<p style="color: #4299e1;">Team Handicap: ' + teamHandicap + ' (70% laveste + 30% høyeste)</p>';
+                                html += '<p style="color: #4299e1;">Team Handicap: ' + teamHandicap.toFixed(1) + ' (70% laveste + 30% høyeste)</p>';
                                 
                                 if (teamScores && Object.keys(teamScores).length > 0) {
                                     // Front 9
@@ -1828,8 +1851,8 @@
                                     var total = frontTotal + backTotal;
                                     var netScore = total - teamHandicap;
                                     var diff = netScore - courseData.par;
-                                    var diffStr = diff === 0 ? 'E' : (diff > 0 ? '+' + diff : diff.toString());
-                                    html += '<p style="margin-top: 10px; font-size: 16px;"><strong>Brutto: ' + (total || '-') + ' | Netto: ' + netScore + ' (' + diffStr + ')</strong></p>';
+                                    var diffStr = diff === 0 ? 'E' : (diff > 0 ? '+' + diff.toFixed(1) : diff.toFixed(1));
+                                    html += '<p style="margin-top: 10px; font-size: 16px;"><strong>Brutto: ' + (total || '-') + ' | Netto: ' + netScore.toFixed(1) + ' (' + diffStr + ')</strong></p>';
                                     
                                 } else {
                                     html += '<p style="color: #718096;">Ingen score registrert</p>';
@@ -2048,7 +2071,7 @@
                         html += '<p>Lag ' + (idx + 1) + ' (' + team.join(' & ') + '): ';
                         if (handicaps.length >= 2) {
                             html += 'HCP ' + handicaps[0] + ' & ' + handicaps[handicaps.length - 1];
-                            html += ' → <strong>' + teamHandicap + ' slag</strong></p>';
+                            html += ' → <strong>' + teamHandicap.toFixed(1) + ' slag</strong></p>';
                         }
                     });
                     html += '</div>';
