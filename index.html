@@ -342,7 +342,54 @@
             margin: 10px 0;
             font-size: 14px;
         }
-        
+        .collapsible {
+    background: #667eea;
+    color: white;
+    cursor: pointer;
+    padding: 12px 15px;
+    width: 100%;
+    border: none;
+    text-align: left;
+    outline: none;
+    font-size: 15px;
+    border-radius: 8px;
+    margin-top: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.collapsible:hover {
+    background: #5a67d8;
+}
+
+.collapsible:after {
+    content: '\002B';
+    color: white;
+    font-weight: bold;
+    float: right;
+    margin-left: 5px;
+}
+
+.collapsible.active:after {
+    content: "\2212";
+}
+
+.collapsible-content {
+    padding: 0 18px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease-out;
+    background-color: #f7fafc;
+    border-radius: 0 0 8px 8px;
+    margin-bottom: 10px;
+}
+
+.collapsible-content.show {
+    max-height: 2000px;
+    padding: 18px;
+    transition: max-height 0.3s ease-in;
+}
         .course-section {
             border-top: 3px solid #667eea;
             margin: 20px 0;
@@ -2178,22 +2225,26 @@
                 html = '<div class="admin-section">';
                 html += '<h3>Administrator Panel</h3>';
                 html += '<button onclick="logoutAdmin()" style="background: #fc8181;">Logg ut</button>';
+
                 
-                // Handicap editing
-                html += '<h4>Rediger Handicap</h4>';
-                html += '<div class="handicap-edit-grid">';
                 
-                players.forEach(function(player) {
-                    html += '<div class="handicap-edit-item">';
-                    html += '<label>' + player.name + '</label>';
-                    html += '<input type="number" step="0.1" id="hcp_' + player.id + '" value="' + player.handicap + '" ';
-                    html += 'onchange="updateHandicap(' + player.id + ', this.value)">';
-                    html += '</div>';
-                });
-                
-                html += '</div>';
-                html += '<button onclick="saveHandicaps()" style="margin-top: 10px;">Lagre Handicap</button>';
-                html += '<div id="handicapMessage"></div>';
+        // Handicap editing
+html += '<button class="collapsible" onclick="toggleSection(this)">Rediger Handicap</button>';
+html += '<div class="collapsible-content">';
+html += '<div class="handicap-edit-grid">';
+
+players.forEach(function(player) {
+    html += '<div class="handicap-edit-item">';
+    html += '<label>' + player.name + '</label>';
+    html += '<input type="number" step="0.1" id="hcp_' + player.id + '" value="' + player.handicap + '" ';
+    html += 'onchange="updateHandicap(' + player.id + ', this.value)">';
+    html += '</div>';
+});
+
+html += '</div>'; // closes handicap-edit-grid
+html += '<button onclick="saveHandicaps()" style="margin-top: 10px;">Lagre Handicap</button>';
+html += '<div id="handicapMessage"></div>';
+html += '</div>'; // closes collapsible-content
                 
                 // Flight times editing for both Individual and Scramble
                 html += '<h4>Starttider for Flights og Scrambles</h4>';
