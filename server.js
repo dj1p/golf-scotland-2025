@@ -63,6 +63,7 @@ app.post('/api/scores', (req, res) => {
             awards: req.body.awards || {},
             scrambleWinners: req.body.scrambleWinners || {},
             players: req.body.players || [],
+            courses: req.body.courses || {},
             schedule: req.body.schedule || [],
             playedCourses: req.body.playedCourses || [],
             whiskyCollection: req.body.whiskyCollection || []
