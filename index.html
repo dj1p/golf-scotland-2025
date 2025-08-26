@@ -2252,197 +2252,196 @@ html += '<div id="handicapMessage"></div>';
 html += '</div>'; // closes collapsible-content
                 
                 // Flight times editing for both Individual and Scramble
-                html += '<h4>Starttider for Flights og Scrambles</h4>';
-                html += '<div style="background: #f7fafc; padding: 15px; border-radius: 10px; margin: 15px 0;">';
-                
-                schedule.forEach(function(round) {
-                    html += '<div style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 8px;">';
-                    html += '<h5>' + round.date + ' - ' + round.course + ' (' + round.type + ')</h5>';
-                    
-                    if (round.type === 'Individuell' && round.flights) {
-                        round.flights.forEach(function(flight, idx) {
-                            html += '<div style="margin: 10px 0;">';
-                            html += '<label style="display: block; margin-bottom: 5px; font-size: 12px;">Flight ' + (idx + 1) + ' (' + flight.players.join(', ') + '):</label>';
-                            html += '<input type="time" id="flight_' + round.id + '_' + idx + '" value="' + (flight.time || '') + '" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
-                            html += '</div>';
-                        });
-                    } else if (round.type === 'Scramble' && round.teams) {
-                        
-                        // Add time inputs for scramble teams
-                        if (!round.teamTimes) {
-                            round.teamTimes = [];
-                        }
-                        round.teams.forEach(function(team, idx) {
-                            html += '<div style="margin: 10px 0;">';
-                            html += '<label style="display: block; margin-bottom: 5px; font-size: 12px;">Lag ' + (idx + 1) + ' (' + team.join(' & ') + '):</label>';
-                            html += '<input type="time" id="scramble_time_' + round.id + '_' + idx + '" value="' + (round.teamTimes && round.teamTimes[idx] ? round.teamTimes[idx] : '') + '" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
-                            html += '</div>';
-                        });
-                    }
-                    
-                    html += '</div>';
-                });
-                
-                html += '<button onclick="saveFlightTimes()">Lagre starttider</button>';
-                html += '</div>';
+html += '<button class="collapsible" onclick="toggleSection(this)">Starttider for Flights og Scrambles</button>';
+html += '<div class="collapsible-content">';
+
+schedule.forEach(function(round) {
+    html += '<div style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 8px;">';
+    html += '<h5>' + round.date + ' - ' + round.course + ' (' + round.type + ')</h5>';
+    
+    if (round.type === 'Individuell' && round.flights) {
+        round.flights.forEach(function(flight, idx) {
+            html += '<div style="margin: 10px 0;">';
+            html += '<label style="display: block; margin-bottom: 5px; font-size: 12px;">Flight ' + (idx + 1) + ' (' + flight.players.join(', ') + '):</label>';
+            html += '<input type="time" id="flight_' + round.id + '_' + idx + '" value="' + (flight.time || '') + '" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
+            html += '</div>';
+        });
+    } else if (round.type === 'Scramble' && round.teams) {
+        // Add time inputs for scramble teams
+        if (!round.teamTimes) {
+            round.teamTimes = [];
+        }
+        round.teams.forEach(function(team, idx) {
+            html += '<div style="margin: 10px 0;">';
+            html += '<label style="display: block; margin-bottom: 5px; font-size: 12px;">Lag ' + (idx + 1) + ' (' + team.join(' & ') + '):</label>';
+            html += '<input type="time" id="scramble_time_' + round.id + '_' + idx + '" value="' + (round.teamTimes && round.teamTimes[idx] ? round.teamTimes[idx] : '') + '" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
+            html += '</div>';
+        });
+    }
+    
+    html += '</div>';
+});
+
+html += '<button onclick="saveFlightTimes()">Lagre starttider</button>';
+html += '</div>'; // closes collapsible-content for flights and scramble
                 
                 // Competition holes editing
-                html += '<h4>Konkurransehull (Longest Drive / Closest to Pin)</h4>';
-                html += '<div style="background: #f7fafc; padding: 15px; border-radius: 10px; margin: 15px 0;">';
+html += '<button class="collapsible" onclick="toggleSection(this)">Konkurransehull (Longest Drive / Closest to Pin)</button>';
+html += '<div class="collapsible-content">';
+
+schedule.forEach(function(round) {
+    html += '<div style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 8px;">';
+    html += '<h5>' + round.date + ' - ' + round.course + ' (' + round.type + ')</h5>';
+    
+    // Longest Drive
+    html += '<div style="margin: 10px 0;">';
+    html += '<label style="display: block; margin-bottom: 5px; font-size: 12px;">Longest Drive hull (kommaseparert, f.eks: 5,15):</label>';
+    var ldValue = round.longestDrive ? round.longestDrive.join(',') : '';
+    html += '<input type="text" id="ld_' + round.id + '" value="' + ldValue + '" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
+    html += '</div>';
+    
+    // Closest to Pin
+    html += '<div style="margin: 10px 0;">';
+    html += '<label style="display: block; margin-bottom: 5px; font-size: 12px;">Closest to Pin hull (kommaseparert, f.eks: 2,13):</label>';
+    var ctpValue = round.closestToPin ? round.closestToPin.join(',') : '';
+    html += '<input type="text" id="ctp_' + round.id + '" value="' + ctpValue + '" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
+    html += '</div>';
+    
+    html += '</div>';
+});
+
+html += '<button onclick="saveCompetitionHoles()">Lagre hull</button>';
+html += '</div>'; // closes collapsible-content
                 
-                schedule.forEach(function(round) {
-                    html += '<div style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 8px;">';
-                    html += '<h5>' + round.date + ' - ' + round.course + ' (' + round.type + ')</h5>';
-                    
-                    // Longest Drive
-                    html += '<div style="margin: 10px 0;">';
-                    html += '<label style="display: block; margin-bottom: 5px; font-size: 12px;">Longest Drive hull (kommaseparert, f.eks: 5,15):</label>';
-                    var ldValue = round.longestDrive ? round.longestDrive.join(',') : '';
-                    html += '<input type="text" id="ld_' + round.id + '" value="' + ldValue + '" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
-                    html += '</div>';
-                    
-                    // Closest to Pin
-                    html += '<div style="margin: 10px 0;">';
-                    html += '<label style="display: block; margin-bottom: 5px; font-size: 12px;">Closest to Pin hull (kommaseparert, f.eks: 2,13):</label>';
-                    var ctpValue = round.closestToPin ? round.closestToPin.join(',') : '';
-                    html += '<input type="text" id="ctp_' + round.id + '" value="' + ctpValue + '" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
-                    html += '</div>';
-                    
-                    html += '</div>';
-                });
-                
-                html += '<button onclick="saveCompetitionHoles()">Lagre hull</button>';
-                html += '</div>';
-                
-                // Award winners - for ALL rounds including scrambles
-                html += '<h4>Konkurransevinnere</h4>';
-                html += '<div style="background: #f7fafc; padding: 15px; border-radius: 10px; margin: 15px 0;">';
-                
-                schedule.forEach(function(round) {
-                    html += '<div style="margin-bottom: 20px;">';
-                    html += '<h5>' + round.date + ' - ' + round.course + ' (' + round.type + ')</h5>';
-                    html += '<div class="award-select">';
-                    
-                    // Show competitions for ALL rounds (both Individual and Scramble)
-                    if (round.longestDrive) {
-                        round.longestDrive.forEach(function(hole) {
-                            html += '<div class="award-input">';
-                            html += '<label>Longest Drive Hull ' + hole + ':</label>';
-                            html += '<select id="award_' + round.id + '_ld_' + hole + '">';
-                            html += '<option value="">-- Velg vinner --</option>';
-                            players.forEach(function(player) {
-                                var selected = awards[round.id + '_ld_' + hole] === player.name ? 'selected' : '';
-                                html += '<option value="' + player.name + '" ' + selected + '>' + player.name + '</option>';
-                            });
-                            html += '</select>';
-                            html += '</div>';
-                        });
-                    }
-                    
-                    if (round.closestToPin) {
-                        round.closestToPin.forEach(function(hole) {
-                            html += '<div class="award-input">';
-                            html += '<label>Closest to Pin Hull ' + hole + ':</label>';
-                            html += '<select id="award_' + round.id + '_ctp_' + hole + '">';
-                            html += '<option value="">-- Velg vinner --</option>';
-                            players.forEach(function(player) {
-                                var selected = awards[round.id + '_ctp_' + hole] === player.name ? 'selected' : '';
-                                html += '<option value="' + player.name + '" ' + selected + '>' + player.name + '</option>';
-                            });
-                            html += '</select>';
-                            html += '</div>';
-                        });
-                    }
-                    
-                    html += '</div>';
-                    html += '</div>';
-                });
-                
-                html += '<button onclick="saveAwards()">Lagre vinnere</button>';
-                html += '</div>';
-                
-                // Scramble winners
-                html += '<h4>Scramble Vinnere</h4>';
-                html += '<div style="background: #f7fafc; padding: 15px; border-radius: 10px; margin: 15px 0;">';
-                
-                schedule.forEach(function(round) {
-                    if (round.type === 'Scramble') {
-                        html += '<div style="margin-bottom: 15px;">';
-                        html += '<h5>' + round.date + ' - ' + round.course + '</h5>';
-                        html += '<select id="scramble_' + round.id + '">';
-                        html += '<option value="">-- Velg vinnende lag --</option>';
-                        round.teams.forEach(function(team, idx) {
-                            var selected = scrambleWinners[round.id] === idx ? 'selected' : '';
-                            html += '<option value="' + idx + '" ' + selected + '>Lag ' + (idx + 1) + ': ' + team.join(' & ') + '</option>';
-                        });
-                        html += '</select>';
-                        html += '</div>';
-                    }
-                });
-                
-                html += '<button onclick="saveScrambleWinners()">Lagre scramble vinnere</button>';
-                html += '</div>';
-                
-                // Played Courses Management
-                html += '<h4>Administrer Spillte Baner</h4>';
-                html += '<div style="background: #f7fafc; padding: 15px; border-radius: 10px; margin: 15px 0;">';
-                
-                html += '<h5>Legg til ny bane</h5>';
-                html += '<div style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 10px; margin-bottom: 15px;">';
-                html += '<input type="text" id="newCourseName" placeholder="Banenavn" style="padding: 8px; border: 1px solid #cbd5e0; border-radius: 5px;">';
-                html += '<input type="number" id="newCourseYear" placeholder="År" min="2010" max="2030" style="padding: 8px; border: 1px solid #cbd5e0; border-radius: 5px;">';
-                html += '<button onclick="addPlayedCourse()">Legg til</button>';
-                html += '</div>';
-                
-                html += '<h5>Eksisterende baner</h5>';
-                html += '<div style="max-height: 300px; overflow-y: auto; background: white; padding: 10px; border-radius: 8px;">';
-                
-                playedCourses.forEach(function(course) {
-                    html += '<div style="margin-bottom: 10px; padding: 10px; background: #f7fafc; border-radius: 5px;">';
-                    html += '<div style="display: flex; justify-content: space-between; align-items: center;">';
-                    html += '<div>';
-                    html += '<strong>' + course.name + '</strong><br>';
-                    html += '<span style="font-size: 12px; color: #718096;">År: ' + course.years.join(', ') + '</span>';
-                    html += '</div>';
-                    html += '<button onclick="removePlayedCourse(' + course.id + ')" style="background: #fc8181; padding: 5px 10px; font-size: 12px;">Slett</button>';
-                    html += '</div>';
-                    html += '<div style="margin-top: 5px;">';
-                    html += '<input type="number" id="addYear_' + course.id + '" placeholder="Legg til år" min="2010" max="2030" style="width: 100px; padding: 4px; margin-right: 5px; border: 1px solid #cbd5e0; border-radius: 3px;">';
-                    html += '<button onclick="addYearToCourse(' + course.id + ')" style="padding: 4px 8px; font-size: 12px;">+ År</button>';
-                    html += '</div>';
-                    html += '</div>';
-                });
-                
-                html += '</div>';
-                html += '</div>';
-                
-                // Whisky Management
-                html += '<h4>Administrer Whisky Samling</h4>';
-                html += '<div style="background: #f7fafc; padding: 15px; border-radius: 10px; margin: 15px 0;">';
-                
-                whiskyCollection.forEach(function(entry) {
-                    html += '<div style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 8px;">';
-                    html += '<h5>' + entry.owner + '</h5>';
-                    html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">';
-                    
-                    html += '<div>';
-                    html += '<label style="display: block; font-size: 12px; margin-bottom: 5px;">Hoved Whisky:</label>';
-                    html += '<input type="text" id="whisky_primary_' + entry.id + '" value="' + (entry.primary || '') + '" ';
-                    html += 'placeholder="F.eks. Glenmorangie" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
-                    html += '</div>';
-                    
-                    html += '<div>';
-                    html += '<label style="display: block; font-size: 12px; margin-bottom: 5px;">Reserve Whisky:</label>';
-                    html += '<input type="text" id="whisky_reserve_' + entry.id + '" value="' + (entry.reserve || '') + '" ';
-                    html += 'placeholder="Valgfritt" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
-                    html += '</div>';
-                    
-                    html += '</div>';
-                    html += '</div>';
-                });
-                
-                html += '<button onclick="saveWhisky()">Lagre Whisky Samling</button>';
-                html += '</div>';
+         // Award winners - for ALL rounds including scrambles
+html += '<button class="collapsible" onclick="toggleSection(this)">Konkurransevinnere</button>';
+html += '<div class="collapsible-content">';
+
+schedule.forEach(function(round) {
+    html += '<div style="margin-bottom: 20px;">';
+    html += '<h5>' + round.date + ' - ' + round.course + ' (' + round.type + ')</h5>';
+    html += '<div class="award-select">';
+    
+    // Show competitions for ALL rounds (both Individual and Scramble)
+    if (round.longestDrive) {
+        round.longestDrive.forEach(function(hole) {
+            html += '<div class="award-input">';
+            html += '<label>Longest Drive Hull ' + hole + ':</label>';
+            html += '<select id="award_' + round.id + '_ld_' + hole + '">';
+            html += '<option value="">-- Velg vinner --</option>';
+            players.forEach(function(player) {
+                var selected = awards[round.id + '_ld_' + hole] === player.name ? 'selected' : '';
+                html += '<option value="' + player.name + '" ' + selected + '>' + player.name + '</option>';
+            });
+            html += '</select>';
+            html += '</div>';
+        });
+    }
+    
+    if (round.closestToPin) {
+        round.closestToPin.forEach(function(hole) {
+            html += '<div class="award-input">';
+            html += '<label>Closest to Pin Hull ' + hole + ':</label>';
+            html += '<select id="award_' + round.id + '_ctp_' + hole + '">';
+            html += '<option value="">-- Velg vinner --</option>';
+            players.forEach(function(player) {
+                var selected = awards[round.id + '_ctp_' + hole] === player.name ? 'selected' : '';
+                html += '<option value="' + player.name + '" ' + selected + '>' + player.name + '</option>';
+            });
+            html += '</select>';
+            html += '</div>';
+        });
+    }
+    
+    html += '</div>';
+    html += '</div>';
+});
+
+html += '<button onclick="saveAwards()">Lagre vinnere</button>';
+html += '</div>'; // closes collapsible-content
+
+// Scramble winners
+html += '<button class="collapsible" onclick="toggleSection(this)">Scramble Vinnere</button>';
+html += '<div class="collapsible-content">';
+
+schedule.forEach(function(round) {
+    if (round.type === 'Scramble') {
+        html += '<div style="margin-bottom: 15px;">';
+        html += '<h5>' + round.date + ' - ' + round.course + '</h5>';
+        html += '<select id="scramble_' + round.id + '">';
+        html += '<option value="">-- Velg vinnende lag --</option>';
+        round.teams.forEach(function(team, idx) {
+            var selected = scrambleWinners[round.id] === idx ? 'selected' : '';
+            html += '<option value="' + idx + '" ' + selected + '>Lag ' + (idx + 1) + ': ' + team.join(' & ') + '</option>';
+        });
+        html += '</select>';
+        html += '</div>';
+    }
+});
+
+html += '<button onclick="saveScrambleWinners()">Lagre scramble vinnere</button>';
+html += '</div>'; // closes collapsible-content
+
+// Played Courses Management
+html += '<button class="collapsible" onclick="toggleSection(this)">Administrer Spillte Baner</button>';
+html += '<div class="collapsible-content">';
+
+html += '<h5>Legg til ny bane</h5>';
+html += '<div style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 10px; margin-bottom: 15px;">';
+html += '<input type="text" id="newCourseName" placeholder="Banenavn" style="padding: 8px; border: 1px solid #cbd5e0; border-radius: 5px;">';
+html += '<input type="number" id="newCourseYear" placeholder="År" min="2010" max="2030" style="padding: 8px; border: 1px solid #cbd5e0; border-radius: 5px;">';
+html += '<button onclick="addPlayedCourse()">Legg til</button>';
+html += '</div>';
+
+html += '<h5>Eksisterende baner</h5>';
+html += '<div style="max-height: 300px; overflow-y: auto; background: white; padding: 10px; border-radius: 8px;">';
+
+playedCourses.forEach(function(course) {
+    html += '<div style="margin-bottom: 10px; padding: 10px; background: #f7fafc; border-radius: 5px;">';
+    html += '<div style="display: flex; justify-content: space-between; align-items: center;">';
+    html += '<div>';
+    html += '<strong>' + course.name + '</strong><br>';
+    html += '<span style="font-size: 12px; color: #718096;">År: ' + course.years.join(', ') + '</span>';
+    html += '</div>';
+    html += '<button onclick="removePlayedCourse(' + course.id + ')" style="background: #fc8181; padding: 5px 10px; font-size: 12px;">Slett</button>';
+    html += '</div>';
+    html += '<div style="margin-top: 5px;">';
+    html += '<input type="number" id="addYear_' + course.id + '" placeholder="Legg til år" min="2010" max="2030" style="width: 100px; padding: 4px; margin-right: 5px; border: 1px solid #cbd5e0; border-radius: 3px;">';
+    html += '<button onclick="addYearToCourse(' + course.id + ')" style="padding: 4px 8px; font-size: 12px;">+ År</button>';
+    html += '</div>';
+    html += '</div>';
+});
+
+html += '</div>';
+html += '</div>'; // closes collapsible-content
+
+// Whisky Management
+html += '<button class="collapsible" onclick="toggleSection(this)">Administrer Whisky Samling</button>';
+html += '<div class="collapsible-content">';
+
+whiskyCollection.forEach(function(entry) {
+    html += '<div style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 8px;">';
+    html += '<h5>' + entry.owner + '</h5>';
+    html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">';
+    
+    html += '<div>';
+    html += '<label style="display: block; font-size: 12px; margin-bottom: 5px;">Hoved Whisky:</label>';
+    html += '<input type="text" id="whisky_primary_' + entry.id + '" value="' + (entry.primary || '') + '" ';
+    html += 'placeholder="F.eks. Glenmorangie" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
+    html += '</div>';
+    
+    html += '<div>';
+    html += '<label style="display: block; font-size: 12px; margin-bottom: 5px;">Reserve Whisky:</label>';
+    html += '<input type="text" id="whisky_reserve_' + entry.id + '" value="' + (entry.reserve || '') + '" ';
+    html += 'placeholder="Valgfritt" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
+    html += '</div>';
+    
+    html += '</div>';
+    html += '</div>';
+});
+
+html += '<button onclick="saveWhisky()">Lagre Whisky Samling</button>';
+html += '</div>'; // closes collapsible-content
 
 // Course Management Section
 html += '<button class="collapsible" onclick="toggleSection(this)">🏌️ Administrer Banedata</button>';
