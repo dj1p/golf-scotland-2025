@@ -2347,9 +2347,45 @@
                 
                 html += '<button onclick="saveWhisky()">Lagre Whisky Samling</button>';
                 html += '</div>';
-                // Banedata administrasjon
+
+// Course Management Section
                 html += '<h4>🏌️ Administrer Banedata</h4>';
                 html += '<div class="course-management-section">';
+                html += '<div class="course-selector">';
+                html += '<label>Velg bane å redigere:</label>';
+                html += '<select id="courseSelect" onchange="loadCourseDataForEdit()">';
+                html += '<option value="Cullen Links">Cullen Links</option>';
+                html += '<option value="Spey Bay">Spey Bay</option>';
+                html += '<option value="Strathlene">Strathlene</option>';
+                html += '<option value="Garmouth & Kingston">Garmouth & Kingston</option>';
+                html += '</select>';
+                html += '</div>';
+                
+                html += '<div class="course-basic-info">';
+                html += '<div class="course-input-group">';
+                html += '<label>Slope Rating (55-155):</label>';
+                html += '<input type="number" id="slopeRating" min="55" max="155" step="1">';
+                html += '</div>';
+                html += '<div class="course-input-group">';
+                html += '<label>Course Rating:</label>';
+                html += '<input type="number" id="courseRating" step="0.1">';
+                html += '</div>';
+                html += '<div class="course-input-group">';
+                html += '<label>Total Par:</label>';
+                html += '<input type="number" id="totalPar" readonly style="background: #e2e8f0;">';
+                html += '</div>';
+                html += '</div>';
+                
+                html += '<h5 style="margin: 15px 0;">Hull 1-9 (Front 9)</h5>';
+                html += '<div class="holes-grid" id="front9Grid"></div>';
+                
+                html += '<h5 style="margin: 15px 0;">Hull 10-18 (Back 9)</h5>';
+                html += '<div class="holes-grid" id="back9Grid"></div>';
+                
+                html += '<button class="save-course-btn" onclick="saveCourseData()">Lagre Banedata</button>';
+                html += '<div id="courseMessage"></div>';
+                html += '</div>';
+
                 html += '</div>';
                 html += '</div>';
             }
@@ -2633,44 +2669,7 @@
             html += '<li style="margin-bottom: 8px;"><strong>Kystbaner:</strong> Cullen og Spey Bay har ofte mer vind</li>';
             html += '<li style="margin-bottom: 8px;"><strong>Innlandsbaner:</strong> Garmouth og Strathlene er mer beskyttet</li>';
             html += '</ul>';
-            // Course Management Section
-                html += '<h4>🏌️ Administrer Banedata</h4>';
-                html += '<div class="course-management-section">';
-                html += '<div class="course-selector">';
-                html += '<label>Velg bane å redigere:</label>';
-                html += '<select id="courseSelect" onchange="loadCourseDataForEdit()">';
-                html += '<option value="Cullen Links">Cullen Links</option>';
-                html += '<option value="Spey Bay">Spey Bay</option>';
-                html += '<option value="Strathlene">Strathlene</option>';
-                html += '<option value="Garmouth & Kingston">Garmouth & Kingston</option>';
-                html += '</select>';
-                html += '</div>';
-                
-                html += '<div class="course-basic-info">';
-                html += '<div class="course-input-group">';
-                html += '<label>Slope Rating (55-155):</label>';
-                html += '<input type="number" id="slopeRating" min="55" max="155" step="1">';
-                html += '</div>';
-                html += '<div class="course-input-group">';
-                html += '<label>Course Rating:</label>';
-                html += '<input type="number" id="courseRating" step="0.1">';
-                html += '</div>';
-                html += '<div class="course-input-group">';
-                html += '<label>Total Par:</label>';
-                html += '<input type="number" id="totalPar" readonly style="background: #e2e8f0;">';
-                html += '</div>';
-                html += '</div>';
-                
-                html += '<h5 style="margin: 15px 0;">Hull 1-9 (Front 9)</h5>';
-                html += '<div class="holes-grid" id="front9Grid"></div>';
-                
-                html += '<h5 style="margin: 15px 0;">Hull 10-18 (Back 9)</h5>';
-                html += '<div class="holes-grid" id="back9Grid"></div>';
-                
-                html += '<button class="save-course-btn" onclick="saveCourseData()">Lagre Banedata</button>';
-                html += '<div id="courseMessage"></div>';
-                html += '</div>';
-            html += '</div>';
+                      html += '</div>';
             
             document.getElementById('weatherContent').innerHTML = html;
         }
