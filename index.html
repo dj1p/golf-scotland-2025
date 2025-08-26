@@ -1383,6 +1383,7 @@
         
         html += '<div class="hole-input ' + (hasStroke ? 'stroke' : '') + '">';
         html += '<label>Hull ' + i + ' (Par ' + par + strokeText + ')</label>';
+        html += '<div style="font-size: 11px; color: #718096; margin-bottom: 3px;">SI: ' + hcpIndex + '</div>';
         html += '<input type="number" id="hole' + i + '" min="1" max="15" value="' + value + '" ';
         html += 'onchange="autoSaveScore(' + playerId + ', ' + roundId + ', ' + i + ')">';
         html += '</div>';
@@ -1418,6 +1419,7 @@
         
         html += '<div class="hole-input ' + (hasStroke ? 'stroke' : '') + '">';
         html += '<label>Hull ' + i + ' (Par ' + par + strokeText + ')</label>';
+        html += '<div style="font-size: 11px; color: #718096; margin-bottom: 3px;">SI: ' + hcpIndex + '</div>';
         html += '<input type="number" id="hole' + i + '" min="1" max="15" value="' + value + '" ';
         html += 'onchange="autoSaveScore(' + playerId + ', ' + roundId + ', ' + i + ')">';
         html += '</div>';
