@@ -1336,60 +1336,96 @@
         }
         
         function loadScorecardForm() {
-            var playerId = document.getElementById('playerSelect').value;
-            var roundId = document.getElementById('selectedRound').value;
-            
-            if (!playerId) return;
-            
-            var player = players.find(function(p) { return p.id == playerId; });
-            var round = schedule.find(function(r) { return r.id == roundId; });
-            var course = courses[round.course];
-            var courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
-            var scoreKey = roundId + '_' + playerId;
-            var existingScores = scores[scoreKey] || {};
-            
-            var html = '<div style="margin: 20px 0; padding: 15px; background: #edf2f7; border-radius: 10px;">';
-            html += '<strong>' + player.name + '</strong><br>';
-            html += 'Handicap: ' + player.handicap + '<br>';
-            html += 'Banehandicap: ' + courseHandicap;
-            html += '</div>';
-            
-            html += '<div class="nine-section">';
-            html += '<h5>Front 9</h5>';
-            html += '<div class="scorecard-grid">';
-            for (var i = 1; i <= 9; i++) {
-                var par = course.pars[i-1];
-                var hcpIndex = course.handicaps[i-1];
-                var hasStroke = hcpIndex <= courseHandicap;
-                var value = existingScores[i] || '';
-                
-                html += '<div class="hole-input ' + (hasStroke ? 'stroke' : '') + '">';
-                html += '<label>Hull ' + i + ' (Par ' + par + (hasStroke ? '+1' : '') + ')</label>';
-                html += '<input type="number" id="hole' + i + '" min="1" max="15" value="' + value + '" ';
-                html += 'onchange="autoSaveScore(' + playerId + ', ' + roundId + ', ' + i + ')">';
-                html += '</div>';
+    var playerId = document.getElementById('playerSelect').value;
+    var roundId = document.getElementById('selectedRound').value;
+    
+    if (!playerId) return;
+    
+    var player = players.find(function(p) { return p.id == playerId; });
+    var round = schedule.find(function(r) { return r.id == roundId; });
+    var course = courses[round.course];
+    var courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
+    var scoreKey = roundId + '_' + playerId;
+    var existingScores = scores[scoreKey] || {};
+    
+    var html = '<div style="margin: 20px 0; padding: 15px; background: #edf2f7; border-radius: 10px;">';
+    html += '<strong>' + player.name + '</strong><br>';
+    html += 'Handicap: ' + player.handicap + '<br>';
+    html += 'Banehandicap: ' + courseHandicap;
+    html += '</div>';
+    
+    html += '<div class="nine-section">';
+    html += '<h5>Front 9</h5>';
+    html += '<div class="scorecard-grid">';
+    for (var i = 1; i <= 9; i++) {
+        var par = course.pars[i-1];
+        var hcpIndex = course.handicaps[i-1];
+        var value = existingScores[i] || '';
+        
+        // Calculate strokes for this hole
+        var strokesOnHole = 0;
+        if (courseHandicap >= 18) {
+            strokesOnHole = 1; // At least one stroke on every hole
+            if (hcpIndex <= (courseHandicap - 18)) {
+                strokesOnHole = 2; // Additional stroke on hardest holes
             }
-            html += '</div></div>';
-            
-            html += '<div class="nine-section">';
-            html += '<h5>Back 9</h5>';
-            html += '<div class="scorecard-grid">';
-            for (var i = 10; i <= 18; i++) {
-                var par = course.pars[i-1];
-                var hcpIndex = course.handicaps[i-1];
-                var hasStroke = hcpIndex <= courseHandicap;
-                var value = existingScores[i] || '';
-                
-                html += '<div class="hole-input ' + (hasStroke ? 'stroke' : '') + '">';
-                html += '<label>Hull ' + i + ' (Par ' + par + (hasStroke ? '+1' : '') + ')</label>';
-                html += '<input type="number" id="hole' + i + '" min="1" max="15" value="' + value + '" ';
-                html += 'onchange="autoSaveScore(' + playerId + ', ' + roundId + ', ' + i + ')">';
-                html += '</div>';
+            if (courseHandicap >= 36 && hcpIndex <= (courseHandicap - 36)) {
+                strokesOnHole = 3; // Third stroke on hardest holes
             }
-            html += '</div></div>';
-            
-            document.getElementById('holesForm').innerHTML = html;
+        } else {
+            if (hcpIndex <= courseHandicap) {
+                strokesOnHole = 1;
+            }
         }
+        
+        var hasStroke = strokesOnHole > 0;
+        var strokeText = strokesOnHole > 0 ? '+' + strokesOnHole : '';
+        
+        html += '<div class="hole-input ' + (hasStroke ? 'stroke' : '') + '">';
+        html += '<label>Hull ' + i + ' (Par ' + par + strokeText + ')</label>';
+        html += '<input type="number" id="hole' + i + '" min="1" max="15" value="' + value + '" ';
+        html += 'onchange="autoSaveScore(' + playerId + ', ' + roundId + ', ' + i + ')">';
+        html += '</div>';
+    }
+    html += '</div></div>';
+    
+    html += '<div class="nine-section">';
+    html += '<h5>Back 9</h5>';
+    html += '<div class="scorecard-grid">';
+    for (var i = 10; i <= 18; i++) {
+        var par = course.pars[i-1];
+        var hcpIndex = course.handicaps[i-1];
+        var value = existingScores[i] || '';
+        
+        // Calculate strokes for this hole
+        var strokesOnHole = 0;
+        if (courseHandicap >= 18) {
+            strokesOnHole = 1; // At least one stroke on every hole
+            if (hcpIndex <= (courseHandicap - 18)) {
+                strokesOnHole = 2; // Additional stroke on hardest holes
+            }
+            if (courseHandicap >= 36 && hcpIndex <= (courseHandicap - 36)) {
+                strokesOnHole = 3; // Third stroke on hardest holes
+            }
+        } else {
+            if (hcpIndex <= courseHandicap) {
+                strokesOnHole = 1;
+            }
+        }
+        
+        var hasStroke = strokesOnHole > 0;
+        var strokeText = strokesOnHole > 0 ? '+' + strokesOnHole : '';
+        
+        html += '<div class="hole-input ' + (hasStroke ? 'stroke' : '') + '">';
+        html += '<label>Hull ' + i + ' (Par ' + par + strokeText + ')</label>';
+        html += '<input type="number" id="hole' + i + '" min="1" max="15" value="' + value + '" ';
+        html += 'onchange="autoSaveScore(' + playerId + ', ' + roundId + ', ' + i + ')">';
+        html += '</div>';
+    }
+    html += '</div></div>';
+    
+    document.getElementById('holesForm').innerHTML = html;
+}
         
         function autoSaveScore(playerId, roundId, hole) {
             var scoreKey = roundId + '_' + playerId;
