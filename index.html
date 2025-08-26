@@ -2267,6 +2267,7 @@ html += '</div>'; // closes collapsible-content
                             html += '</div>';
                         });
                     } else if (round.type === 'Scramble' && round.teams) {
+                        
                         // Add time inputs for scramble teams
                         if (!round.teamTimes) {
                             round.teamTimes = [];
@@ -2444,7 +2445,11 @@ html += '</div>'; // closes collapsible-content
                 html += '</div>';
 
 // Course Management Section
-                html += '<h4>🏌️ Administrer Banedata</h4>';
+                // Course Management Section
+html += '<button class="collapsible" onclick="toggleSection(this)">🏌️ Administrer Banedata</button>';
+html += '<div class="collapsible-content">';
+html += '<div class="course-selector">';
+html += '<label>Velg bane å redigere:</label>';
                 html += '<div class="course-management-section">';
                 html += '<div class="course-selector">';
                 html += '<label>Velg bane å redigere:</label>';
@@ -2480,7 +2485,9 @@ html += '</div>'; // closes collapsible-content
                 html += '<button class="save-course-btn" onclick="saveCourseData()">Lagre Banedata</button>';
                 html += '<div id="courseMessage"></div>';
                 html += '</div>';
-
+html += '<button class="save-course-btn" onclick="saveCourseData()">Lagre Banedata</button>';
+html += '<div id="courseMessage"></div>';
+html += '</div>';
                 html += '</div>';
                 html += '</div>';
             }
