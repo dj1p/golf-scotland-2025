@@ -2396,12 +2396,18 @@ html += '</div>';
 html += '<h5>Eksisterende baner</h5>';
 html += '<div style="max-height: 300px; overflow-y: auto; background: white; padding: 10px; border-radius: 8px;">';
 
-playedCourses.forEach(function(course) {
+// Sort played courses alphabetically
+var sortedPlayedCourses = playedCourses.slice().sort(function(a, b) {
+    return a.name.localeCompare(b.name);
+});
+                
+sortedPlayedCourses.forEach(function(course) {
     html += '<div style="margin-bottom: 10px; padding: 10px; background: #f7fafc; border-radius: 5px;">';
     html += '<div style="display: flex; justify-content: space-between; align-items: center;">';
     html += '<div>';
     html += '<strong>' + course.name + '</strong><br>';
-html += '<span style="font-size: 12px; color: #718096;">År: ';
+    html += '<span style="font-size: 12px; color: #718096;">År: ';
+    
 
     // Make each year individually removable
 course.years.forEach(function(year, idx) {
