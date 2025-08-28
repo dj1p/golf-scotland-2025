@@ -1047,34 +1047,34 @@ function toggleSection(element) {
     content.classList.toggle("show");
 }
         // Function to calculate scramble team handicap
-        function calculateScrambleHandicap(teamMembers, courseName) {
-            var course = courses[courseName];
-            var courseHandicaps = [];
-            
-            teamMembers.forEach(function(memberName) {
-                var player = players.find(function(p) { return p.name === memberName; });
-                if (player) {
-                    var courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
-                    courseHandicaps.push(courseHandicap);
-                }
-            });
-            
-            // Sort to find lowest and highest
-            courseHandicaps.sort(function(a, b) { return a - b; });
-            
-            if (courseHandicaps.length >= 2) {
-                // 70% of lowest + 30% of highest - keep one decimal
-                var lowest = courseHandicaps[0];
-                var highest = courseHandicaps[courseHandicaps.length - 1];
-                var teamHandicap = (lowest * 0.7) + (highest * 0.3);
-                return Math.round(teamHandicap * 10) / 10; // Round to 1 decimal
-            } else if (courseHandicaps.length === 1) {
-                // If only one player (shouldn't happen in scramble)
-                return courseHandicaps[0];
-            }
-            
-            return 0;
+function calculateScrambleHandicap(teamMembers, courseName) {
+    var playerHandicaps = [];
+    
+    teamMembers.forEach(function(memberName) {
+        var player = players.find(function(p) { return p.name === memberName; });
+        if (player) {
+            playerHandicaps.push(player.handicap);
         }
+    });
+    
+    // Sort to find lowest and highest
+    playerHandicaps.sort(function(a, b) { return a - b; });
+    
+    if (playerHandicaps.length >= 2) {
+        var lowest = playerHandicaps[0];
+        var highest = playerHandicaps[playerHandicaps.length - 1];
+        
+        // 70% of lowest + 30% of highest
+        var teamHandicap = (lowest * 0.7) + (highest * 0.3);
+        
+        // Round to nearest whole number (no decimals)
+        return Math.round(teamHandicap);
+    } else if (playerHandicaps.length === 1) {
+        return Math.round(playerHandicaps[0]);
+    }
+    
+    return 0;
+}
         
         // Initialize with sync from server if available
         async function syncWithServer() {
