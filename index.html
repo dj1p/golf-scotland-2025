@@ -1068,7 +1068,7 @@ function calculateScrambleHandicap(teamMembers, courseName) {
         var teamHandicap = (lowest * 0.7) + (highest * 0.3);
         
         // Round to nearest whole number (no decimals)
-        return Math.round(teamHandicap);
+        return Math.round(teamHandicap * 10) / 10;
     } else if (playerHandicaps.length === 1) {
         return Math.round(playerHandicaps[0]);
     }
