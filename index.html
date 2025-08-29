@@ -219,25 +219,6 @@
             border-radius: 5px;
             font-size: 14px;
         }
-
-        /* NEW: Stableford specific styling */
-        .stableford-points {
-            font-size: 11px;
-            color: #4299e1;
-            font-weight: bold;
-            margin-top: 2px;
-        }
-
-        .scoring-mode-indicator {
-            background: #e6f4ff;
-            border: 1px solid #4299e1;
-            padding: 8px 12px;
-            border-radius: 8px;
-            margin: 10px 0;
-            font-size: 12px;
-            color: #2b6cb0;
-            text-align: center;
-        }
         
         button {
             background: #48bb78;
@@ -560,7 +541,7 @@
             font-size: 14px;
         }
 
-        /* Styles for the handicap toggle */
+        /* NEW: Styles for the handicap toggle */
         .handicap-toggle {
             background: #f0f8ff;
             border: 1px solid #4299e1;
@@ -686,7 +667,7 @@
         <span id="langBtn">🇬🇧 EN</span>
     </div>
 
-    <div class="version-badge" onclick="toggleStats(event)">v3.17</div>
+    <div class="version-badge" onclick="toggleStats(event)">v3.16</div>
     
     <div class="stats-badge" id="statsBadge">
         <span class="close-stats" onclick="hideStats()">×</span>
@@ -819,7 +800,7 @@
     </div>
 
     <script>
-        // Complete Golf App JavaScript with Stableford support
+        // Complete Golf App JavaScript - keeping original structure, just adding handicap toggle
         var players = [
             { id: 1, name: 'Klaus', handicap: 18.1 },
             { id: 2, name: 'Ruben', handicap: 11 },
@@ -1010,27 +991,6 @@
         var scrambleWinners = {};
         var isAdmin = false;
         
-        // NEW: Add scoring system variable (stroke or stableford)
-        var scoringSystem = 'stroke'; // 'stroke' or 'stableford'
-        
-        // Load saved scoring system
-        var savedScoringSystem = localStorage.getItem('scoringSystem2025');
-        if (savedScoringSystem) {
-            scoringSystem = savedScoringSystem;
-        }
-        
-        // NEW: Stableford points calculation
-        function calculateStablefordPoints(score, par, strokes) {
-            var netScore = score - strokes;
-            var diff = netScore - par;
-            
-            if (diff <= -2) return 4; // Eagle or better
-            if (diff === -1) return 3; // Birdie
-            if (diff === 0) return 2;  // Par
-            if (diff === 1) return 1;  // Bogey
-            return 0; // Double bogey or worse
-        }
-        
         // Statistics tracking
         var stats = JSON.parse(localStorage.getItem('golfStats2025') || '{}');
         if (!stats.pageViews) stats.pageViews = 0;
@@ -1126,45 +1086,43 @@
         function hideStats() {
             document.getElementById('statsBadge').classList.remove('active');
         }
-
         // Collapsible rows in Admin Console
-        function toggleSection(element) {
-            element.classList.toggle("active");
-            var content = element.nextElementSibling;
-            content.classList.toggle("show");
-        }
-
+function toggleSection(element) {
+    element.classList.toggle("active");
+    var content = element.nextElementSibling;
+    content.classList.toggle("show");
+}
         // Function to calculate scramble team handicap
-        function calculateScrambleHandicap(teamMembers, courseName) {
-            var playerHandicaps = [];
-            
-            teamMembers.forEach(function(memberName) {
-                var player = players.find(function(p) { return p.name === memberName; });
-                if (player) {
-                    playerHandicaps.push(player.handicap);
-                }
-            });
-            
-            // Sort to find lowest and highest
-            playerHandicaps.sort(function(a, b) { return a - b; });
-            
-            if (playerHandicaps.length >= 2) {
-                var lowest = playerHandicaps[0];
-                var highest = playerHandicaps[playerHandicaps.length - 1];
-                
-                // 70% of lowest + 30% of highest
-                var teamHandicap = (lowest * 0.7) + (highest * 0.3);
-                
-                // Round to 1 decimal place
-                return Math.round(teamHandicap * 10) / 10;
-            } else if (playerHandicaps.length === 1) {
-                return Math.round(playerHandicaps[0]);
-            }
-            
-            return 0;
+function calculateScrambleHandicap(teamMembers, courseName) {
+    var playerHandicaps = [];
+    
+    teamMembers.forEach(function(memberName) {
+        var player = players.find(function(p) { return p.name === memberName; });
+        if (player) {
+            playerHandicaps.push(player.handicap);
         }
+    });
+    
+    // Sort to find lowest and highest
+    playerHandicaps.sort(function(a, b) { return a - b; });
+    
+    if (playerHandicaps.length >= 2) {
+        var lowest = playerHandicaps[0];
+        var highest = playerHandicaps[playerHandicaps.length - 1];
+        
+        // 70% of lowest + 30% of highest
+        var teamHandicap = (lowest * 0.7) + (highest * 0.3);
+        
+        // Round to 1 decimal place
+        return Math.round(teamHandicap * 10) / 10;
+    } else if (playerHandicaps.length === 1) {
+        return Math.round(playerHandicaps[0]);
+    }
+    
+    return 0;
+}
 
-        // Calculate course-based scramble handicap
+        // NEW: Calculate course-based scramble handicap
         function calculateCourseScrambleHandicap(teamMembers, courseName) {
             var course = courses[courseName];
             var courseHandicaps = [];
@@ -1191,7 +1149,7 @@
             return 0;
         }
 
-        // Get stroke holes for course-based handicap
+        // NEW: Get stroke holes for course-based handicap
         function getStrokeHoles(handicap, course) {
             var strokeHoles = [];
             var roundedHandicap = Math.round(handicap);
@@ -1221,7 +1179,7 @@
             return strokeHoles;
         }
 
-        // Toggle handicap calculation display
+        // NEW: Toggle handicap calculation display
         function toggleHandicapDetails(containerId) {
             var details = document.getElementById('handicapDetails_' + containerId);
             var checkbox = document.getElementById('handicapToggle_' + containerId);
@@ -1231,20 +1189,6 @@
             } else {
                 details.style.display = 'none';
             }
-        }
-
-        // NEW: Change scoring system
-        function changeScoringSystem(system) {
-            scoringSystem = system;
-            localStorage.setItem('scoringSystem2025', scoringSystem);
-            saveToServer();
-            
-            // Update any currently visible scoring forms
-            if (document.getElementById('holesForm') && document.getElementById('holesForm').innerHTML) {
-                loadScorecardForm();
-            }
-            
-            alert('Poengsystem endret til: ' + (system === 'stableford' ? 'Stableford' : 'Stroke Play'));
         }
         
         // Initialize with sync from server if available
@@ -1257,10 +1201,6 @@
                     scrambleScores = serverData.scrambleScores || scrambleScores;
                     awards = serverData.awards || awards;
                     scrambleWinners = serverData.scrambleWinners || scrambleWinners;
-                    if (serverData.scoringSystem) {
-                        scoringSystem = serverData.scoringSystem;
-                        localStorage.setItem('scoringSystem2025', scoringSystem);
-                    }
                     if (serverData.players && Array.isArray(serverData.players) && serverData.players.length > 0) {
                         players = serverData.players;
                     }
@@ -1274,9 +1214,9 @@
                         whiskyCollection = serverData.whiskyCollection;
                     }
                     if (serverData.courses) {
-                        courses = serverData.courses;
-                        localStorage.setItem('golfCourses2025', JSON.stringify(courses));
-                    }
+                courses = serverData.courses;
+                localStorage.setItem('golfCourses2025', JSON.stringify(courses));
+            }
                     localStorage.setItem('golfScores2025', JSON.stringify(scores));
                     localStorage.setItem('scrambleScores2025', JSON.stringify(scrambleScores));
                     localStorage.setItem('golfAwards2025', JSON.stringify(awards));
@@ -1285,7 +1225,7 @@
                     localStorage.setItem('golfSchedule2025', JSON.stringify(schedule));
                     localStorage.setItem('playedCourses2025', JSON.stringify(playedCourses));
                     localStorage.setItem('whiskyCollection2025', JSON.stringify(whiskyCollection));
-                    localStorage.setItem('golfCourses2025', JSON.stringify(courses));
+                    localStorage.setItem('golfCourses2025', JSON.stringify(courses));  // Add this line
                 }
             } catch (e) {
                 console.log('Using local storage only');
@@ -1307,8 +1247,7 @@
                         schedule, 
                         playedCourses, 
                         whiskyCollection,
-                        courses,
-                        scoringSystem
+                        courses
                     })
                 });
             } catch (e) {
@@ -1431,6 +1370,52 @@
                         var teamHandicap = calculateScrambleHandicap(team, round.course);
                         html += ' <span style="color: #718096; font-size: 12px;">(Team HCP: ' + teamHandicap.toFixed(1) + ')</span>';
                         
+                        // NEW: Add handicap toggle for schedule view
+                        var containerId = 'schedule_' + round.id + '_' + j;
+                        html += '<div class="handicap-toggle" style="margin-top: 8px;">';
+                        html += '<label>';
+                        html += '<input type="checkbox" id="handicapToggle_' + containerId + '" onchange="toggleHandicapDetails(\'' + containerId + '\')" style="margin-right: 5px;">';
+                        html += 'Vis banehandicap og slag';
+                        html += '</label>';
+                        html += '<div id="handicapDetails_' + containerId + '" class="handicap-details">';
+                        
+                        var course = courses[round.course];
+                        var courseTeamHandicap = calculateCourseScrambleHandicap(team, round.course);
+                        
+                        html += '<div style="margin-bottom: 10px;">';
+                        html += '<strong>Baneinfo:</strong> ' + round.course + ' (Slope: ' + course.slopeRating + ', Par: ' + course.par + ')<br>';
+                        
+                        // Show individual course handicaps
+                        team.forEach(function(memberName) {
+                            var player = players.find(function(p) { return p.name === memberName; });
+                            if (player) {
+                                var courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
+                                html += memberName + ': HCP ' + player.handicap + ' → Bane HCP ' + courseHandicap + '<br>';
+                            }
+                        });
+                        
+                        html += '<strong>Team Bane HCP: ' + courseTeamHandicap.toFixed(1) + ' slag</strong>';
+                        html += '</div>';
+                        
+                        // Show stroke holes
+                        html += '<div><strong>Ekstra slag per hull:</strong></div>';
+                        html += '<div class="stroke-grid">';
+                        var strokeHoles = getStrokeHoles(courseTeamHandicap, course);
+                        strokeHoles.forEach(function(holeInfo) {
+                            var strokeClass = holeInfo.strokes > 0 ? 'stroke-hole' : 'no-stroke-hole';
+                            var strokeText = holeInfo.strokes > 0 ? '+' + holeInfo.strokes : '0';
+                            
+                            html += '<div class="' + strokeClass + '">';
+                            html += '<div style="font-weight: bold;">H' + holeInfo.hole + '</div>';
+                            html += '<div style="font-size: 10px;">SI ' + course.handicaps[holeInfo.hole-1] + '</div>';
+                            html += '<div>' + strokeText + '</div>';
+                            html += '</div>';
+                        });
+                        html += '</div>';
+                        
+                        html += '</div>';
+                        html += '</div>';
+                        
                         if (round.teamTimes && round.teamTimes[j]) {
                             html += ' - ' + round.teamTimes[j];
                         }
@@ -1452,14 +1437,7 @@
         }
         
         function loadScorecard() {
-            var html = '';
-            
-            // NEW: Add scoring system indicator
-            html += '<div class="scoring-mode-indicator">';
-            html += '📊 Poengsystem: <strong>' + (scoringSystem === 'stableford' ? 'Stableford' : 'Stroke Play') + '</strong>';
-            html += '</div>';
-            
-            html += '<h3>Velg runde:</h3>';
+            var html = '<h3>Velg runde:</h3>';
             schedule.forEach(function(round) {
                 html += '<div class="round-select" onclick="selectRound(' + round.id + ')">';
                 html += '<strong>' + round.date + ' - ' + round.time + '</strong><br>';
@@ -1473,11 +1451,6 @@
         function selectRound(roundId) {
             var round = schedule.find(function(r) { return r.id === roundId; });
             var html = '<h3>' + round.course + ' - ' + round.date + '</h3>';
-            
-            // NEW: Add scoring system indicator
-            html += '<div class="scoring-mode-indicator">';
-            html += '📊 Poengsystem: <strong>' + (scoringSystem === 'stableford' ? 'Stableford' : 'Stroke Play') + '</strong>';
-            html += '</div>';
             
             if (round.type === 'Scramble') {
                 html += '<h4>Velg lag:</h4>';
@@ -1515,11 +1488,6 @@
             var html = '<h3>' + round.course + ' - ' + round.date + '</h3>';
             html += '<h4>Lag ' + (teamIdx + 1) + ': ' + team.join(' & ') + '</h4>';
             
-            // NEW: Add scoring system indicator
-            html += '<div class="scoring-mode-indicator">';
-            html += '📊 Poengsystem: <strong>' + (scoringSystem === 'stableford' ? 'Stableford' : 'Stroke Play') + '</strong>';
-            html += '</div>';
-            
             // Show scramble handicap info
             html += '<div class="scramble-handicap-info">';
             html += '<h5>Scramble Handicap Beregning</h5>';
@@ -1543,11 +1511,56 @@
             }
             
             html += '<p><strong>Team Handicap: ' + teamHandicap.toFixed(1) + ' slag</strong></p>';
-            if (scoringSystem === 'stableford') {
-                html += '<p style="color: #718096; font-size: 12px;">Stableford: Poeng beregnes per hull basert på team handicap</p>';
-            } else {
-                html += '<p style="color: #718096; font-size: 12px;">Stroke Play: Netto score = Brutto - ' + teamHandicap.toFixed(1) + '</p>';
-            }
+            html += '<p style="color: #718096; font-size: 12px;">Netto score = Brutto - ' + teamHandicap.toFixed(1) + '</p>';
+            
+            // NEW: Add handicap toggle for team selection
+            var containerId = 'teamSelect_' + roundId + '_' + teamIdx;
+            html += '<div class="handicap-toggle" style="margin-top: 15px;">';
+            html += '<label>';
+            html += '<input type="checkbox" id="handicapToggle_' + containerId + '" onchange="toggleHandicapDetails(\'' + containerId + '\')" style="margin-right: 5px;">';
+            html += 'Vis banehandicap og ekstra slag per hull';
+            html += '</label>';
+            html += '<div id="handicapDetails_' + containerId + '" class="handicap-details">';
+            
+            var courseTeamHandicap = calculateCourseScrambleHandicap(team, round.course);
+            
+            html += '<div style="margin-bottom: 10px;">';
+            html += '<strong>Baneinfo:</strong> ' + round.course + ' (Slope: ' + course.slopeRating + ', Par: ' + course.par + ')<br>';
+            
+            // Show individual course handicaps
+            team.forEach(function(memberName) {
+                var player = players.find(function(p) { return p.name === memberName; });
+                if (player) {
+                    var courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
+                    html += memberName + ': HCP ' + player.handicap + ' → Bane HCP ' + courseHandicap + '<br>';
+                }
+            });
+            
+            html += '<strong>Team Bane HCP: ' + courseTeamHandicap.toFixed(1) + ' slag</strong>';
+            html += '</div>';
+            
+            // Show stroke holes
+            html += '<div><strong>Ekstra slag per hull:</strong></div>';
+            html += '<div class="stroke-grid">';
+            var strokeHoles = getStrokeHoles(courseTeamHandicap, course);
+            strokeHoles.forEach(function(holeInfo) {
+                var strokeClass = holeInfo.strokes > 0 ? 'stroke-hole' : 'no-stroke-hole';
+                var strokeText = holeInfo.strokes > 0 ? '+' + holeInfo.strokes : '0';
+                
+                html += '<div class="' + strokeClass + '">';
+                html += '<div style="font-weight: bold;">H' + holeInfo.hole + '</div>';
+                html += '<div style="font-size: 10px;">Par ' + course.pars[holeInfo.hole-1] + '</div>';
+                html += '<div style="font-size: 10px;">SI ' + course.handicaps[holeInfo.hole-1] + '</div>';
+                html += '<div>' + strokeText + '</div>';
+                html += '</div>';
+            });
+            html += '</div>';
+            html += '<div style="margin-top: 8px; font-size: 11px; color: #718096;">';
+            html += 'SI = Stroke Index (1=vanskeligst hull) | +slag = ekstra slag laget får på hullet';
+            html += '</div>';
+            
+            html += '</div>';
+            html += '</div>';
             html += '</div>';
             
             html += '<h4>Registrer lagscore:</h4>';
@@ -1600,9 +1613,6 @@
             html += '<strong>' + player.name + '</strong><br>';
             html += 'Handicap: ' + player.handicap + '<br>';
             html += 'Banehandicap: ' + courseHandicap;
-            if (scoringSystem === 'stableford') {
-                html += '<br><span style="color: #4299e1;">Stableford: Poeng beregnes per hull</span>';
-            }
             html += '</div>';
             
             html += '<div class="nine-section">';
@@ -1616,12 +1626,12 @@
                 // Calculate strokes for this hole
                 var strokesOnHole = 0;
                 if (courseHandicap >= 18) {
-                    strokesOnHole = 1;
+                    strokesOnHole = 1; // At least one stroke on every hole
                     if (hcpIndex <= (courseHandicap - 18)) {
-                        strokesOnHole = 2;
+                        strokesOnHole = 2; // Additional stroke on hardest holes
                     }
                     if (courseHandicap >= 36 && hcpIndex <= (courseHandicap - 36)) {
-                        strokesOnHole = 3;
+                        strokesOnHole = 3; // Third stroke on hardest holes
                     }
                 } else {
                     if (hcpIndex <= courseHandicap) {
@@ -1635,13 +1645,6 @@
                 html += '<div class="hole-input ' + (hasStroke ? 'stroke' : '') + '">';
                 html += '<label>Hull ' + i + ' (Par ' + par + strokeText + ')</label>';
                 html += '<div style="font-size: 11px; color: #718096; margin-bottom: 3px;">SI: ' + hcpIndex + '</div>';
-                
-                // NEW: Show Stableford points if applicable
-                if (scoringSystem === 'stableford' && value) {
-                    var points = calculateStablefordPoints(parseInt(value), par, strokesOnHole);
-                    html += '<div class="stableford-points">' + points + ' poeng</div>';
-                }
-                
                 html += '<input type="number" id="hole' + i + '" min="1" max="15" value="' + value + '" ';
                 html += 'onchange="autoSaveScore(' + playerId + ', ' + roundId + ', ' + i + ')">';
                 html += '</div>';
@@ -1659,12 +1662,12 @@
                 // Calculate strokes for this hole
                 var strokesOnHole = 0;
                 if (courseHandicap >= 18) {
-                    strokesOnHole = 1;
+                    strokesOnHole = 1; // At least one stroke on every hole
                     if (hcpIndex <= (courseHandicap - 18)) {
-                        strokesOnHole = 2;
+                        strokesOnHole = 2; // Additional stroke on hardest holes
                     }
                     if (courseHandicap >= 36 && hcpIndex <= (courseHandicap - 36)) {
-                        strokesOnHole = 3;
+                        strokesOnHole = 3; // Third stroke on hardest holes
                     }
                 } else {
                     if (hcpIndex <= courseHandicap) {
@@ -1678,13 +1681,6 @@
                 html += '<div class="hole-input ' + (hasStroke ? 'stroke' : '') + '">';
                 html += '<label>Hull ' + i + ' (Par ' + par + strokeText + ')</label>';
                 html += '<div style="font-size: 11px; color: #718096; margin-bottom: 3px;">SI: ' + hcpIndex + '</div>';
-                
-                // NEW: Show Stableford points if applicable
-                if (scoringSystem === 'stableford' && value) {
-                    var points = calculateStablefordPoints(parseInt(value), par, strokesOnHole);
-                    html += '<div class="stableford-points">' + points + ' poeng</div>';
-                }
-                
                 html += '<input type="number" id="hole' + i + '" min="1" max="15" value="' + value + '" ';
                 html += 'onchange="autoSaveScore(' + playerId + ', ' + roundId + ', ' + i + ')">';
                 html += '</div>';
@@ -1707,20 +1703,12 @@
             }
             
             localStorage.setItem('golfScores2025', JSON.stringify(scores));
-            saveToServer();
             
             var input = document.getElementById('hole' + hole);
             input.style.backgroundColor = '#c6f6d5';
             setTimeout(function() {
                 input.style.backgroundColor = '';
             }, 500);
-            
-            // NEW: Refresh Stableford points display if needed
-            if (scoringSystem === 'stableford') {
-                setTimeout(function() {
-                    loadScorecardForm();
-                }, 600);
-            }
         }
         
         function autoSaveTeamScore(roundId, teamIdx, hole) {
@@ -1736,7 +1724,6 @@
             }
             
             localStorage.setItem('scrambleScores2025', JSON.stringify(scrambleScores));
-            saveToServer();
             
             var input = document.getElementById('hole' + hole);
             input.style.backgroundColor = '#c6f6d5';
@@ -1747,22 +1734,12 @@
         
         function loadLeaderboard() {
             var html = '<div class="overall-section"><h3>⭐ SAMMENLAGT STILLING ⭐</h3>';
-            
-            // NEW: Add scoring system indicator
-            html += '<div style="background: rgba(255,255,255,0.2); padding: 8px; border-radius: 8px; margin: 10px 0; color: white; text-align: center;">';
-            html += 'Poengsystem: <strong>' + (scoringSystem === 'stableford' ? 'Stableford' : 'Stroke Play') + '</strong>';
-            html += '</div>';
-            
             html += '<div class="overall-table"><div class="table-wrapper">';
-            if (scoringSystem === 'stableford') {
-                html += '<table><thead><tr><th>Spiller</th><th>Total Poeng</th></tr></thead><tbody>';
-            } else {
-                html += '<table><thead><tr><th>Spiller</th><th>Total Brutto</th><th>Total Netto</th></tr></thead><tbody>';
-            }
+            html += '<table><thead><tr><th>Spiller</th><th>Total Brutto</th><th>Total Netto</th></tr></thead><tbody>';
             
             var overallScores = {};
             players.forEach(function(player) {
-                overallScores[player.name] = { gross: 0, net: 0, points: 0, rounds: 0 };
+                overallScores[player.name] = { gross: 0, net: 0, rounds: 0 };
             });
             
             // Calculate individual round scores
@@ -1774,50 +1751,21 @@
                         
                         if (roundScores && Object.keys(roundScores).length > 0) {
                             var gross = 0;
-                            var totalPoints = 0;
+                            Object.values(roundScores).forEach(function(s) { gross += s; });
+                            
                             var course = courses[round.course];
                             var courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
-                            
-                            Object.keys(roundScores).forEach(function(hole) {
-                                var score = roundScores[hole];
-                                var holeNum = parseInt(hole);
-                                var par = course.pars[holeNum - 1];
-                                var strokeIndex = course.handicaps[holeNum - 1];
-                                
-                                // Calculate strokes for this hole
-                                var strokesOnHole = 0;
-                                if (courseHandicap >= 18) {
-                                    strokesOnHole = 1;
-                                    if (strokeIndex <= (courseHandicap - 18)) {
-                                        strokesOnHole = 2;
-                                    }
-                                    if (courseHandicap >= 36 && strokeIndex <= (courseHandicap - 36)) {
-                                        strokesOnHole = 3;
-                                    }
-                                } else {
-                                    if (strokeIndex <= courseHandicap) {
-                                        strokesOnHole = 1;
-                                    }
-                                }
-                                
-                                gross += score;
-                                if (scoringSystem === 'stableford') {
-                                    totalPoints += calculateStablefordPoints(score, par, strokesOnHole);
-                                }
-                            });
-                            
                             var net = gross - courseHandicap;
                             
                             overallScores[player.name].gross += gross;
                             overallScores[player.name].net += net;
-                            overallScores[player.name].points += totalPoints;
                             overallScores[player.name].rounds++;
                         }
                     });
                 }
             });
             
-            // Calculate scramble scores
+            // Calculate scramble scores - using team handicap
             schedule.forEach(function(round) {
                 if (round.type === 'Scramble' && round.teams) {
                     round.teams.forEach(function(team, teamIdx) {
@@ -1826,46 +1774,15 @@
                         
                         if (teamScores && Object.keys(teamScores).length > 0) {
                             var teamGross = 0;
-                            var teamPoints = 0;
+                            Object.values(teamScores).forEach(function(s) { teamGross += s; });
+                            
                             var teamHandicap = calculateScrambleHandicap(team, round.course);
-                            var course = courses[round.course];
-                            
-                            Object.keys(teamScores).forEach(function(hole) {
-                                var score = teamScores[hole];
-                                var holeNum = parseInt(hole);
-                                var par = course.pars[holeNum - 1];
-                                var strokeIndex = course.handicaps[holeNum - 1];
-                                
-                                // Calculate team strokes for this hole
-                                var roundedTeamHandicap = Math.round(teamHandicap);
-                                var strokesOnHole = 0;
-                                if (roundedTeamHandicap >= 18) {
-                                    strokesOnHole = 1;
-                                    if (strokeIndex <= (roundedTeamHandicap - 18)) {
-                                        strokesOnHole = 2;
-                                    }
-                                    if (roundedTeamHandicap >= 36 && strokeIndex <= (roundedTeamHandicap - 36)) {
-                                        strokesOnHole = 3;
-                                    }
-                                } else {
-                                    if (strokeIndex <= roundedTeamHandicap) {
-                                        strokesOnHole = 1;
-                                    }
-                                }
-                                
-                                teamGross += score;
-                                if (scoringSystem === 'stableford') {
-                                    teamPoints += calculateStablefordPoints(score, par, strokesOnHole);
-                                }
-                            });
-                            
                             var teamNet = teamGross - teamHandicap;
                             
                             // Distribute scores to team members
                             team.forEach(function(playerName) {
                                 overallScores[playerName].gross += teamGross / 2;
                                 overallScores[playerName].net += teamNet / 2;
-                                overallScores[playerName].points += teamPoints / 2;
                                 overallScores[playerName].rounds++;
                             });
                         }
@@ -1880,27 +1797,18 @@
                     sortedOverall.push({
                         name: name,
                         gross: overallScores[name].gross,
-                        net: overallScores[name].net,
-                        points: overallScores[name].points
+                        net: overallScores[name].net
                     });
                 }
             });
             
-            if (scoringSystem === 'stableford') {
-                sortedOverall.sort(function(a, b) { return b.points - a.points; }); // Higher points = better
-            } else {
-                sortedOverall.sort(function(a, b) { return a.net - b.net; }); // Lower score = better
-            }
+            sortedOverall.sort(function(a, b) { return a.net - b.net; });
             
             sortedOverall.forEach(function(player, idx) {
                 html += '<tr>';
                 html += '<td>' + (idx === 0 ? '<span class="trophy">🏆</span>' : '') + player.name + '</td>';
-                if (scoringSystem === 'stableford') {
-                    html += '<td><strong>' + Math.round(player.points) + '</strong></td>';
-                } else {
-                    html += '<td>' + Math.round(player.gross) + '</td>';
-                    html += '<td><strong>' + Math.round(player.net) + '</strong></td>';
-                }
+                html += '<td>' + Math.round(player.gross) + '</td>';
+                html += '<td><strong>' + Math.round(player.net) + '</strong></td>';
                 html += '</tr>';
             });
             
@@ -1924,64 +1832,26 @@
                         
                         if (roundScores && Object.keys(roundScores).length > 0) {
                             var gross = 0;
-                            var totalPoints = 0;
+                            Object.values(roundScores).forEach(function(s) { gross += s; });
                             
                             var courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
-                            
-                            Object.keys(roundScores).forEach(function(hole) {
-                                var score = roundScores[hole];
-                                var holeNum = parseInt(hole);
-                                var par = course.pars[holeNum - 1];
-                                var strokeIndex = course.handicaps[holeNum - 1];
-                                
-                                var strokesOnHole = 0;
-                                if (courseHandicap >= 18) {
-                                    strokesOnHole = 1;
-                                    if (strokeIndex <= (courseHandicap - 18)) {
-                                        strokesOnHole = 2;
-                                    }
-                                    if (courseHandicap >= 36 && strokeIndex <= (courseHandicap - 36)) {
-                                        strokesOnHole = 3;
-                                    }
-                                } else {
-                                    if (strokeIndex <= courseHandicap) {
-                                        strokesOnHole = 1;
-                                    }
-                                }
-                                
-                                gross += score;
-                                if (scoringSystem === 'stableford') {
-                                    totalPoints += calculateStablefordPoints(score, par, strokesOnHole);
-                                }
-                            });
-                            
                             var net = gross - courseHandicap;
                             
                             roundResults.push({
                                 name: player.name,
                                 gross: gross,
                                 net: net,
-                                points: totalPoints,
                                 handicap: courseHandicap
                             });
                         }
                     });
                     
                     if (roundResults.length > 0) {
-                        if (scoringSystem === 'stableford') {
-                            roundResults.sort(function(a, b) { return b.points - a.points; });
-                        } else {
-                            roundResults.sort(function(a, b) { return a.net - b.net; });
-                        }
+                        roundResults.sort(function(a, b) { return a.net - b.net; });
                         
                         html += '<div class="table-wrapper">';
                         html += '<table><thead><tr>';
-                        html += '<th>Plass</th><th>Spiller</th>';
-                        if (scoringSystem === 'stableford') {
-                            html += '<th>Brutto</th><th>HCP</th><th>Poeng</th>';
-                        } else {
-                            html += '<th>Brutto</th><th>HCP</th><th>Netto</th>';
-                        }
+                        html += '<th>Plass</th><th>Spiller</th><th>Brutto</th><th>HCP</th><th>Netto</th>';
                         html += '</tr></thead><tbody>';
                         
                         roundResults.forEach(function(result, idx) {
@@ -1990,11 +1860,7 @@
                             html += '<td>' + result.name + '</td>';
                             html += '<td>' + result.gross + '</td>';
                             html += '<td>' + result.handicap.toFixed(1) + '</td>';
-                            if (scoringSystem === 'stableford') {
-                                html += '<td><strong>' + result.points + '</strong></td>';
-                            } else {
-                                html += '<td><strong>' + result.net.toFixed(1) + '</strong></td>';
-                            }
+                            html += '<td><strong>' + result.net.toFixed(1) + '</strong></td>';
                             html += '</tr>';
                         });
                         
@@ -2023,7 +1889,7 @@
                         html += '</div>';
                     }
                 } else {
-                    // Scramble results
+                    // Scramble results with team handicaps
                     var teamResults = [];
                     
                     round.teams.forEach(function(team, teamIdx) {
@@ -2032,37 +1898,9 @@
                         
                         if (teamScores && Object.keys(teamScores).length > 0) {
                             var total = 0;
-                            var totalPoints = 0;
+                            Object.values(teamScores).forEach(function(s) { total += s; });
+                            
                             var teamHandicap = calculateScrambleHandicap(team, round.course);
-                            
-                            Object.keys(teamScores).forEach(function(hole) {
-                                var score = teamScores[hole];
-                                var holeNum = parseInt(hole);
-                                var par = course.pars[holeNum - 1];
-                                var strokeIndex = course.handicaps[holeNum - 1];
-                                
-                                var roundedTeamHandicap = Math.round(teamHandicap);
-                                var strokesOnHole = 0;
-                                if (roundedTeamHandicap >= 18) {
-                                    strokesOnHole = 1;
-                                    if (strokeIndex <= (roundedTeamHandicap - 18)) {
-                                        strokesOnHole = 2;
-                                    }
-                                    if (roundedTeamHandicap >= 36 && strokeIndex <= (roundedTeamHandicap - 36)) {
-                                        strokesOnHole = 3;
-                                    }
-                                } else {
-                                    if (strokeIndex <= roundedTeamHandicap) {
-                                        strokesOnHole = 1;
-                                    }
-                                }
-                                
-                                total += score;
-                                if (scoringSystem === 'stableford') {
-                                    totalPoints += calculateStablefordPoints(score, par, strokesOnHole);
-                                }
-                            });
-                            
                             var netScore = total - teamHandicap;
                             
                             teamResults.push({
@@ -2070,49 +1908,72 @@
                                 members: team.join(' & '),
                                 gross: total,
                                 handicap: teamHandicap,
-                                net: netScore,
-                                points: totalPoints
+                                net: netScore
                             });
                         }
                     });
                     
                     if (teamResults.length > 0) {
-                        // Sort by scoring system
-                        if (scoringSystem === 'stableford') {
-                            teamResults.sort(function(a, b) { return b.points - a.points; });
-                        } else {
-                            teamResults.sort(function(a, b) { return a.net - b.net; });
-                        }
+                        // Sort by net score
+                        teamResults.sort(function(a, b) { return a.net - b.net; });
                         
                         html += '<h5>Scramble Resultater</h5>';
                         html += '<div class="table-wrapper">';
                         html += '<table><thead><tr>';
-                        html += '<th>Plass</th><th>Lag</th><th>Brutto</th><th>HCP</th>';
-                        if (scoringSystem === 'stableford') {
-                            html += '<th>Poeng</th>';
-                        } else {
-                            html += '<th>Netto</th><th>+/-</th>';
-                        }
+                        html += '<th>Plass</th><th>Lag</th><th>Brutto</th><th>HCP</th><th>Netto</th><th>+/-</th>';
                         html += '</tr></thead><tbody>';
                         
                         teamResults.forEach(function(result, idx) {
+                            var diff = result.net - course.par;
+                            var diffStr = diff === 0 ? 'E' : (diff > 0 ? '+' + diff : diff.toString());
+                            
                             html += '<tr' + (idx === 0 ? ' class="winner"' : '') + '>';
                             html += '<td>' + (idx + 1) + (idx === 0 ? ' 🏆' : '') + '</td>';
                             html += '<td>Lag ' + (result.teamIdx + 1) + ': ' + result.members + '</td>';
                             html += '<td>' + result.gross + '</td>';
                             html += '<td>' + result.handicap + '</td>';
-                            if (scoringSystem === 'stableford') {
-                                html += '<td><strong>' + result.points + '</strong></td>';
-                            } else {
-                                var diff = result.net - course.par;
-                                var diffStr = diff === 0 ? 'E' : (diff > 0 ? '+' + diff : diff.toString());
-                                html += '<td><strong>' + result.net + '</strong></td>';
-                                html += '<td>' + diffStr + '</td>';
-                            }
+                            html += '<td><strong>' + result.net + '</strong></td>';
+                            html += '<td>' + diffStr + '</td>';
                             html += '</tr>';
                         });
                         
                         html += '</tbody></table></div>';
+                        
+                        // NEW: Add handicap toggle for leaderboard scramble results
+                        var containerId = 'leaderboard_' + round.id;
+                        html += '<div class="handicap-toggle" style="margin-top: 15px;">';
+                        html += '<label>';
+                        html += '<input type="checkbox" id="handicapToggle_' + containerId + '" onchange="toggleHandicapDetails(\'' + containerId + '\')" style="margin-right: 5px;">';
+                        html += 'Vis banehandicap sammenligning';
+                        html += '</label>';
+                        html += '<div id="handicapDetails_' + containerId + '" class="handicap-details">';
+                        
+                        html += '<h6>Sammenligning: Individual HCP vs Bane HCP</h6>';
+                        html += '<div class="table-wrapper">';
+                        html += '<table style="font-size: 11px;"><thead><tr>';
+                        html += '<th>Lag</th><th>Spillere</th><th>Individual HCP</th><th>Bane HCP</th><th>Forskjell</th>';
+                        html += '</tr></thead><tbody>';
+                        
+                        round.teams.forEach(function(team, teamIdx) {
+                            var individualHCP = calculateScrambleHandicap(team, round.course);
+                            var courseHCP = calculateCourseScrambleHandicap(team, round.course);
+                            var diff = courseHCP - individualHCP;
+                            
+                            html += '<tr>';
+                            html += '<td>Lag ' + (teamIdx + 1) + '</td>';
+                            html += '<td>' + team.join(' & ') + '</td>';
+                            html += '<td>' + individualHCP.toFixed(1) + '</td>';
+                            html += '<td>' + courseHCP.toFixed(1) + '</td>';
+                            html += '<td style="color: ' + (diff > 0 ? '#f56565' : diff < 0 ? '#48bb78' : '#718096') + ';">';
+                            html += (diff > 0 ? '+' : '') + diff.toFixed(1);
+                            html += '</td>';
+                            html += '</tr>';
+                        });
+                        
+                        html += '</tbody></table></div>';
+                        html += '</div>';
+                        html += '</div>';
+                        
                     } else {
                         html += '<p style="color: #718096;">Ingen resultater registrert ennå</p>';
                     }
@@ -2159,15 +2020,9 @@
                     if (round.course === courseName) {
                         html += '<h4>' + round.date + ' - ' + round.time + ' (' + round.type + ')</h4>';
                         
-                        // NEW: Add scoring system indicator
-                        html += '<div style="background: #e6f4ff; padding: 8px; border-radius: 8px; margin: 10px 0; color: #2b6cb0; text-align: center; font-size: 12px;">';
-                        html += 'Poengsystem: <strong>' + (scoringSystem === 'stableford' ? 'Stableford' : 'Stroke Play') + '</strong>';
-                        html += '</div>';
-                        
-                        // Rest of the loadCourses function continues as before...
-                        // Individual and scramble scorecard display remains the same
-                        
                         if (round.type === 'Individuell') {
+                            // Show individual scorecards with Front 9 and Back 9 separate
+                            
                             // Front 9
                             html += '<div style="margin-bottom: 20px;">';
                             html += '<h5>Front 9</h5>';
@@ -2176,11 +2031,7 @@
                             for (var i = 1; i <= 9; i++) {
                                 html += '<th>' + i + '</th>';
                             }
-                            html += '<th>Out</th>';
-                            if (scoringSystem === 'stableford') {
-                                html += '<th>Poeng</th>';
-                            }
-                            html += '</tr></thead><tbody>';
+                            html += '<th>Out</th></tr></thead><tbody>';
                             
                             // Par row
                             html += '<tr><td>Par</td>';
@@ -2189,11 +2040,7 @@
                                 html += '<td>' + courseData.pars[i] + '</td>';
                                 frontPar += courseData.pars[i];
                             }
-                            html += '<td><strong>' + frontPar + '</strong></td>';
-                            if (scoringSystem === 'stableford') {
-                                html += '<td>-</td>';
-                            }
-                            html += '</tr>';
+                            html += '<td><strong>' + frontPar + '</strong></td></tr>';
                             
                             // Player scores
                             players.forEach(function(player) {
@@ -2203,57 +2050,25 @@
                                 if (roundScores && Object.keys(roundScores).length > 0) {
                                     html += '<tr><td>' + player.name + '</td>';
                                     var frontTotal = 0;
-                                    var frontPoints = 0;
-                                    var courseHandicap = Math.round((player.handicap * courseData.slopeRating) / 113);
-                                    
                                     for (var i = 1; i <= 9; i++) {
                                         var score = roundScores[i] || '-';
                                         html += '<td>' + score + '</td>';
-                                        if (score !== '-') {
-                                            frontTotal += score;
-                                            if (scoringSystem === 'stableford') {
-                                                var par = courseData.pars[i-1];
-                                                var strokeIndex = courseData.handicaps[i-1];
-                                                var strokesOnHole = 0;
-                                                if (courseHandicap >= 18) {
-                                                    strokesOnHole = 1;
-                                                    if (strokeIndex <= (courseHandicap - 18)) {
-                                                        strokesOnHole = 2;
-                                                    }
-                                                    if (courseHandicap >= 36 && strokeIndex <= (courseHandicap - 36)) {
-                                                        strokesOnHole = 3;
-                                                    }
-                                                } else {
-                                                    if (strokeIndex <= courseHandicap) {
-                                                        strokesOnHole = 1;
-                                                    }
-                                                }
-                                                frontPoints += calculateStablefordPoints(score, par, strokesOnHole);
-                                            }
-                                        }
+                                        if (score !== '-') frontTotal += score;
                                     }
-                                    html += '<td><strong>' + (frontTotal || '-') + '</strong></td>';
-                                    if (scoringSystem === 'stableford') {
-                                        html += '<td><strong>' + (frontPoints || '-') + '</strong></td>';
-                                    }
-                                    html += '</tr>';
+                                    html += '<td><strong>' + (frontTotal || '-') + '</strong></td></tr>';
                                 }
                             });
                             
                             html += '</tbody></table></div>';
                             
-                            // Back 9 - similar structure
+                            // Back 9
                             html += '<h5>Back 9</h5>';
                             html += '<div class="table-wrapper">';
                             html += '<table><thead><tr><th>Spiller</th>';
                             for (var i = 10; i <= 18; i++) {
                                 html += '<th>' + i + '</th>';
                             }
-                            html += '<th>In</th>';
-                            if (scoringSystem === 'stableford') {
-                                html += '<th>Poeng</th>';
-                            }
-                            html += '</tr></thead><tbody>';
+                            html += '<th>In</th></tr></thead><tbody>';
                             
                             // Par row
                             html += '<tr><td>Par</td>';
@@ -2262,11 +2077,7 @@
                                 html += '<td>' + courseData.pars[i] + '</td>';
                                 backPar += courseData.pars[i];
                             }
-                            html += '<td><strong>' + backPar + '</strong></td>';
-                            if (scoringSystem === 'stableford') {
-                                html += '<td>-</td>';
-                            }
-                            html += '</tr>';
+                            html += '<td><strong>' + backPar + '</strong></td></tr>';
                             
                             // Player scores
                             players.forEach(function(player) {
@@ -2276,40 +2087,12 @@
                                 if (roundScores && Object.keys(roundScores).length > 0) {
                                     html += '<tr><td>' + player.name + '</td>';
                                     var backTotal = 0;
-                                    var backPoints = 0;
-                                    var courseHandicap = Math.round((player.handicap * courseData.slopeRating) / 113);
-                                    
                                     for (var i = 10; i <= 18; i++) {
                                         var score = roundScores[i] || '-';
                                         html += '<td>' + score + '</td>';
-                                        if (score !== '-') {
-                                            backTotal += score;
-                                            if (scoringSystem === 'stableford') {
-                                                var par = courseData.pars[i-1];
-                                                var strokeIndex = courseData.handicaps[i-1];
-                                                var strokesOnHole = 0;
-                                                if (courseHandicap >= 18) {
-                                                    strokesOnHole = 1;
-                                                    if (strokeIndex <= (courseHandicap - 18)) {
-                                                        strokesOnHole = 2;
-                                                    }
-                                                    if (courseHandicap >= 36 && strokeIndex <= (courseHandicap - 36)) {
-                                                        strokesOnHole = 3;
-                                                    }
-                                                } else {
-                                                    if (strokeIndex <= courseHandicap) {
-                                                        strokesOnHole = 1;
-                                                    }
-                                                }
-                                                backPoints += calculateStablefordPoints(score, par, strokesOnHole);
-                                            }
-                                        }
+                                        if (score !== '-') backTotal += score;
                                     }
-                                    html += '<td><strong>' + (backTotal || '-') + '</strong></td>';
-                                    if (scoringSystem === 'stableford') {
-                                        html += '<td><strong>' + (backPoints || '-') + '</strong></td>';
-                                    }
-                                    html += '</tr>';
+                                    html += '<td><strong>' + (backTotal || '-') + '</strong></td></tr>';
                                 }
                             });
                             
@@ -2318,11 +2101,7 @@
                             // Totals summary
                             html += '<h5>Totaler</h5>';
                             html += '<div class="table-wrapper">';
-                            html += '<table><thead><tr><th>Spiller</th><th>Front 9</th><th>Back 9</th><th>Total</th>';
-                            if (scoringSystem === 'stableford') {
-                                html += '<th>Total Poeng</th>';
-                            }
-                            html += '</tr></thead><tbody>';
+                            html += '<table><thead><tr><th>Spiller</th><th>Front 9</th><th>Back 9</th><th>Total</th></tr></thead><tbody>';
                             
                             players.forEach(function(player) {
                                 var scoreKey = round.id + '_' + player.id;
@@ -2331,56 +2110,12 @@
                                 if (roundScores && Object.keys(roundScores).length > 0) {
                                     var frontTotal = 0;
                                     var backTotal = 0;
-                                    var totalPoints = 0;
-                                    var courseHandicap = Math.round((player.handicap * courseData.slopeRating) / 113);
                                     
                                     for (var i = 1; i <= 9; i++) {
-                                        if (roundScores[i]) {
-                                            frontTotal += roundScores[i];
-                                            if (scoringSystem === 'stableford') {
-                                                var par = courseData.pars[i-1];
-                                                var strokeIndex = courseData.handicaps[i-1];
-                                                var strokesOnHole = 0;
-                                                if (courseHandicap >= 18) {
-                                                    strokesOnHole = 1;
-                                                    if (strokeIndex <= (courseHandicap - 18)) {
-                                                        strokesOnHole = 2;
-                                                    }
-                                                    if (courseHandicap >= 36 && strokeIndex <= (courseHandicap - 36)) {
-                                                        strokesOnHole = 3;
-                                                    }
-                                                } else {
-                                                    if (strokeIndex <= courseHandicap) {
-                                                        strokesOnHole = 1;
-                                                    }
-                                                }
-                                                totalPoints += calculateStablefordPoints(roundScores[i], par, strokesOnHole);
-                                            }
-                                        }
+                                        if (roundScores[i]) frontTotal += roundScores[i];
                                     }
                                     for (var i = 10; i <= 18; i++) {
-                                        if (roundScores[i]) {
-                                            backTotal += roundScores[i];
-                                            if (scoringSystem === 'stableford') {
-                                                var par = courseData.pars[i-1];
-                                                var strokeIndex = courseData.handicaps[i-1];
-                                                var strokesOnHole = 0;
-                                                if (courseHandicap >= 18) {
-                                                    strokesOnHole = 1;
-                                                    if (strokeIndex <= (courseHandicap - 18)) {
-                                                        strokesOnHole = 2;
-                                                    }
-                                                    if (courseHandicap >= 36 && strokeIndex <= (courseHandicap - 36)) {
-                                                        strokesOnHole = 3;
-                                                    }
-                                                } else {
-                                                    if (strokeIndex <= courseHandicap) {
-                                                        strokesOnHole = 1;
-                                                    }
-                                                }
-                                                totalPoints += calculateStablefordPoints(roundScores[i], par, strokesOnHole);
-                                            }
-                                        }
+                                        if (roundScores[i]) backTotal += roundScores[i];
                                     }
                                     
                                     var total = frontTotal + backTotal;
@@ -2390,9 +2125,6 @@
                                     html += '<td>' + (frontTotal || '-') + '</td>';
                                     html += '<td>' + (backTotal || '-') + '</td>';
                                     html += '<td><strong>' + (total || '-') + '</strong></td>';
-                                    if (scoringSystem === 'stableford') {
-                                        html += '<td><strong>' + (totalPoints || '-') + '</strong></td>';
-                                    }
                                     html += '</tr>';
                                 }
                             });
@@ -2401,7 +2133,7 @@
                             html += '</div>';
                             
                         } else {
-                            // Scramble scorecards - similar structure but simpler
+                            // Show scramble scorecards with Front 9 and Back 9 separate
                             html += '<div class="team-section">';
                             round.teams.forEach(function(team, teamIdx) {
                                 var scoreKey = round.id + '_team_' + teamIdx;
@@ -2412,6 +2144,43 @@
                                 html += '<h5>Lag ' + (teamIdx + 1) + ': ' + team.join(' & ') + '</h5>';
                                 html += '<p style="color: #4299e1;">Team Handicap: ' + teamHandicap.toFixed(1) + ' (70% laveste + 30% høyeste)</p>';
                                 
+                                // NEW: Add handicap toggle for courses view
+                                var containerId = 'courses_' + round.id + '_' + teamIdx;
+                                html += '<div class="handicap-toggle" style="margin: 10px 0;">';
+                                html += '<label>';
+                                html += '<input type="checkbox" id="handicapToggle_' + containerId + '" onchange="toggleHandicapDetails(\'' + containerId + '\')" style="margin-right: 5px;">';
+                                html += 'Vis banehandicap og ekstra slag';
+                                html += '</label>';
+                                html += '<div id="handicapDetails_' + containerId + '" class="handicap-details">';
+                                
+                                var courseTeamHandicap = calculateCourseScrambleHandicap(team, round.course);
+                                
+                                html += '<div style="margin-bottom: 10px;">';
+                                html += '<strong>Banehandicap sammenligning:</strong><br>';
+                                html += 'Individual HCP metode: ' + teamHandicap.toFixed(1) + ' slag<br>';
+                                html += 'Banehandicap metode: ' + courseTeamHandicap.toFixed(1) + ' slag<br>';
+                                
+                                // Show stroke holes for course-based calculation
+                                html += '<div style="margin-top: 10px;"><strong>Ekstra slag per hull (bane HCP):</strong></div>';
+                                html += '<div class="stroke-grid">';
+                                var strokeHoles = getStrokeHoles(courseTeamHandicap, courseData);
+                                strokeHoles.forEach(function(holeInfo) {
+                                    var strokeClass = holeInfo.strokes > 0 ? 'stroke-hole' : 'no-stroke-hole';
+                                    var strokeText = holeInfo.strokes > 0 ? '+' + holeInfo.strokes : '0';
+                                    
+                                    html += '<div class="' + strokeClass + '">';
+                                    html += '<div style="font-weight: bold;">H' + holeInfo.hole + '</div>';
+                                    html += '<div style="font-size: 10px;">Par ' + courseData.pars[holeInfo.hole-1] + '</div>';
+                                    html += '<div style="font-size: 10px;">SI ' + courseData.handicaps[holeInfo.hole-1] + '</div>';
+                                    html += '<div>' + strokeText + '</div>';
+                                    html += '</div>';
+                                });
+                                html += '</div>';
+                                html += '</div>';
+                                
+                                html += '</div>';
+                                html += '</div>';
+                                
                                 if (teamScores && Object.keys(teamScores).length > 0) {
                                     // Front 9
                                     html += '<h6>Front 9</h6>';
@@ -2420,11 +2189,7 @@
                                     for (var i = 1; i <= 9; i++) {
                                         html += '<th>' + i + '</th>';
                                     }
-                                    html += '<th>Out</th>';
-                                    if (scoringSystem === 'stableford') {
-                                        html += '<th>Poeng</th>';
-                                    }
-                                    html += '</tr></thead><tbody>';
+                                    html += '<th>Out</th></tr></thead><tbody>';
                                     
                                     // Par row
                                     html += '<tr><td>Par</td>';
@@ -2433,49 +2198,17 @@
                                         html += '<td>' + courseData.pars[i] + '</td>';
                                         frontPar += courseData.pars[i];
                                     }
-                                    html += '<td><strong>' + frontPar + '</strong></td>';
-                                    if (scoringSystem === 'stableford') {
-                                        html += '<td>-</td>';
-                                    }
-                                    html += '</tr>';
+                                    html += '<td><strong>' + frontPar + '</strong></td></tr>';
                                     
                                     // Team scores
                                     html += '<tr><td>Score</td>';
                                     var frontTotal = 0;
-                                    var frontPoints = 0;
-                                    var roundedTeamHandicap = Math.round(teamHandicap);
-                                    
                                     for (var i = 1; i <= 9; i++) {
                                         var score = teamScores[i] || '-';
                                         html += '<td>' + score + '</td>';
-                                        if (score !== '-') {
-                                            frontTotal += score;
-                                            if (scoringSystem === 'stableford') {
-                                                var par = courseData.pars[i-1];
-                                                var strokeIndex = courseData.handicaps[i-1];
-                                                var strokesOnHole = 0;
-                                                if (roundedTeamHandicap >= 18) {
-                                                    strokesOnHole = 1;
-                                                    if (strokeIndex <= (roundedTeamHandicap - 18)) {
-                                                        strokesOnHole = 2;
-                                                    }
-                                                    if (roundedTeamHandicap >= 36 && strokeIndex <= (roundedTeamHandicap - 36)) {
-                                                        strokesOnHole = 3;
-                                                    }
-                                                } else {
-                                                    if (strokeIndex <= roundedTeamHandicap) {
-                                                        strokesOnHole = 1;
-                                                    }
-                                                }
-                                                frontPoints += calculateStablefordPoints(score, par, strokesOnHole);
-                                            }
-                                        }
+                                        if (score !== '-') frontTotal += score;
                                     }
-                                    html += '<td><strong>' + (frontTotal || '-') + '</strong></td>';
-                                    if (scoringSystem === 'stableford') {
-                                        html += '<td><strong>' + (frontPoints || '-') + '</strong></td>';
-                                    }
-                                    html += '</tr>';
+                                    html += '<td><strong>' + (frontTotal || '-') + '</strong></td></tr>';
                                     html += '</tbody></table></div>';
                                     
                                     // Back 9
@@ -2485,11 +2218,7 @@
                                     for (var i = 10; i <= 18; i++) {
                                         html += '<th>' + i + '</th>';
                                     }
-                                    html += '<th>In</th>';
-                                    if (scoringSystem === 'stableford') {
-                                        html += '<th>Poeng</th>';
-                                    }
-                                    html += '</tr></thead><tbody>';
+                                    html += '<th>In</th></tr></thead><tbody>';
                                     
                                     // Par row
                                     html += '<tr><td>Par</td>';
@@ -2498,61 +2227,25 @@
                                         html += '<td>' + courseData.pars[i] + '</td>';
                                         backPar += courseData.pars[i];
                                     }
-                                    html += '<td><strong>' + backPar + '</strong></td>';
-                                    if (scoringSystem === 'stableford') {
-                                        html += '<td>-</td>';
-                                    }
-                                    html += '</tr>';
+                                    html += '<td><strong>' + backPar + '</strong></td></tr>';
                                     
                                     // Team scores
                                     html += '<tr><td>Score</td>';
                                     var backTotal = 0;
-                                    var backPoints = 0;
                                     for (var i = 10; i <= 18; i++) {
                                         var score = teamScores[i] || '-';
                                         html += '<td>' + score + '</td>';
-                                        if (score !== '-') {
-                                            backTotal += score;
-                                            if (scoringSystem === 'stableford') {
-                                                var par = courseData.pars[i-1];
-                                                var strokeIndex = courseData.handicaps[i-1];
-                                                var strokesOnHole = 0;
-                                                if (roundedTeamHandicap >= 18) {
-                                                    strokesOnHole = 1;
-                                                    if (strokeIndex <= (roundedTeamHandicap - 18)) {
-                                                        strokesOnHole = 2;
-                                                    }
-                                                    if (roundedTeamHandicap >= 36 && strokeIndex <= (roundedTeamHandicap - 36)) {
-                                                        strokesOnHole = 3;
-                                                    }
-                                                } else {
-                                                    if (strokeIndex <= roundedTeamHandicap) {
-                                                        strokesOnHole = 1;
-                                                    }
-                                                }
-                                                backPoints += calculateStablefordPoints(score, par, strokesOnHole);
-                                            }
-                                        }
+                                        if (score !== '-') backTotal += score;
                                     }
-                                    html += '<td><strong>' + (backTotal || '-') + '</strong></td>';
-                                    if (scoringSystem === 'stableford') {
-                                        html += '<td><strong>' + (backPoints || '-') + '</strong></td>';
-                                    }
-                                    html += '</tr>';
+                                    html += '<td><strong>' + (backTotal || '-') + '</strong></td></tr>';
                                     html += '</tbody></table></div>';
                                     
                                     // Total
                                     var total = frontTotal + backTotal;
-                                    var totalPoints = frontPoints + backPoints;
-                                    
-                                    if (scoringSystem === 'stableford') {
-                                        html += '<p style="margin-top: 10px; font-size: 16px;"><strong>Brutto: ' + (total || '-') + ' | Total Poeng: ' + totalPoints + '</strong></p>';
-                                    } else {
-                                        var netScore = total - teamHandicap;
-                                        var diff = netScore - courseData.par;
-                                        var diffStr = diff === 0 ? 'E' : (diff > 0 ? '+' + diff.toFixed(1) : diff.toFixed(1));
-                                        html += '<p style="margin-top: 10px; font-size: 16px;"><strong>Brutto: ' + (total || '-') + ' | Netto: ' + netScore.toFixed(1) + ' (' + diffStr + ')</strong></p>';
-                                    }
+                                    var netScore = total - teamHandicap;
+                                    var diff = netScore - courseData.par;
+                                    var diffStr = diff === 0 ? 'E' : (diff > 0 ? '+' + diff.toFixed(1) : diff.toFixed(1));
+                                    html += '<p style="margin-top: 10px; font-size: 16px;"><strong>Brutto: ' + (total || '-') + ' | Netto: ' + netScore.toFixed(1) + ' (' + diffStr + ')</strong></p>';
                                     
                                 } else {
                                     html += '<p style="color: #718096;">Ingen score registrert</p>';
@@ -2589,22 +2282,10 @@
             });
             html += '</div>';
             
-            // Add scramble handicap info
+            // Add scramble handicap info with toggle
             html += '<div style="margin-top: 30px; padding: 20px; background: #e6f4ff; border-radius: 10px;">';
             html += '<h3>Scramble Handicap Info</h3>';
             html += '<p>I scramble runder bruker vi <strong>70% av laveste handicap + 30% av høyeste handicap</strong>.</p>';
-            
-            // NEW: Add scoring system note
-            html += '<div style="background: white; padding: 12px; border-radius: 8px; margin: 15px 0; border: 1px solid #4299e1;">';
-            html += '<h4>Poengsystem</h4>';
-            html += '<p>Nåværende system: <strong>' + (scoringSystem === 'stableford' ? 'Stableford' : 'Stroke Play') + '</strong></p>';
-            if (scoringSystem === 'stableford') {
-                html += '<p style="font-size: 12px; color: #718096;">Stableford: Eagle=4p, Birdie=3p, Par=2p, Bogey=1p, Double bogey+=0p</p>';
-            } else {
-                html += '<p style="font-size: 12px; color: #718096;">Stroke Play: Laveste score vinner (brutto minus handicap)</p>';
-            }
-            html += '</div>';
-            
             html += '<p style="margin-top: 10px;">Beregning for hvert lag:</p>';
             
             // Show scramble handicaps for each round
@@ -2617,6 +2298,40 @@
                         
                         html += '<div style="margin: 10px 0; padding: 10px; background: white; border-radius: 5px;">';
                         html += '<p><strong>Lag ' + (idx + 1) + ' (' + team.join(' & ') + '):</strong> ' + teamHandicap.toFixed(1) + ' slag</p>';
+                        
+                        // NEW: Add handicap toggle for players view
+                        var containerId = 'players_' + round.id + '_' + idx;
+                        html += '<div class="handicap-toggle">';
+                        html += '<label>';
+                        html += '<input type="checkbox" id="handicapToggle_' + containerId + '" onchange="toggleHandicapDetails(\'' + containerId + '\')" style="margin-right: 5px;">';
+                        html += 'Sammenlign med banehandicap';
+                        html += '</label>';
+                        html += '<div id="handicapDetails_' + containerId + '" class="handicap-details">';
+                        
+                        var course = courses[round.course];
+                        var courseTeamHandicap = calculateCourseScrambleHandicap(team, round.course);
+                        
+                        html += '<div style="margin-bottom: 10px;">';
+                        html += '<strong>Sammenligning:</strong><br>';
+                        html += 'Individual HCP metode: ' + teamHandicap.toFixed(1) + ' slag<br>';
+                        html += 'Banehandicap metode: ' + courseTeamHandicap.toFixed(1) + ' slag<br>';
+                        html += 'Forskjell: ' + (courseTeamHandicap - teamHandicap).toFixed(1) + ' slag';
+                        html += '</div>';
+                        
+                        // Individual player calculations
+                        html += '<div><strong>Detaljert beregning:</strong></div>';
+                        html += '<div style="font-size: 12px; margin: 5px 0;">';
+                        team.forEach(function(memberName) {
+                            var player = players.find(function(p) { return p.name === memberName; });
+                            if (player) {
+                                var courseHandicap = Math.round((player.handicap * course.slopeRating) / 113);
+                                html += memberName + ': HCP ' + player.handicap + ' → Bane HCP ' + courseHandicap + '<br>';
+                            }
+                        });
+                        html += '</div>';
+                        
+                        html += '</div>';
+                        html += '</div>';
                         html += '</div>';
                     });
                     html += '</div>';
@@ -2628,7 +2343,7 @@
             document.getElementById('playersContent').innerHTML = html;
         }
         
-        // Keep all existing functions (loadHistory, loadWhisky, loadWeather)
+        // Keep all your existing functions for History, Whisky, Weather, Admin etc. unchanged
         function loadHistory() {
             // Get all unique years
             var allYears = [];
@@ -2639,7 +2354,7 @@
                     }
                 });
             });
-            allYears.sort(function(a, b) { return b - a; });
+            allYears.sort(function(a, b) { return b - a; }); // Sort years descending
             
             var html = '<div style="margin-bottom: 20px;">';
             html += '<h3>Skottland Golfturer - Spillte Baner</h3>';
@@ -2773,181 +2488,285 @@
                 html = '<div class="admin-section">';
                 html += '<h3>Administrator Panel</h3>';
                 html += '<button onclick="logoutAdmin()" style="background: #fc8181;">Logg ut</button>';
+
                 
-                // NEW: Scoring System Selection
-                html += '<button class="collapsible" onclick="toggleSection(this)">🎯 Poengsystem</button>';
-                html += '<div class="collapsible-content">';
-                html += '<div style="background: #fef5e7; padding: 15px; border-radius: 10px;">';
-                html += '<h4>Velg poengsystem for alle runder</h4>';
-                html += '<div style="margin: 15px 0;">';
-                html += '<label style="display: block; margin-bottom: 10px;">';
-                html += '<input type="radio" name="scoringSystem" value="stroke" ' + 
-                        (scoringSystem === 'stroke' ? 'checked' : '') + 
-                        ' onchange="changeScoringSystem(\'stroke\')">';
-                html += ' <strong>Stroke Play</strong> - Tradisjonell telling (laveste score vinner)';
-                html += '</label>';
-                html += '<label style="display: block;">';
-                html += '<input type="radio" name="scoringSystem" value="stableford" ' + 
-                        (scoringSystem === 'stableford' ? 'checked' : '') + 
-                        ' onchange="changeScoringSystem(\'stableford\')">';
-                html += ' <strong>Stableford</strong> - Poengbasert system (Eagle=4p, Birdie=3p, Par=2p, Bogey=1p)';
-                html += '</label>';
-                html += '</div>';
-                html += '<p style="color: #718096; font-size: 12px;">Endring påvirker alle runder og spillere umiddelbart</p>';
-                html += '</div>';
-                html += '</div>';
                 
-                // Handicap editing
-                html += '<button class="collapsible" onclick="toggleSection(this)">Rediger Handicap</button>';
-                html += '<div class="collapsible-content">';
-                html += '<div class="handicap-edit-grid">';
+        // Handicap editing
+html += '<button class="collapsible" onclick="toggleSection(this)">Rediger Handicap</button>';
+html += '<div class="collapsible-content">';
+html += '<div class="handicap-edit-grid">';
 
-                players.forEach(function(player) {
-                    html += '<div class="handicap-edit-item">';
-                    html += '<label>' + player.name + '</label>';
-                    html += '<input type="number" step="0.1" id="hcp_' + player.id + '" value="' + player.handicap + '" ';
-                    html += 'onchange="updateHandicap(' + player.id + ', this.value)">';
-                    html += '</div>';
-                });
+players.forEach(function(player) {
+    html += '<div class="handicap-edit-item">';
+    html += '<label>' + player.name + '</label>';
+    html += '<input type="number" step="0.1" id="hcp_' + player.id + '" value="' + player.handicap + '" ';
+    html += 'onchange="updateHandicap(' + player.id + ', this.value)">';
+    html += '</div>';
+});
 
-                html += '</div>';
-                html += '<button onclick="saveHandicaps()" style="margin-top: 10px;">Lagre Handicap</button>';
-                html += '<div id="handicapMessage"></div>';
-                html += '</div>';
+html += '</div>'; // closes handicap-edit-grid
+html += '<button onclick="saveHandicaps()" style="margin-top: 10px;">Lagre Handicap</button>';
+html += '<div id="handicapMessage"></div>';
+html += '</div>'; // closes collapsible-content
                 
-                // Flight times editing
-                html += '<button class="collapsible" onclick="toggleSection(this)">Starttider for Flights og Scrambles</button>';
-                html += '<div class="collapsible-content">';
+                // Flight times editing for both Individual and Scramble
+html += '<button class="collapsible" onclick="toggleSection(this)">Starttider for Flights og Scrambles</button>';
+html += '<div class="collapsible-content">';
 
-                schedule.forEach(function(round) {
-                    html += '<div style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 8px;">';
-                    html += '<h5>' + round.date + ' - ' + round.course + ' (' + round.type + ')</h5>';
-                    
-                    if (round.type === 'Individuell' && round.flights) {
-                        round.flights.forEach(function(flight, idx) {
-                            html += '<div style="margin: 10px 0;">';
-                            html += '<label style="display: block; margin-bottom: 5px; font-size: 12px;">Flight ' + (idx + 1) + ' (' + flight.players.join(', ') + '):</label>';
-                            html += '<input type="time" id="flight_' + round.id + '_' + idx + '" value="' + (flight.time || '') + '" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
-                            html += '</div>';
-                        });
-                    } else if (round.type === 'Scramble' && round.teams) {
-                        if (!round.teamTimes) {
-                            round.teamTimes = [];
-                        }
-                        round.teams.forEach(function(team, idx) {
-                            html += '<div style="margin: 10px 0;">';
-                            html += '<label style="display: block; margin-bottom: 5px; font-size: 12px;">Lag ' + (idx + 1) + ' (' + team.join(' & ') + '):</label>';
-                            html += '<input type="time" id="scramble_time_' + round.id + '_' + idx + '" value="' + (round.teamTimes && round.teamTimes[idx] ? round.teamTimes[idx] : '') + '" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
-                            html += '</div>';
-                        });
-                    }
-                    
-                    html += '</div>';
-                });
+schedule.forEach(function(round) {
+    html += '<div style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 8px;">';
+    html += '<h5>' + round.date + ' - ' + round.course + ' (' + round.type + ')</h5>';
+    
+    if (round.type === 'Individuell' && round.flights) {
+        round.flights.forEach(function(flight, idx) {
+            html += '<div style="margin: 10px 0;">';
+            html += '<label style="display: block; margin-bottom: 5px; font-size: 12px;">Flight ' + (idx + 1) + ' (' + flight.players.join(', ') + '):</label>';
+            html += '<input type="time" id="flight_' + round.id + '_' + idx + '" value="' + (flight.time || '') + '" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
+            html += '</div>';
+        });
+    } else if (round.type === 'Scramble' && round.teams) {
+        // Add time inputs for scramble teams
+        if (!round.teamTimes) {
+            round.teamTimes = [];
+        }
+        round.teams.forEach(function(team, idx) {
+            html += '<div style="margin: 10px 0;">';
+            html += '<label style="display: block; margin-bottom: 5px; font-size: 12px;">Lag ' + (idx + 1) + ' (' + team.join(' & ') + '):</label>';
+            html += '<input type="time" id="scramble_time_' + round.id + '_' + idx + '" value="' + (round.teamTimes && round.teamTimes[idx] ? round.teamTimes[idx] : '') + '" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
+            html += '</div>';
+        });
+    }
+    
+    html += '</div>';
+});
 
-                html += '<button onclick="saveFlightTimes()">Lagre starttider</button>';
-                html += '</div>';
+html += '<button onclick="saveFlightTimes()">Lagre starttider</button>';
+html += '</div>'; // closes collapsible-content for flights and scramble
                 
                 // Competition holes editing
-                html += '<button class="collapsible" onclick="toggleSection(this)">Konkurransehull (Longest Drive / Closest to Pin)</button>';
-                html += '<div class="collapsible-content">';
+html += '<button class="collapsible" onclick="toggleSection(this)">Konkurransehull (Longest Drive / Closest to Pin)</button>';
+html += '<div class="collapsible-content">';
 
-                schedule.forEach(function(round) {
-                    html += '<div style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 8px;">';
-                    html += '<h5>' + round.date + ' - ' + round.course + ' (' + round.type + ')</h5>';
-                    
-                    // Longest Drive
-                    html += '<div style="margin: 10px 0;">';
-                    html += '<label style="display: block; margin-bottom: 5px; font-size: 12px;">Longest Drive hull (kommaseparert, f.eks: 5,15):</label>';
-                    var ldValue = round.longestDrive ? round.longestDrive.join(',') : '';
-                    html += '<input type="text" id="ld_' + round.id + '" value="' + ldValue + '" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
-                    html += '</div>';
-                    
-                    // Closest to Pin
-                    html += '<div style="margin: 10px 0;">';
-                    html += '<label style="display: block; margin-bottom: 5px; font-size: 12px;">Closest to Pin hull (kommaseparert, f.eks: 2,13):</label>';
-                    var ctpValue = round.closestToPin ? round.closestToPin.join(',') : '';
-                    html += '<input type="text" id="ctp_' + round.id + '" value="' + ctpValue + '" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
-                    html += '</div>';
-                    
-                    html += '</div>';
-                });
+schedule.forEach(function(round) {
+    html += '<div style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 8px;">';
+    html += '<h5>' + round.date + ' - ' + round.course + ' (' + round.type + ')</h5>';
+    
+    // Longest Drive
+    html += '<div style="margin: 10px 0;">';
+    html += '<label style="display: block; margin-bottom: 5px; font-size: 12px;">Longest Drive hull (kommaseparert, f.eks: 5,15):</label>';
+    var ldValue = round.longestDrive ? round.longestDrive.join(',') : '';
+    html += '<input type="text" id="ld_' + round.id + '" value="' + ldValue + '" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
+    html += '</div>';
+    
+    // Closest to Pin
+    html += '<div style="margin: 10px 0;">';
+    html += '<label style="display: block; margin-bottom: 5px; font-size: 12px;">Closest to Pin hull (kommaseparert, f.eks: 2,13):</label>';
+    var ctpValue = round.closestToPin ? round.closestToPin.join(',') : '';
+    html += '<input type="text" id="ctp_' + round.id + '" value="' + ctpValue + '" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
+    html += '</div>';
+    
+    html += '</div>';
+});
 
-                html += '<button onclick="saveCompetitionHoles()">Lagre hull</button>';
-                html += '</div>';
+html += '<button onclick="saveCompetitionHoles()">Lagre hull</button>';
+html += '</div>'; // closes collapsible-content
                 
-                // Award winners
-                html += '<button class="collapsible" onclick="toggleSection(this)">Konkurransevinnere</button>';
-                html += '<div class="collapsible-content">';
+         // Award winners - for ALL rounds including scrambles
+html += '<button class="collapsible" onclick="toggleSection(this)">Konkurransevinnere</button>';
+html += '<div class="collapsible-content">';
 
-                schedule.forEach(function(round) {
-                    html += '<div style="margin-bottom: 20px;">';
-                    html += '<h5>' + round.date + ' - ' + round.course + ' (' + round.type + ')</h5>';
-                    html += '<div class="award-select">';
-                    
-                    if (round.longestDrive) {
-                        round.longestDrive.forEach(function(hole) {
-                            html += '<div class="award-input">';
-                            html += '<label>Longest Drive Hull ' + hole + ':</label>';
-                            html += '<select id="award_' + round.id + '_ld_' + hole + '">';
-                            html += '<option value="">-- Velg vinner --</option>';
-                            players.forEach(function(player) {
-                                var selected = awards[round.id + '_ld_' + hole] === player.name ? 'selected' : '';
-                                html += '<option value="' + player.name + '" ' + selected + '>' + player.name + '</option>';
-                            });
-                            html += '</select>';
-                            html += '</div>';
-                        });
-                    }
-                    
-                    if (round.closestToPin) {
-                        round.closestToPin.forEach(function(hole) {
-                            html += '<div class="award-input">';
-                            html += '<label>Closest to Pin Hull ' + hole + ':</label>';
-                            html += '<select id="award_' + round.id + '_ctp_' + hole + '">';
-                            html += '<option value="">-- Velg vinner --</option>';
-                            players.forEach(function(player) {
-                                var selected = awards[round.id + '_ctp_' + hole] === player.name ? 'selected' : '';
-                                html += '<option value="' + player.name + '" ' + selected + '>' + player.name + '</option>';
-                            });
-                            html += '</select>';
-                            html += '</div>';
-                        });
-                    }
-                    
-                    html += '</div>';
-                    html += '</div>';
-                });
+schedule.forEach(function(round) {
+    html += '<div style="margin-bottom: 20px;">';
+    html += '<h5>' + round.date + ' - ' + round.course + ' (' + round.type + ')</h5>';
+    html += '<div class="award-select">';
+    
+    // Show competitions for ALL rounds (both Individual and Scramble)
+    if (round.longestDrive) {
+        round.longestDrive.forEach(function(hole) {
+            html += '<div class="award-input">';
+            html += '<label>Longest Drive Hull ' + hole + ':</label>';
+            html += '<select id="award_' + round.id + '_ld_' + hole + '">';
+            html += '<option value="">-- Velg vinner --</option>';
+            players.forEach(function(player) {
+                var selected = awards[round.id + '_ld_' + hole] === player.name ? 'selected' : '';
+                html += '<option value="' + player.name + '" ' + selected + '>' + player.name + '</option>';
+            });
+            html += '</select>';
+            html += '</div>';
+        });
+    }
+    
+    if (round.closestToPin) {
+        round.closestToPin.forEach(function(hole) {
+            html += '<div class="award-input">';
+            html += '<label>Closest to Pin Hull ' + hole + ':</label>';
+            html += '<select id="award_' + round.id + '_ctp_' + hole + '">';
+            html += '<option value="">-- Velg vinner --</option>';
+            players.forEach(function(player) {
+                var selected = awards[round.id + '_ctp_' + hole] === player.name ? 'selected' : '';
+                html += '<option value="' + player.name + '" ' + selected + '>' + player.name + '</option>';
+            });
+            html += '</select>';
+            html += '</div>';
+        });
+    }
+    
+    html += '</div>';
+    html += '</div>';
+});
 
-                html += '<button onclick="saveAwards()">Lagre vinnere</button>';
-                html += '</div>';
+html += '<button onclick="saveAwards()">Lagre vinnere</button>';
+html += '</div>'; // closes collapsible-content
 
-                // Scramble winners
-                html += '<button class="collapsible" onclick="toggleSection(this)">Scramble Vinnere</button>';
-                html += '<div class="collapsible-content">';
+// Scramble winners
+html += '<button class="collapsible" onclick="toggleSection(this)">Scramble Vinnere</button>';
+html += '<div class="collapsible-content">';
 
-                schedule.forEach(function(round) {
-                    if (round.type === 'Scramble') {
-                        html += '<div style="margin-bottom: 15px;">';
-                        html += '<h5>' + round.date + ' - ' + round.course + '</h5>';
-                        html += '<select id="scramble_' + round.id + '">';
-                        html += '<option value="">-- Velg vinnende lag --</option>';
-                        round.teams.forEach(function(team, idx) {
-                            var selected = scrambleWinners[round.id] === idx ? 'selected' : '';
-                            html += '<option value="' + idx + '" ' + selected + '>Lag ' + (idx + 1) + ': ' + team.join(' & ') + '</option>';
-                        });
-                        html += '</select>';
-                        html += '</div>';
-                    }
-                });
+schedule.forEach(function(round) {
+    if (round.type === 'Scramble') {
+        html += '<div style="margin-bottom: 15px;">';
+        html += '<h5>' + round.date + ' - ' + round.course + '</h5>';
+        html += '<select id="scramble_' + round.id + '">';
+        html += '<option value="">-- Velg vinnende lag --</option>';
+        round.teams.forEach(function(team, idx) {
+            var selected = scrambleWinners[round.id] === idx ? 'selected' : '';
+            html += '<option value="' + idx + '" ' + selected + '>Lag ' + (idx + 1) + ': ' + team.join(' & ') + '</option>';
+        });
+        html += '</select>';
+        html += '</div>';
+    }
+});
 
-                html += '<button onclick="saveScrambleWinners()">Lagre scramble vinnere</button>';
-                html += '</div>';
+html += '<button onclick="saveScrambleWinners()">Lagre scramble vinnere</button>';
+html += '</div>'; // closes collapsible-content
+
+// Played Courses Management
+html += '<button class="collapsible" onclick="toggleSection(this)">Administrer Spillte Baner</button>';
+html += '<div class="collapsible-content">';
+
+html += '<h5>Legg til ny bane</h5>';
+html += '<div style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 10px; margin-bottom: 15px;">';
+html += '<input type="text" id="newCourseName" placeholder="Banenavn" style="padding: 8px; border: 1px solid #cbd5e0; border-radius: 5px;">';
+html += '<input type="number" id="newCourseYear" placeholder="År" min="2010" max="2030" style="padding: 8px; border: 1px solid #cbd5e0; border-radius: 5px;">';
+html += '<button onclick="addPlayedCourse()">Legg til</button>';
+html += '</div>';
+
+html += '<h5>Eksisterende baner</h5>';
+html += '<div style="max-height: 300px; overflow-y: auto; background: white; padding: 10px; border-radius: 8px;">';
+
+// Sort played courses alphabetically
+var sortedPlayedCourses = playedCourses.slice().sort(function(a, b) {
+    return a.name.localeCompare(b.name);
+});
                 
-                html += '</div>';
-            }
+sortedPlayedCourses.forEach(function(course) {
+    html += '<div style="margin-bottom: 10px; padding: 10px; background: #f7fafc; border-radius: 5px;">';
+    html += '<div style="display: flex; justify-content: space-between; align-items: center;">';
+    html += '<div>';
+    html += '<strong>' + course.name + '</strong><br>';
+    html += '<span style="font-size: 12px; color: #718096;">År: ';
+    
+
+    // Make each year individually removable
+course.years.forEach(function(year, idx) {
+    html += '<span style="display: inline-block; background: white; padding: 2px 6px; margin: 2px; border-radius: 3px;">';
+    html += year;
+    html += ' <span onclick="removeYearFromCourse(' + course.id + ', ' + year + ')" style="color: #fc8181; cursor: pointer; margin-left: 3px;">×</span>';
+    html += '</span>';
+});
+html += '</span>';
+    
+    html += '</div>';
+    html += '<button onclick="removePlayedCourse(' + course.id + ')" style="background: #fc8181; padding: 5px 10px; font-size: 12px;">Slett</button>';
+    html += '</div>';
+    html += '<div style="margin-top: 5px;">';
+    html += '<input type="number" id="addYear_' + course.id + '" placeholder="Legg til år" min="2010" max="2030" style="width: 100px; padding: 4px; margin-right: 5px; border: 1px solid #cbd5e0; border-radius: 3px;">';
+    html += '<button onclick="addYearToCourse(' + course.id + ')" style="padding: 4px 8px; font-size: 12px;">+ År</button>';
+    html += '</div>';
+    html += '</div>';
+});
+
+html += '</div>';
+html += '</div>'; // closes collapsible-content
+
+// Whisky Management
+html += '<button class="collapsible" onclick="toggleSection(this)">Administrer Whisky Samling</button>';
+html += '<div class="collapsible-content">';
+
+whiskyCollection.forEach(function(entry) {
+    html += '<div style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 8px;">';
+    html += '<h5>' + entry.owner + '</h5>';
+    html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">';
+    
+    html += '<div>';
+    html += '<label style="display: block; font-size: 12px; margin-bottom: 5px;">Hoved Whisky:</label>';
+    html += '<input type="text" id="whisky_primary_' + entry.id + '" value="' + (entry.primary || '') + '" ';
+    html += 'placeholder="F.eks. Glenmorangie" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
+    html += '</div>';
+    
+    html += '<div>';
+    html += '<label style="display: block; font-size: 12px; margin-bottom: 5px;">Reserve Whisky:</label>';
+    html += '<input type="text" id="whisky_reserve_' + entry.id + '" value="' + (entry.reserve || '') + '" ';
+    html += 'placeholder="Valgfritt" style="width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 5px;">';
+    html += '</div>';
+    
+    html += '</div>';
+    html += '</div>';
+});
+
+html += '<button onclick="saveWhisky()">Lagre Whisky Samling</button>';
+html += '</div>'; // closes collapsible-content
+
+// Course Management Section
+html += '<button class="collapsible" onclick="toggleSection(this)">🏌️ Administrer Banedata</button>';
+html += '<div class="collapsible-content">';
+html += '<div class="course-selector">';
+html += '<label>Velg bane å redigere:</label>';
+html += '<select id="courseSelect" onchange="loadCourseDataForEdit()">';
+html += '<option value="Cullen Links">Cullen Links</option>';
+html += '<option value="Spey Bay">Spey Bay</option>';
+html += '<option value="Strathlene">Strathlene</option>';
+html += '<option value="Garmouth & Kingston">Garmouth & Kingston</option>';
+html += '</select>';
+html += '</div>';
+
+html += '<div class="course-basic-info">';
+html += '<div class="course-input-group">';
+html += '<label>Slope Rating (55-155):</label>';
+html += '<input type="number" id="slopeRating" min="55" max="155" step="1">';
+html += '</div>';
+html += '<div class="course-input-group">';
+html += '<label>Course Rating:</label>';
+html += '<input type="number" id="courseRating" step="0.1">';
+html += '</div>';
+html += '<div class="course-input-group">';
+html += '<label>Total Par:</label>';
+html += '<input type="number" id="totalPar" readonly style="background: #e2e8f0;">';
+html += '</div>';
+html += '</div>';
+
+html += '<h5 style="margin: 15px 0;">Hull 1-9 (Front 9)</h5>';
+html += '<div class="holes-grid" id="front9Grid"></div>';
+
+html += '<h5 style="margin: 15px 0;">Hull 10-18 (Back 9)</h5>';
+html += '<div class="holes-grid" id="back9Grid"></div>';
+
+html += '<button class="save-course-btn" onclick="saveCourseData()">Lagre Banedata</button>';
+html += '<div id="courseMessage"></div>';
+html += '</div>'; // closes collapsible-content
+
+html += '</div>'; // closes admin-section div
+}
             
             document.getElementById('adminContent').innerHTML = html;
+            // Load course data if admin
+            if (isAdmin) {
+                setTimeout(function() {
+                    if (document.getElementById('courseSelect')) {
+                        loadCourseDataForEdit();
+                    }
+                }, 100);
+            }
         }
         
         function loginAdmin() {
@@ -3039,11 +2858,12 @@
             localStorage.setItem('golfSchedule2025', JSON.stringify(schedule));
             saveToServer();
             alert('Konkurransehull lagret!');
-            loadAdmin();
+            loadAdmin(); // Reload to update award selectors
         }
         
         function saveAwards() {
             schedule.forEach(function(round) {
+                // Save awards for ALL rounds, including scrambles
                 if (round.longestDrive) {
                     round.longestDrive.forEach(function(hole) {
                         var select = document.getElementById('award_' + round.id + '_ld_' + hole);
@@ -3081,6 +2901,212 @@
             localStorage.setItem('scrambleWinners2025', JSON.stringify(scrambleWinners));
             saveToServer();
             alert('Scramble vinnere lagret!');
+        }
+        
+        function addPlayedCourse() {
+            var name = document.getElementById('newCourseName').value;
+            var year = parseInt(document.getElementById('newCourseYear').value);
+            
+            if (!name || !year) {
+                alert('Vennligst fyll inn både banenavn og år');
+                return;
+            }
+            
+            // Check if course already exists
+            var existingCourse = playedCourses.find(function(c) { 
+                return c.name.toLowerCase() === name.toLowerCase(); 
+            });
+            
+            if (existingCourse) {
+                // Add year to existing course if not already there
+                if (existingCourse.years.indexOf(year) === -1) {
+                    existingCourse.years.push(year);
+                    existingCourse.years.sort();
+                }
+            } else {
+                // Add new course
+                var newId = Math.max.apply(null, playedCourses.map(function(c) { return c.id; })) + 1;
+                playedCourses.push({
+                    id: newId,
+                    name: name,
+                    years: [year]
+                });
+            }
+            
+            localStorage.setItem('playedCourses2025', JSON.stringify(playedCourses));
+            saveToServer();
+            document.getElementById('newCourseName').value = '';
+            document.getElementById('newCourseYear').value = '';
+            loadAdmin();
+            alert('Bane lagt til!');
+        }
+        
+        function addYearToCourse(courseId) {
+            var year = parseInt(document.getElementById('addYear_' + courseId).value);
+            
+            if (!year) {
+                alert('Vennligst oppgi år');
+                return;
+            }
+            
+            var course = playedCourses.find(function(c) { return c.id === courseId; });
+            if (course) {
+                if (course.years.indexOf(year) === -1) {
+                    course.years.push(year);
+                    course.years.sort();
+                    localStorage.setItem('playedCourses2025', JSON.stringify(playedCourses));
+                    saveToServer();
+                    loadAdmin();
+                    alert('År lagt til!');
+                } else {
+                    alert('Dette året er allerede registrert for denne banen');
+                }
+            }
+        }
+        
+        function removePlayedCourse(courseId) {
+            if (confirm('Er du sikker på at du vil slette denne banen?')) {
+                playedCourses = playedCourses.filter(function(c) { return c.id !== courseId; });
+                localStorage.setItem('playedCourses2025', JSON.stringify(playedCourses));
+                saveToServer();
+                loadAdmin();
+                alert('Bane slettet!');
+            }
+        }
+        
+        function removeYearFromCourse(courseId, year) {
+            var course = playedCourses.find(function(c) { return c.id === courseId; });
+            if (course) {
+                var yearIndex = course.years.indexOf(year);
+                if (yearIndex > -1) {
+                    if (course.years.length === 1) {
+                        // If this is the last year, ask if they want to remove the entire course
+                        if (confirm('Dette er det siste året for denne banen. Vil du slette hele banen?')) {
+                            removePlayedCourse(courseId);
+                        }
+                    } else {
+                        course.years.splice(yearIndex, 1);
+                        localStorage.setItem('playedCourses2025', JSON.stringify(playedCourses));
+                        saveToServer();
+                        loadAdmin();
+                    }
+                }
+            }
+        }
+        
+        function saveWhisky() {
+            whiskyCollection.forEach(function(entry) {
+                var primaryInput = document.getElementById('whisky_primary_' + entry.id);
+                var reserveInput = document.getElementById('whisky_reserve_' + entry.id);
+                
+                if (primaryInput) {
+                    entry.primary = primaryInput.value;
+                }
+                if (reserveInput) {
+                    entry.reserve = reserveInput.value;
+                }
+            });
+            
+            localStorage.setItem('whiskyCollection2025', JSON.stringify(whiskyCollection));
+            saveToServer();
+            alert('Whisky samling lagret!');
+            loadAdmin();
+        }
+        
+        // Course Management Functions
+        function loadCourseDataForEdit() {
+            var courseName = document.getElementById('courseSelect').value;
+            var course = courses[courseName];
+            
+            if (!course) return;
+            
+            document.getElementById('slopeRating').value = course.slopeRating;
+            document.getElementById('courseRating').value = course.courseRating || course.par;
+            
+            var front9HTML = '';
+            for (var i = 1; i <= 9; i++) {
+                front9HTML += '<div class="hole-card">';
+                front9HTML += '<h5>Hull ' + i + '</h5>';
+                front9HTML += '<div class="hole-input">';
+                front9HTML += '<label>Par:</label>';
+                front9HTML += '<input type="number" id="par_' + i + '" value="' + course.pars[i-1] + '" min="3" max="5" onchange="updateCoursePar()">';
+                front9HTML += '</div>';
+                front9HTML += '<div class="hole-input">';
+                front9HTML += '<label>Stroke Index:</label>';
+                front9HTML += '<input type="number" id="stroke_' + i + '" value="' + course.handicaps[i-1] + '" min="1" max="18">';
+                front9HTML += '</div>';
+                front9HTML += '</div>';
+            }
+            document.getElementById('front9Grid').innerHTML = front9HTML;
+            
+            var back9HTML = '';
+            for (var i = 10; i <= 18; i++) {
+                back9HTML += '<div class="hole-card">';
+                back9HTML += '<h5>Hull ' + i + '</h5>';
+                back9HTML += '<div class="hole-input">';
+                back9HTML += '<label>Par:</label>';
+                back9HTML += '<input type="number" id="par_' + i + '" value="' + course.pars[i-1] + '" min="3" max="5" onchange="updateCoursePar()">';
+                back9HTML += '</div>';
+                back9HTML += '<div class="hole-input">';
+                back9HTML += '<label>Stroke Index:</label>';
+                back9HTML += '<input type="number" id="stroke_' + i + '" value="' + course.handicaps[i-1] + '" min="1" max="18">';
+                back9HTML += '</div>';
+                back9HTML += '</div>';
+            }
+            document.getElementById('back9Grid').innerHTML = back9HTML;
+            
+            updateCoursePar();
+        }
+
+        function updateCoursePar() {
+            var total = 0;
+            for (var i = 1; i <= 18; i++) {
+                var parInput = document.getElementById('par_' + i);
+                if (parInput) {
+                    total += parseInt(parInput.value) || 0;
+                }
+            }
+            document.getElementById('totalPar').value = total;
+        }
+
+        function saveCourseData() {
+            var courseName = document.getElementById('courseSelect').value;
+            
+            courses[courseName].slopeRating = parseInt(document.getElementById('slopeRating').value);
+            courses[courseName].courseRating = parseFloat(document.getElementById('courseRating').value) || courses[courseName].par;
+            
+            var pars = [];
+            var handicaps = [];
+            
+            for (var i = 1; i <= 18; i++) {
+                pars.push(parseInt(document.getElementById('par_' + i).value));
+                handicaps.push(parseInt(document.getElementById('stroke_' + i).value));
+            }
+            
+            var strokeCheck = {};
+            for (var i = 0; i < handicaps.length; i++) {
+                if (handicaps[i] < 1 || handicaps[i] > 18) {
+                    alert('Stroke index må være mellom 1 og 18');
+                    return;
+                }
+                if (strokeCheck[handicaps[i]]) {
+                    alert('Stroke index ' + handicaps[i] + ' er brukt flere ganger');
+                    return;
+                }
+                strokeCheck[handicaps[i]] = true;
+            }
+            
+            courses[courseName].pars = pars;
+            courses[courseName].handicaps = handicaps;
+            courses[courseName].par = pars.reduce(function(a, b) { return a + b; }, 0);
+            
+            localStorage.setItem('golfCourses2025', JSON.stringify(courses));
+            saveToServer();
+            
+            document.getElementById('courseMessage').innerHTML = '<div class="success-message">Banedata lagret!</div>';
+            setTimeout(function() {
+                document.getElementById('courseMessage').innerHTML = '';
+            }, 3000);
         }
         
         // Initialize on load
