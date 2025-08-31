@@ -12,7 +12,7 @@
             box-sizing: border-box;
         }
 
-```
+
     body {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -663,7 +663,7 @@
         color: #718096;
     }
 </style>
-```
+
 
 </head>
 <body>
@@ -671,7 +671,7 @@
         <span id="langBtn">🇬🇧 EN</span>
     </div>
 
-```
+
 <div class="version-badge" onclick="toggleStats(event)">v3.16</div>
 
 <div class="stats-badge" id="statsBadge">
@@ -1093,7 +1093,7 @@
         document.getElementById('statsBadge').classList.remove('active');
     }
     // Collapsible rows in Admin Console
-```
+
 
 function toggleSection(element) {
 element.classList.toggle(“active”);
@@ -1104,7 +1104,7 @@ content.classList.toggle(“show”);
 function calculateScrambleHandicap(teamMembers, courseName) {
 var playerHandicaps = [];
 
-```
+
 teamMembers.forEach(function(memberName) {
     var player = players.find(function(p) { return p.name === memberName; });
     if (player) {
@@ -1129,11 +1129,11 @@ if (playerHandicaps.length >= 2) {
 }
 
 return 0;
-```
+
 
 }
 
-```
+
     // NEW: Calculate course-based scramble handicap
     function calculateCourseScrambleHandicap(teamMembers, courseName) {
         var course = courses[courseName];
@@ -2731,7 +2731,6 @@ return 0;
             html += '</div>';
             
             // Handicap editing
-```
 
 html += ‘<button class="collapsible" onclick="toggleSection(this)">Rediger Handicap</button>’;
 html += ‘<div class="collapsible-content">’;
@@ -2750,9 +2749,9 @@ html += ‘<button onclick="saveHandicaps()" style="margin-top: 10px;">Lagre Han
 html += ‘<div id="handicapMessage"></div>’;
 html += ‘</div>’; // closes collapsible-content
 
-```
+
             // Flight times editing for both Individual and Scramble
-```
+
 
 html += ‘<button class="collapsible" onclick="toggleSection(this)">Starttider for Flights og Scrambles</button>’;
 html += ‘<div class="collapsible-content">’;
@@ -2761,7 +2760,7 @@ schedule.forEach(function(round) {
 html += ‘<div style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 8px;">’;
 html += ‘<h5>’ + round.date + ’ - ’ + round.course + ’ (’ + round.type + ‘)</h5>’;
 
-```
+
 if (round.type === 'Individuell' && round.flights) {
     round.flights.forEach(function(flight, idx) {
         html += '<div style="margin: 10px 0;">';
@@ -2783,16 +2782,16 @@ if (round.type === 'Individuell' && round.flights) {
 }
 
 html += '</div>';
-```
+
 
 });
 
 html += ‘<button onclick="saveFlightTimes()">Lagre starttider</button>’;
 html += ‘</div>’; // closes collapsible-content for flights and scramble
 
-```
+
             // Competition holes editing
-```
+
 
 html += ‘<button class="collapsible" onclick="toggleSection(this)">Konkurransehull (Longest Drive / Closest to Pin)</button>’;
 html += ‘<div class="collapsible-content">’;
@@ -2801,7 +2800,7 @@ schedule.forEach(function(round) {
 html += ‘<div style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 8px;">’;
 html += ‘<h5>’ + round.date + ’ - ’ + round.course + ’ (’ + round.type + ‘)</h5>’;
 
-```
+
 // Longest Drive
 html += '<div style="margin: 10px 0;">';
 html += '<label style="display: block; margin-bottom: 5px; font-size: 12px;">Longest Drive hull (kommaseparert, f.eks: 5,15):</label>';
@@ -2817,16 +2816,16 @@ html += '<input type="text" id="ctp_' + round.id + '" value="' + ctpValue + '" s
 html += '</div>';
 
 html += '</div>';
-```
+
 
 });
 
 html += ‘<button onclick="saveCompetitionHoles()">Lagre hull</button>’;
 html += ‘</div>’; // closes collapsible-content
 
-```
+
      // Award winners - for ALL rounds including scrambles
-```
+
 
 html += ‘<button class="collapsible" onclick="toggleSection(this)">Konkurransevinnere</button>’;
 html += ‘<div class="collapsible-content">’;
@@ -2836,7 +2835,7 @@ html += ‘<div style="margin-bottom: 20px;">’;
 html += ‘<h5>’ + round.date + ’ - ’ + round.course + ’ (’ + round.type + ‘)</h5>’;
 html += ‘<div class="award-select">’;
 
-```
+
 // Show competitions for ALL rounds (both Individual and Scramble)
 if (round.longestDrive) {
     round.longestDrive.forEach(function(hole) {
@@ -2870,7 +2869,6 @@ if (round.closestToPin) {
 
 html += '</div>';
 html += '</div>';
-```
 
 });
 
@@ -2925,9 +2923,9 @@ html += ‘<div>’;
 html += ‘<strong>’ + course.name + ‘</strong><br>’;
 html += ’<span style="font-size: 12px; color: #718096;">År: ’;
 
-```
+
 // Make each year individually removable
-```
+
 
 course.years.forEach(function(year, idx) {
 html += ‘<span style="display: inline-block; background: white; padding: 2px 6px; margin: 2px; border-radius: 3px;">’;
@@ -2937,7 +2935,7 @@ html += ‘</span>’;
 });
 html += ‘</span>’;
 
-```
+
 html += '</div>';
 html += '<button onclick="removePlayedCourse(' + course.id + ')" style="background: #fc8181; padding: 5px 10px; font-size: 12px;">Slett</button>';
 html += '</div>';
@@ -2946,7 +2944,7 @@ html += '<input type="number" id="addYear_' + course.id + '" placeholder="Legg t
 html += '<button onclick="addYearToCourse(' + course.id + ')" style="padding: 4px 8px; font-size: 12px;">+ År</button>';
 html += '</div>';
 html += '</div>';
-```
+
 
 });
 
@@ -2962,7 +2960,7 @@ html += ‘<div style="margin-bottom: 15px; padding: 10px; background: white; bo
 html += ‘<h5>’ + entry.owner + ‘</h5>’;
 html += ‘<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">’;
 
-```
+
 html += '<div>';
 html += '<label style="display: block; font-size: 12px; margin-bottom: 5px;">Hoved Whisky:</label>';
 html += '<input type="text" id="whisky_primary_' + entry.id + '" value="' + (entry.primary || '') + '" ';
@@ -2977,7 +2975,7 @@ html += '</div>';
 
 html += '</div>';
 html += '</div>';
-```
+
 
 });
 
@@ -3025,7 +3023,7 @@ html += ‘</div>’; // closes collapsible-content
 html += ‘</div>’; // closes admin-section div
 }
 
-```
+
         document.getElementById('adminContent').innerHTML = html;
         // Load course data if admin
         if (isAdmin) {
@@ -3384,7 +3382,7 @@ html += ‘</div>’; // closes admin-section div
         trackPageView('home');
     };
 </script>
-```
+
 
 </body>
 </html>
