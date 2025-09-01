@@ -1218,7 +1218,7 @@
                     html += '<div class="team-select" onclick="selectTeam(' + roundId + ', ' + idx + ')">';
                     html += '<strong>Lag ' + (idx + 1) + '</strong><br>';
                     html += team.join(' & ');
-                    html += '<br><span style="color: #718096; font-size: 12px;">Team Handicap: ' + teamHandicap + ' slag</span>';
+                    html += '<br><span style="color: #718096; font-size: 12px;">Tilleggsslag: ' + teamHandicap + ' slag</span>';
                     html += '</div>';
                 });
             } else {
@@ -1246,7 +1246,26 @@
             
             var html = '<h3>' + round.course + ' - ' + round.date + '</h3>';
             html += '<h4>Lag ' + (teamIdx + 1) + ': ' + team.join(' & ') + '</h4>';
-            html += '<div class="handicap-info">Team Handicap: <strong>' + teamHandicap + ' slag</strong></div>';
+            
+            // Show detailed team handicap calculation
+            html += '<div class="handicap-info">';
+            html += '<strong>Lag tilleggsslag basert på baneindex:</strong><br>';
+            var playerHandicaps = [];
+            team.forEach(function(memberName) {
+                var player = players.find(function(p) { return p.name === memberName; });
+                if (player) {
+                    playerHandicaps.push({name: memberName, handicap: player.handicap});
+                }
+            });
+            playerHandicaps.sort(function(a, b) { return a.handicap - b.handicap; });
+            
+            if (playerHandicaps.length >= 2) {
+                var lowest = playerHandicaps[0];
+                var highest = playerHandicaps[playerHandicaps.length - 1];
+                html += lowest.name + ' (' + lowest.handicap + ') × 70% + ' + highest.name + ' (' + highest.handicap + ') × 30%<br>';
+                html += 'Beregning: ' + (lowest.handicap * 0.7).toFixed(1) + ' + ' + (highest.handicap * 0.3).toFixed(1) + ' = ' + teamHandicap + ' tilleggsslag';
+            }
+            html += '</div>';
             
             html += '<h4>Registrer lagscore:</h4>';
             
@@ -1621,64 +1640,172 @@
         function loadCourses() {
             var html = '';
             
-            Object.keys(courses).forEach(function(courseName) {
+            // Define course order based on schedule dates
+            var courseOrder = [
+                'Cullen Links',    // Friday 29. aug (Morning & Afternoon)
+                'Spey Bay',        // Saturday 30. aug (Morning)
+                'Garmouth & Kingston', // Saturday 30. aug (Afternoon)  
+                'Strathlene'       // Sunday 31. aug (Hele dagen)
+            ];
+            
+            courseOrder.forEach(function(courseName) {
+                if (!courses[courseName]) return;
+                
                 var courseData = courses[courseName];
                 html += '<div class="course-section">';
                 html += '<h3>' + courseName + '</h3>';
-                html += '<p>Par: ' + courseData.par + ' | Slope: ' + courseData.slopeRating + '</p>';
+                html += '<p>Par: ' + courseData.par + ' | Slope: ' + courseData.slopeRating;
+                if (courseData.courseRating) {
+                    html += ' | Course Rating: ' + courseData.courseRating;
+                }
+                html += '</p>';
                 
-                schedule.forEach(function(round) {
-                    if (round.course === courseName) {
-                        html += '<h4>' + round.date + ' - ' + round.time + ' (' + round.type + ')</h4>';
+                // Find all rounds for this course in chronological order
+                var courseRounds = schedule.filter(function(round) {
+                    return round.course === courseName;
+                }).sort(function(a, b) {
+                    return a.id - b.id; // Sort by round ID (chronological)
+                });
+                
+                courseRounds.forEach(function(round) {
+                    html += '<h4>' + round.date + ' - ' + round.time + ' (' + round.type + ')</h4>';
+                    
+                    if (round.type === 'Individuell') {
+                        html += '<div class="table-wrapper">';
+                        html += '<table><thead><tr><th>Spiller</th>';
+                        for (var i = 1; i <= 18; i++) {
+                            html += '<th>' + i + '</th>';
+                        }
+                        html += '<th>Poeng</th></tr></thead><tbody>';
                         
-                        if (round.type === 'Individuell') {
+                        // Par row
+                        html += '<tr><td><strong>Par</strong></td>';
+                        for (var i = 0; i < 18; i++) {
+                            html += '<td><strong>' + courseData.pars[i] + '</strong></td>';
+                        }
+                        html += '<td><strong>-</strong></td></tr>';
+                        
+                        // Stroke Index row
+                        html += '<tr><td><strong>SI</strong></td>';
+                        for (var i = 0; i < 18; i++) {
+                            html += '<td style="font-size: 10px; color: #718096;">' + courseData.handicaps[i] + '</td>';
+                        }
+                        html += '<td><strong>-</strong></td></tr>';
+                        
+                        // Distance row (if available)
+                        if (courseData.meters) {
+                            html += '<tr><td><strong>Meter</strong></td>';
+                            for (var i = 0; i < 18; i++) {
+                                html += '<td style="font-size: 10px; color: #718096;">' + courseData.meters[i] + '</td>';
+                            }
+                            html += '<td><strong>-</strong></td></tr>';
+                        }
+                        
+                        // Player scores
+                        players.forEach(function(player) {
+                            var scoreKey = round.id + '_' + player.id;
+                            var roundScores = scores[scoreKey];
+                            
+                            if (roundScores && Object.keys(roundScores).length > 0) {
+                                var courseHandicap = calculateCourseHandicap(player.handicap, courseData.slopeRating);
+                                var totalPoints = 0;
+                                
+                                html += '<tr><td><strong>' + player.name + '</strong><br><span style="font-size: 10px;">HCP ' + courseHandicap + '</span></td>';
+                                for (var i = 1; i <= 18; i++) {
+                                    var score = roundScores[i] || '-';
+                                    var cellStyle = '';
+                                    
+                                    if (score !== '-') {
+                                        var par = courseData.pars[i - 1];
+                                        var hcpIndex = courseData.handicaps[i - 1];
+                                        
+                                        var strokesOnHole = 0;
+                                        if (courseHandicap >= 18) {
+                                            strokesOnHole = 1;
+                                            if (hcpIndex <= (courseHandicap - 18)) strokesOnHole = 2;
+                                            if (courseHandicap >= 36 && hcpIndex <= (courseHandicap - 36)) strokesOnHole = 3;
+                                        } else {
+                                            if (hcpIndex <= courseHandicap) strokesOnHole = 1;
+                                        }
+                                        
+                                        var points = calculateStablefordPoints(score, par, strokesOnHole);
+                                        totalPoints += points;
+                                        
+                                        // Color coding for scores
+                                        if (points >= 3) cellStyle = 'background: #c6f6d5;'; // Green for birdie+
+                                        else if (points == 2) cellStyle = 'background: #fff5f5;'; // Light for par
+                                        else if (points == 1) cellStyle = 'background: #fef5e7;'; // Yellow for bogey
+                                        else cellStyle = 'background: #fed7d7;'; // Red for worse
+                                        
+                                        if (strokesOnHole > 0) {
+                                            cellStyle += ' border: 2px solid #f6d55c;'; // Yellow border for stroke holes
+                                        }
+                                    }
+                                    
+                                    html += '<td style="' + cellStyle + '">' + score + '</td>';
+                                }
+                                html += '<td style="background: #e6f4ff;"><strong>' + totalPoints + '</strong></td></tr>';
+                            }
+                        });
+                        
+                        html += '</tbody></table></div>';
+                    } else {
+                        // Scramble results
+                        html += '<h5>Scramble Resultater</h5>';
+                        var teamResults = [];
+                        
+                        round.teams.forEach(function(team, teamIdx) {
+                            var scoreKey = round.id + '_team_' + teamIdx;
+                            var teamScores = scrambleScores[scoreKey];
+                            
+                            if (teamScores && Object.keys(teamScores).length > 0) {
+                                var teamHandicap = calculateScrambleHandicap(team, round.course);
+                                var total = 0;
+                                Object.values(teamScores).forEach(function(s) { total += s; });
+                                var netScore = total - teamHandicap;
+                                
+                                teamResults.push({
+                                    teamIdx: teamIdx,
+                                    members: team.join(' & '),
+                                    gross: total,
+                                    handicap: teamHandicap,
+                                    net: netScore,
+                                    scores: teamScores
+                                });
+                            }
+                        });
+                        
+                        if (teamResults.length > 0) {
+                            // Show detailed scramble scorecard
                             html += '<div class="table-wrapper">';
-                            html += '<table><thead><tr><th>Spiller</th>';
+                            html += '<table><thead><tr><th>Lag</th>';
                             for (var i = 1; i <= 18; i++) {
                                 html += '<th>' + i + '</th>';
                             }
-                            html += '<th>Poeng</th></tr></thead><tbody>';
+                            html += '<th>Total</th><th>HCP</th><th>Netto</th></tr></thead><tbody>';
                             
-                            html += '<tr><td>Par</td>';
+                            // Par row
+                            html += '<tr><td><strong>Par</strong></td>';
                             for (var i = 0; i < 18; i++) {
-                                html += '<td>' + courseData.pars[i] + '</td>';
+                                html += '<td><strong>' + courseData.pars[i] + '</strong></td>';
                             }
-                            html += '<td>-</td></tr>';
+                            html += '<td><strong>' + courseData.par + '</strong></td><td><strong>-</strong></td><td><strong>-</strong></td></tr>';
                             
-                            players.forEach(function(player) {
-                                var scoreKey = round.id + '_' + player.id;
-                                var roundScores = scores[scoreKey];
-                                
-                                if (roundScores && Object.keys(roundScores).length > 0) {
-                                    var courseHandicap = calculateCourseHandicap(player.handicap, courseData.slopeRating);
-                                    var totalPoints = 0;
-                                    
-                                    html += '<tr><td>' + player.name + '</td>';
-                                    for (var i = 1; i <= 18; i++) {
-                                        var score = roundScores[i] || '-';
-                                        html += '<td>' + score + '</td>';
-                                        
-                                        if (score !== '-') {
-                                            var par = courseData.pars[i - 1];
-                                            var hcpIndex = courseData.handicaps[i - 1];
-                                            
-                                            var strokesOnHole = 0;
-                                            if (courseHandicap >= 18) {
-                                                strokesOnHole = 1;
-                                                if (hcpIndex <= (courseHandicap - 18)) strokesOnHole = 2;
-                                                if (courseHandicap >= 36 && hcpIndex <= (courseHandicap - 36)) strokesOnHole = 3;
-                                            } else {
-                                                if (hcpIndex <= courseHandicap) strokesOnHole = 1;
-                                            }
-                                            
-                                            totalPoints += calculateStablefordPoints(score, par, strokesOnHole);
-                                        }
-                                    }
-                                    html += '<td><strong>' + totalPoints + '</strong></td></tr>';
+                            // Team scores
+                            teamResults.forEach(function(result) {
+                                html += '<tr><td><strong>Lag ' + (result.teamIdx + 1) + '</strong><br><span style="font-size: 10px;">' + result.members + '</span></td>';
+                                for (var i = 1; i <= 18; i++) {
+                                    var score = result.scores[i] || '-';
+                                    html += '<td>' + score + '</td>';
                                 }
+                                html += '<td><strong>' + result.gross + '</strong></td>';
+                                html += '<td>' + result.handicap + '</td>';
+                                html += '<td style="background: #e6f4ff;"><strong>' + result.net + '</strong></td></tr>';
                             });
                             
                             html += '</tbody></table></div>';
+                        } else {
+                            html += '<p style="color: #718096;">Ingen resultater registrert ennå</p>';
                         }
                     }
                 });
