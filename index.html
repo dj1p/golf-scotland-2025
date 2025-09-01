@@ -10,208 +10,6 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
-        // Course data import functions
-        function importCourseData() {
-            var fileInput = document.getElementById('courseImportFile');
-            var file = fileInput.files[0];
-            
-            if (!file) {
-                showImportMessage('Vennligst velg en CSV fil', 'error');
-                return;
-            }
-            
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    var csvData = e.target.result;
-                    parseCourseCSV(csvData);
-                } catch (error) {
-                    showImportMessage('Feil ved lesing av fil: ' + error.message, 'error');
-                }
-            };
-            reader.readAsText(file);
-        }
-        
-        function parseCourseCSV(csvData) {
-            var lines = csvData.trim().split('\n');
-            var importedCourses = {};
-            var errors = [];
-            
-            for (var i = 0; i < lines.length; i++) {
-                var line = lines[i].trim();
-                if (!line || line.startsWith('#')) continue; // Skip empty lines and comments
-                
-                try {
-                    var data = line.split(',').map(function(item) { return item.trim(); });
-                    
-                    if (data.length < 58) { // Min: name, slope, par, courseRating + 18x3 hole data
-                        errors.push('Linje ' + (i + 1) + ': Ikke nok data (minimum 58 kolonner)');
-                        continue;
-                    }
-                    
-                    var courseName = data[0];
-                    var slopeRating = parseInt(data[1]);
-                    var par = parseInt(data[2]);
-                    var courseRating = parseFloat(data[3]);
-                    
-                    if (!courseName || isNaN(slopeRating) || isNaN(par) || isNaN(courseRating)) {
-                        errors.push('Linje ' + (i + 1) + ': Ugyldig grunndata');
-                        continue;
-                    }
-                    
-                    var pars = [];
-                    var handicaps = [];
-                    var yards = [];
-                    
-                    // Parse 18 holes (each hole has par, SI, yards)
-                    for (var hole = 0; hole < 18; hole++) {
-                        var baseIndex = 4 + (hole * 3);
-                        var holePar = parseInt(data[baseIndex]);
-                        var holeHandicap = parseInt(data[baseIndex + 1]);
-                        var holeYards = parseInt(data[baseIndex + 2]);
-                        
-                        if (isNaN(holePar) || isNaN(holeHandicap) || isNaN(holeYards)) {
-                            errors.push('Linje ' + (i + 1) + ': Ugyldig data for hull ' + (hole + 1));
-                            break;
-                        }
-                        
-                        pars.push(holePar);
-                        handicaps.push(holeHandicap);
-                        yards.push(holeYards);
-                    }
-                    
-                    // Validate stroke indexes (must be 1-18 unique)
-                    var sortedHandicaps = handicaps.slice().sort(function(a, b) { return a - b; });
-                    var expectedHandicaps = Array.from({length: 18}, function(_, i) { return i + 1; });
-                    var handicapValid = JSON.stringify(sortedHandicaps) === JSON.stringify(expectedHandicaps);
-                    
-                    if (!handicapValid) {
-                        errors.push('Linje ' + (i + 1) + ': Stroke Index må inneholde tallene 1-18 nøyaktig en gang hver');
-                        continue;
-                    }
-                    
-                    // Calculate total par and validate
-                    var calculatedPar = pars.reduce(function(sum, p) { return sum + p; }, 0);
-                    if (calculatedPar !== par) {
-                        errors.push('Linje ' + (i + 1) + ': Par total (' + par + ') stemmer ikke med hull sum (' + calculatedPar + ')');
-                        continue;
-                    }
-                    
-                    importedCourses[courseName] = {
-                        slopeRating: slopeRating,
-                        courseRating: courseRating,
-                        par: par,
-                        pars: pars,
-                        handicaps: handicaps,
-                        yardsYellow: yards,
-                        meters: yards.map(function(y) { return Math.round(y * 0.9144); }) // Convert to meters
-                    };
-                    
-                } catch (error) {
-                    errors.push('Linje ' + (i + 1) + ': ' + error.message);
-                }
-            }
-            
-            if (errors.length > 0) {
-                showImportMessage('Import feil:\n' + errors.join('\n'), 'error');
-                return;
-            }
-            
-            if (Object.keys(importedCourses).length === 0) {
-                showImportMessage('Ingen gyldige baner funnet i CSV filen', 'error');
-                return;
-            }
-            
-            // Ask for confirmation
-            var courseNames = Object.keys(importedCourses);
-            var confirmMessage = 'Importer ' + courseNames.length + ' baner?\n\n' + courseNames.join('\n') + '\n\nDette vil overskrive eksisterende baner med samme navn.';
-            
-            if (confirm(confirmMessage)) {
-                // Update courses
-                Object.keys(importedCourses).forEach(function(courseName) {
-                    courses[courseName] = importedCourses[courseName];
-                });
-                
-                saveToStorage();
-                showImportMessage(courseNames.length + ' baner importert!', 'success');
-                loadAdmin(); // Reload to show imported courses
-            }
-        }
-        
-        function downloadCourseTemplate() {
-            var template = 'CourseName,SlopeRating,Par,CourseRating';
-            for (var i = 1; i <= 18; i++) {
-                template += ',Hole' + i + 'Par,Hole' + i + 'SI,Hole' + i + 'Yards';
-            }
-            template += '\n';
-            
-            // Add example course
-            template += 'Example Course,113,72,71.5';
-            var examplePars = [4,4,3,4,5,4,3,4,4,4,4,3,5,4,3,4,4,4];
-            var exampleSI = [1,3,17,5,9,7,15,11,13,2,4,18,6,8,16,12,10,14];
-            var exampleYards = [420,380,165,410,520,390,140,430,395,415,385,175,545,400,155,425,405,435];
-            
-            for (var i = 0; i < 18; i++) {
-                template += ',' + examplePars[i] + ',' + exampleSI[i] + ',' + exampleYards[i];
-            }
-            template += '\n';
-            
-            // Add comment line
-            template += '# Format: CourseName,SlopeRating,Par,CourseRating,Hole1Par,Hole1SI,Hole1Yards,...Hole18Par,Hole18SI,Hole18Yards\n';
-            template += '# SI (Stroke Index) must contain numbers 1-18 exactly once\n';
-            
-            var blob = new Blob([template], { type: 'text/csv' });
-            var url = window.URL.createObjectURL(blob);
-            var a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = 'course_import_template.csv';
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-            
-            showImportMessage('Mal lastet ned! Fyll ut med dine banedata og importer.', 'success');
-        }
-        
-        function showImportMessage(message, type) {
-            var messageDiv = document.getElementById('importMessage');
-            messageDiv.innerHTML = '<div style="background: ' + (type === 'error' ? '#fed7d7' : '#c6f6d5') + 
-                                   '; color: ' + (type === 'error' ? '#c53030' : '#2f855a') + 
-                                   '; padding: 10px; border-radius: 8px; white-space: pre-line;">' + message + '</div>';
-            
-            setTimeout(function() {
-                messageDiv.innerHTML = '';
-            }, 8000);
-        }
-        
-        // Travel information management
-        function saveTravelInfo() {
-            var travelInfo = {
-                hotelName: document.getElementById('hotelName').value,
-                hotelAddress: document.getElementById('hotelAddress').value,
-                hotelPhone: document.getElementById('hotelPhone').value,
-                hotelWebsite: document.getElementById('hotelWebsite').value,
-                transportType: document.getElementById('transportType').value,
-                transportDetails: document.getElementById('transportDetails').value,
-                airportDistance: document.getElementById('airportDistance').value,
-                airportDriveTime: document.getElementById('airportDriveTime').value,
-                additionalInfo: document.getElementById('additionalInfo').value
-            };
-            
-            if (!yearlyData[currentYear].travelInfo) {
-                yearlyData[currentYear].travelInfo = {};
-            }
-            
-            yearlyData[currentYear].travelInfo = travelInfo;
-            saveToStorage();
-            
-            document.getElementById('travelMessage').innerHTML = '<div class="success-message">Reiseinformasjon lagret!</div>';
-            setTimeout(function() {
-                document.getElementById('travelMessage').innerHTML = '';
-            }, 3000);
-        }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -905,12 +703,6 @@
                     <p id="whiskyDesc">Samlingen</p>
                 </div>
                 
-                <div class="nav-card" onclick="showView('travel')">
-                    <div class="icon">✈️</div>
-                    <h3 id="travelTitle">Reiseinfo</h3>
-                    <p id="travelDesc">Hotel & transport</p>
-                </div>
-                
                 <div class="nav-card" onclick="showView('admin')">
                     <div class="icon">🔐</div>
                     <h3 id="adminTitle">Admin</h3>
@@ -965,12 +757,6 @@
             <button class="back-btn" onclick="showView('home')">← Tilbake</button>
             <h2>Whisky Samlingen</h2>
             <div id="whiskyContent"></div>
-        </div>
-        
-        <div id="travelView" class="content">
-            <button class="back-btn" onclick="showView('home')">← Tilbake</button>
-            <h2>Reiseinformasjon</h2>
-            <div id="travelContent"></div>
         </div>
         
         <div id="adminView" class="content">
@@ -1439,7 +1225,6 @@
                 if (viewName === 'yearlyResults') loadYearlyResults();
                 if (viewName === 'history') loadHistory();
                 if (viewName === 'whisky') loadWhisky();
-                if (viewName === 'travel') loadTravel();
                 if (viewName === 'admin') loadAdmin();
             }
         }
@@ -1471,8 +1256,6 @@
                     historyDesc: 'Spillte baner',
                     whiskyTitle: 'Whisky',
                     whiskyDesc: 'Samlingen',
-                    travelTitle: 'Reiseinfo',
-                    travelDesc: 'Hotel & transport',
                     adminTitle: 'Admin',
                     adminDesc: 'Administrer'
                 },
@@ -1495,8 +1278,6 @@
                     historyDesc: 'Played courses',
                     whiskyTitle: 'Whisky',
                     whiskyDesc: 'Collection',
-                    travelTitle: 'Travel Info',
-                    travelDesc: 'Hotel & transport',
                     adminTitle: 'Admin',
                     adminDesc: 'Manage'
                 }
@@ -2330,89 +2111,7 @@
             document.getElementById('historyContent').innerHTML = html;
         }
         
-        function loadTravel() {
-            var travelInfo = yearlyData[currentYear].travelInfo || {};
-            var html = '<div style="margin-bottom: 20px;">';
-            html += '<h3>Reiseinformasjon Scotland Golf ' + currentYear + '</h3>';
-            html += '<p style="color: #718096;">Hotel og transport informasjon for turen</p>';
-            html += '</div>';
-            
-            if (Object.keys(travelInfo).length === 0 || !travelInfo.hotelName) {
-                html += '<div style="background: #f3f4f6; padding: 20px; border-radius: 10px; text-align: center;">';
-                html += '<p>Ingen reiseinformasjon registrert ennå.</p>';
-                html += '<p style="color: #718096; font-size: 14px;">Administratoren kan legge inn informasjon i admin panelet.</p>';
-                html += '</div>';
-            } else {
-                html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">';
-                
-                // Hotel Information Card
-                html += '<div style="background: #f0f9ff; padding: 20px; border-radius: 15px; border: 2px solid #3b82f6;">';
-                html += '<h4 style="color: #1e40af; margin-bottom: 15px;">🏨 Hotel</h4>';
-                
-                if (travelInfo.hotelName) {
-                    html += '<h5 style="margin-bottom: 10px;">' + travelInfo.hotelName + '</h5>';
-                }
-                if (travelInfo.hotelAddress) {
-                    html += '<p style="margin-bottom: 8px;"><strong>Adresse:</strong><br>' + travelInfo.hotelAddress + '</p>';
-                }
-                if (travelInfo.hotelPhone) {
-                    html += '<p style="margin-bottom: 8px;"><strong>Telefon:</strong> <a href="tel:' + travelInfo.hotelPhone + '">' + travelInfo.hotelPhone + '</a></p>';
-                }
-                if (travelInfo.hotelWebsite) {
-                    html += '<p style="margin-bottom: 8px;"><strong>Nettside:</strong> <a href="' + travelInfo.hotelWebsite + '" target="_blank">Åpne nettside</a></p>';
-                }
-                
-                html += '</div>';
-                
-                // Transport Information Card  
-                html += '<div style="background: #f0fdf4; padding: 20px; border-radius: 15px; border: 2px solid #22c55e;">';
-                html += '<h4 style="color: #15803d; margin-bottom: 15px;">🚗 Transport</h4>';
-                
-                if (travelInfo.transportType) {
-                    var transportText = {
-                        'rental_car': 'Leiebil',
-                        'minibus': 'Minibuss', 
-                        'taxi': 'Taxi',
-                        'other': 'Annet'
-                    };
-                    html += '<p style="margin-bottom: 10px;"><strong>Type:</strong> ' + (transportText[travelInfo.transportType] || travelInfo.transportType) + '</p>';
-                }
-                if (travelInfo.transportDetails) {
-                    html += '<p style="margin-bottom: 10px;"><strong>Detaljer:</strong><br>' + travelInfo.transportDetails.replace(/\n/g, '<br>') + '</p>';
-                }
-                
-                html += '</div>';
-                
-                html += '</div>';
-                
-                // Airport Information
-                if (travelInfo.airportDistance || travelInfo.airportDriveTime) {
-                    html += '<div style="background: #fef3c7; padding: 20px; border-radius: 15px; border: 2px solid #f59e0b; margin-top: 20px;">';
-                    html += '<h4 style="color: #92400e; margin-bottom: 15px;">✈️ Fra Flyplass</h4>';
-                    html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">';
-                    
-                    if (travelInfo.airportDistance) {
-                        html += '<p><strong>Avstand:</strong> ' + travelInfo.airportDistance + '</p>';
-                    }
-                    if (travelInfo.airportDriveTime) {
-                        html += '<p><strong>Kjøretid:</strong> ' + travelInfo.airportDriveTime + '</p>';
-                    }
-                    
-                    html += '</div>';
-                    html += '</div>';
-                }
-                
-                // Additional Information
-                if (travelInfo.additionalInfo) {
-                    html += '<div style="background: #f7fafc; padding: 20px; border-radius: 15px; margin-top: 20px;">';
-                    html += '<h4 style="color: #2d3748; margin-bottom: 15px;">📋 Tilleggsinformasjon</h4>';
-                    html += '<div style="white-space: pre-line;">' + travelInfo.additionalInfo + '</div>';
-                    html += '</div>';
-                }
-            }
-            
-            document.getElementById('travelContent').innerHTML = html;
-        }
+        function loadWhisky() {
             var html = '<div style="margin-bottom: 20px;">';
             html += '<h3>Whisky Collection ' + currentYear + '</h3>';
             html += '<p style="color: #718096;">Hver deltaker tar med sin whisky til turen</p>';
@@ -2694,94 +2393,9 @@
                 
                 html += '<button onclick="saveCourseData()">Lagre Banedata</button>';
                 html += '<div id="courseDataMessage"></div>';
-                
-                // Course Data Import Section
-                html += '<div style="margin-top: 30px; padding: 15px; background: #fef5e7; border-radius: 10px;">';
-                html += '<h4>Importer Banedata fra CSV</h4>';
-                html += '<p style="color: #718096; font-size: 13px; margin-bottom: 10px;">CSV format: CourseName,SlopeRating,Par,CourseRating,Hole1Par,Hole1SI,Hole1Yards,...,Hole18Par,Hole18SI,Hole18Yards</p>';
-                html += '<input type="file" id="courseImportFile" accept=".csv" style="margin-bottom: 10px;">';
-                html += '<div style="display: flex; gap: 10px;">';
-                html += '<button onclick="importCourseData()" style="background: #8b5cf6;">Importer CSV</button>';
-                html += '<button onclick="downloadCourseTemplate()" style="background: #06b6d4;">Last ned mal</button>';
-                html += '</div>';
-                html += '<div id="importMessage" style="margin-top: 10px;"></div>';
-                html += '</div>';
-                
                 html += '</div>';
 
-                // 7. Travel Information Management
-                html += '<button class="collapsible" onclick="toggleSection(this)">✈️ Reise Informasjon</button>';
-                html += '<div class="collapsible-content">';
-                html += '<div style="background: #f0f9ff; padding: 15px; border-radius: 10px;">';
-                html += '<h4>Hotel & Transport Informasjon</h4>';
-                
-                // Load travel info
-                var travelInfo = yearlyData[currentYear].travelInfo || {
-                    hotelName: '',
-                    hotelAddress: '',
-                    hotelPhone: '',
-                    hotelWebsite: '',
-                    transportType: '',
-                    transportDetails: '',
-                    airportDistance: '',
-                    airportDriveTime: '',
-                    additionalInfo: ''
-                };
-                
-                html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin: 15px 0;">';
-                
-                // Hotel Information
-                html += '<div style="background: white; padding: 15px; border-radius: 8px;">';
-                html += '<h5>🏨 Hotel Informasjon</h5>';
-                html += '<label>Hotel Navn:</label>';
-                html += '<input type="text" id="hotelName" value="' + travelInfo.hotelName + '" placeholder="F.eks. Cullen Bay Hotel">';
-                html += '<label>Adresse:</label>';
-                html += '<input type="text" id="hotelAddress" value="' + travelInfo.hotelAddress + '" placeholder="Gate, postnummer, by">';
-                html += '<label>Telefon:</label>';
-                html += '<input type="text" id="hotelPhone" value="' + travelInfo.hotelPhone + '" placeholder="+44 1234 567890">';
-                html += '<label>Nettside:</label>';
-                html += '<input type="text" id="hotelWebsite" value="' + travelInfo.hotelWebsite + '" placeholder="https://...">';
-                html += '</div>';
-                
-                // Transport Information
-                html += '<div style="background: white; padding: 15px; border-radius: 8px;">';
-                html += '<h5>🚗 Transport Informasjon</h5>';
-                html += '<label>Transport Type:</label>';
-                html += '<select id="transportType">';
-                html += '<option value="">Velg transport</option>';
-                html += '<option value="rental_car" ' + (travelInfo.transportType === 'rental_car' ? 'selected' : '') + '>Leiebil</option>';
-                html += '<option value="minibus" ' + (travelInfo.transportType === 'minibus' ? 'selected' : '') + '>Minibuss</option>';
-                html += '<option value="taxi" ' + (travelInfo.transportType === 'taxi' ? 'selected' : '') + '>Taxi</option>';
-                html += '<option value="other" ' + (travelInfo.transportType === 'other' ? 'selected' : '') + '>Annet</option>';
-                html += '</select>';
-                html += '<label>Transport Detaljer:</label>';
-                html += '<textarea id="transportDetails" rows="3" placeholder="Biltype, leiefirma, booking referanse...">' + travelInfo.transportDetails + '</textarea>';
-                html += '</div>';
-                
-                html += '</div>';
-                
-                // Airport & Additional Info
-                html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">';
-                html += '<div>';
-                html += '<label>Avstand fra flyplass:</label>';
-                html += '<input type="text" id="airportDistance" value="' + travelInfo.airportDistance + '" placeholder="F.eks. 45 km">';
-                html += '</div>';
-                html += '<div>';
-                html += '<label>Kjøretid fra flyplass:</label>';
-                html += '<input type="text" id="airportDriveTime" value="' + travelInfo.airportDriveTime + '" placeholder="F.eks. 50 minutter">';
-                html += '</div>';
-                html += '</div>';
-                
-                html += '<label>Tilleggsinformasjon:</label>';
-                html += '<textarea id="additionalInfo" rows="4" placeholder="Check-in tider, parkeringsmuligheter, restauranter i nærheten...">' + travelInfo.additionalInfo + '</textarea>';
-                
-                html += '<button onclick="saveTravelInfo()" style="margin-top: 15px;">Lagre Reiseinformasjon</button>';
-                html += '<div id="travelMessage"></div>';
-                
-                html += '</div>';
-                html += '</div>';
-
-                // 8. Historical Data Management (renumbered)
+                // 7. Historical Data Management
                 html += '<button class="collapsible" onclick="toggleSection(this)">📚 Historiske Data</button>';
                 html += '<div class="collapsible-content">';
                 html += '<div style="background: #f0f9ff; padding: 15px; border-radius: 10px;">';
