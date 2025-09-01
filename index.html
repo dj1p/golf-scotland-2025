@@ -10,6 +10,208 @@
             padding: 0;
             box-sizing: border-box;
         }
+        
+        // Course data import functions
+        function importCourseData() {
+            var fileInput = document.getElementById('courseImportFile');
+            var file = fileInput.files[0];
+            
+            if (!file) {
+                showImportMessage('Vennligst velg en CSV fil', 'error');
+                return;
+            }
+            
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    var csvData = e.target.result;
+                    parseCourseCSV(csvData);
+                } catch (error) {
+                    showImportMessage('Feil ved lesing av fil: ' + error.message, 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+        
+        function parseCourseCSV(csvData) {
+            var lines = csvData.trim().split('\n');
+            var importedCourses = {};
+            var errors = [];
+            
+            for (var i = 0; i < lines.length; i++) {
+                var line = lines[i].trim();
+                if (!line || line.startsWith('#')) continue; // Skip empty lines and comments
+                
+                try {
+                    var data = line.split(',').map(function(item) { return item.trim(); });
+                    
+                    if (data.length < 58) { // Min: name, slope, par, courseRating + 18x3 hole data
+                        errors.push('Linje ' + (i + 1) + ': Ikke nok data (minimum 58 kolonner)');
+                        continue;
+                    }
+                    
+                    var courseName = data[0];
+                    var slopeRating = parseInt(data[1]);
+                    var par = parseInt(data[2]);
+                    var courseRating = parseFloat(data[3]);
+                    
+                    if (!courseName || isNaN(slopeRating) || isNaN(par) || isNaN(courseRating)) {
+                        errors.push('Linje ' + (i + 1) + ': Ugyldig grunndata');
+                        continue;
+                    }
+                    
+                    var pars = [];
+                    var handicaps = [];
+                    var yards = [];
+                    
+                    // Parse 18 holes (each hole has par, SI, yards)
+                    for (var hole = 0; hole < 18; hole++) {
+                        var baseIndex = 4 + (hole * 3);
+                        var holePar = parseInt(data[baseIndex]);
+                        var holeHandicap = parseInt(data[baseIndex + 1]);
+                        var holeYards = parseInt(data[baseIndex + 2]);
+                        
+                        if (isNaN(holePar) || isNaN(holeHandicap) || isNaN(holeYards)) {
+                            errors.push('Linje ' + (i + 1) + ': Ugyldig data for hull ' + (hole + 1));
+                            break;
+                        }
+                        
+                        pars.push(holePar);
+                        handicaps.push(holeHandicap);
+                        yards.push(holeYards);
+                    }
+                    
+                    // Validate stroke indexes (must be 1-18 unique)
+                    var sortedHandicaps = handicaps.slice().sort(function(a, b) { return a - b; });
+                    var expectedHandicaps = Array.from({length: 18}, function(_, i) { return i + 1; });
+                    var handicapValid = JSON.stringify(sortedHandicaps) === JSON.stringify(expectedHandicaps);
+                    
+                    if (!handicapValid) {
+                        errors.push('Linje ' + (i + 1) + ': Stroke Index må inneholde tallene 1-18 nøyaktig en gang hver');
+                        continue;
+                    }
+                    
+                    // Calculate total par and validate
+                    var calculatedPar = pars.reduce(function(sum, p) { return sum + p; }, 0);
+                    if (calculatedPar !== par) {
+                        errors.push('Linje ' + (i + 1) + ': Par total (' + par + ') stemmer ikke med hull sum (' + calculatedPar + ')');
+                        continue;
+                    }
+                    
+                    importedCourses[courseName] = {
+                        slopeRating: slopeRating,
+                        courseRating: courseRating,
+                        par: par,
+                        pars: pars,
+                        handicaps: handicaps,
+                        yardsYellow: yards,
+                        meters: yards.map(function(y) { return Math.round(y * 0.9144); }) // Convert to meters
+                    };
+                    
+                } catch (error) {
+                    errors.push('Linje ' + (i + 1) + ': ' + error.message);
+                }
+            }
+            
+            if (errors.length > 0) {
+                showImportMessage('Import feil:\n' + errors.join('\n'), 'error');
+                return;
+            }
+            
+            if (Object.keys(importedCourses).length === 0) {
+                showImportMessage('Ingen gyldige baner funnet i CSV filen', 'error');
+                return;
+            }
+            
+            // Ask for confirmation
+            var courseNames = Object.keys(importedCourses);
+            var confirmMessage = 'Importer ' + courseNames.length + ' baner?\n\n' + courseNames.join('\n') + '\n\nDette vil overskrive eksisterende baner med samme navn.';
+            
+            if (confirm(confirmMessage)) {
+                // Update courses
+                Object.keys(importedCourses).forEach(function(courseName) {
+                    courses[courseName] = importedCourses[courseName];
+                });
+                
+                saveToStorage();
+                showImportMessage(courseNames.length + ' baner importert!', 'success');
+                loadAdmin(); // Reload to show imported courses
+            }
+        }
+        
+        function downloadCourseTemplate() {
+            var template = 'CourseName,SlopeRating,Par,CourseRating';
+            for (var i = 1; i <= 18; i++) {
+                template += ',Hole' + i + 'Par,Hole' + i + 'SI,Hole' + i + 'Yards';
+            }
+            template += '\n';
+            
+            // Add example course
+            template += 'Example Course,113,72,71.5';
+            var examplePars = [4,4,3,4,5,4,3,4,4,4,4,3,5,4,3,4,4,4];
+            var exampleSI = [1,3,17,5,9,7,15,11,13,2,4,18,6,8,16,12,10,14];
+            var exampleYards = [420,380,165,410,520,390,140,430,395,415,385,175,545,400,155,425,405,435];
+            
+            for (var i = 0; i < 18; i++) {
+                template += ',' + examplePars[i] + ',' + exampleSI[i] + ',' + exampleYards[i];
+            }
+            template += '\n';
+            
+            // Add comment line
+            template += '# Format: CourseName,SlopeRating,Par,CourseRating,Hole1Par,Hole1SI,Hole1Yards,...Hole18Par,Hole18SI,Hole18Yards\n';
+            template += '# SI (Stroke Index) must contain numbers 1-18 exactly once\n';
+            
+            var blob = new Blob([template], { type: 'text/csv' });
+            var url = window.URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'course_import_template.csv';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            
+            showImportMessage('Mal lastet ned! Fyll ut med dine banedata og importer.', 'success');
+        }
+        
+        function showImportMessage(message, type) {
+            var messageDiv = document.getElementById('importMessage');
+            messageDiv.innerHTML = '<div style="background: ' + (type === 'error' ? '#fed7d7' : '#c6f6d5') + 
+                                   '; color: ' + (type === 'error' ? '#c53030' : '#2f855a') + 
+                                   '; padding: 10px; border-radius: 8px; white-space: pre-line;">' + message + '</div>';
+            
+            setTimeout(function() {
+                messageDiv.innerHTML = '';
+            }, 8000);
+        }
+        
+        // Travel information management
+        function saveTravelInfo() {
+            var travelInfo = {
+                hotelName: document.getElementById('hotelName').value,
+                hotelAddress: document.getElementById('hotelAddress').value,
+                hotelPhone: document.getElementById('hotelPhone').value,
+                hotelWebsite: document.getElementById('hotelWebsite').value,
+                transportType: document.getElementById('transportType').value,
+                transportDetails: document.getElementById('transportDetails').value,
+                airportDistance: document.getElementById('airportDistance').value,
+                airportDriveTime: document.getElementById('airportDriveTime').value,
+                additionalInfo: document.getElementById('additionalInfo').value
+            };
+            
+            if (!yearlyData[currentYear].travelInfo) {
+                yearlyData[currentYear].travelInfo = {};
+            }
+            
+            yearlyData[currentYear].travelInfo = travelInfo;
+            saveToStorage();
+            
+            document.getElementById('travelMessage').innerHTML = '<div class="success-message">Reiseinformasjon lagret!</div>';
+            setTimeout(function() {
+                document.getElementById('travelMessage').innerHTML = '';
+            }, 3000);
+        }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -703,6 +905,12 @@
                     <p id="whiskyDesc">Samlingen</p>
                 </div>
                 
+                <div class="nav-card" onclick="showView('travel')">
+                    <div class="icon">✈️</div>
+                    <h3 id="travelTitle">Reiseinfo</h3>
+                    <p id="travelDesc">Hotel & transport</p>
+                </div>
+                
                 <div class="nav-card" onclick="showView('admin')">
                     <div class="icon">🔐</div>
                     <h3 id="adminTitle">Admin</h3>
@@ -757,6 +965,12 @@
             <button class="back-btn" onclick="showView('home')">← Tilbake</button>
             <h2>Whisky Samlingen</h2>
             <div id="whiskyContent"></div>
+        </div>
+        
+        <div id="travelView" class="content">
+            <button class="back-btn" onclick="showView('home')">← Tilbake</button>
+            <h2>Reiseinformasjon</h2>
+            <div id="travelContent"></div>
         </div>
         
         <div id="adminView" class="content">
@@ -968,6 +1182,11 @@
         var scrambleScores = {};
         var awards = {};
         var flightTimes = {};
+        
+        // Update page title to reflect current year
+        function updatePageTitle() {
+            document.getElementById('appTitle').textContent = 'Scotland Golf ' + currentYear;
+        }
         
         // Load data from localStorage
         function loadFromStorage() {
@@ -1220,6 +1439,7 @@
                 if (viewName === 'yearlyResults') loadYearlyResults();
                 if (viewName === 'history') loadHistory();
                 if (viewName === 'whisky') loadWhisky();
+                if (viewName === 'travel') loadTravel();
                 if (viewName === 'admin') loadAdmin();
             }
         }
@@ -1251,6 +1471,8 @@
                     historyDesc: 'Spillte baner',
                     whiskyTitle: 'Whisky',
                     whiskyDesc: 'Samlingen',
+                    travelTitle: 'Reiseinfo',
+                    travelDesc: 'Hotel & transport',
                     adminTitle: 'Admin',
                     adminDesc: 'Administrer'
                 },
@@ -1273,6 +1495,8 @@
                     historyDesc: 'Played courses',
                     whiskyTitle: 'Whisky',
                     whiskyDesc: 'Collection',
+                    travelTitle: 'Travel Info',
+                    travelDesc: 'Hotel & transport',
                     adminTitle: 'Admin',
                     adminDesc: 'Manage'
                 }
@@ -1910,21 +2134,132 @@
         }
         
         function loadYearlyResults() {
-            var html = '<h3>Oversikt over alle turneringsår</h3>';
+            var html = '<h3>Turnering Resultater Gjennom Årene</h3>';
             
             var availableYears = Object.keys(yearlyData).sort().reverse();
             
-            if (availableYears.length > 1) {
+            if (availableYears.length > 0) {
                 availableYears.forEach(function(year) {
-                    if (year != currentYear) {
-                        html += '<div class="year-results">';
-                        html += '<h4>Turnering ' + year + '</h4>';
-                        html += '<p>Data vil vises her når historiske resultater er tilgjengelig</p>';
+                    var yearData = yearlyData[year];
+                    var isCurrentYear = parseInt(year) === currentYear;
+                    
+                    html += '<div class="year-results">';
+                    html += '<h4>Turnering ' + year + (isCurrentYear ? ' (Pågående)' : '') + '</h4>';
+                    
+                    if (yearData.archived && !isCurrentYear) {
+                        // Show archived results
+                        html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">';
+                        
+                        // Overall Winner
+                        if (yearData.archived.overallWinner) {
+                            html += '<div style="background: #c6f6d5; padding: 15px; border-radius: 10px; border: 2px solid #48bb78;">';
+                            html += '<h5>🏆 Sammenlagt Vinner</h5>';
+                            html += '<p><strong>' + yearData.archived.overallWinner.name + '</strong></p>';
+                            html += '<p>' + yearData.archived.overallWinner.points + ' poeng (' + yearData.archived.overallWinner.rounds + ' runder)</p>';
+                            html += '</div>';
+                        }
+                        
+                        // Final Standings
+                        if (yearData.archived.finalStandings && yearData.archived.finalStandings.length > 0) {
+                            html += '<div style="background: #f0f9ff; padding: 15px; border-radius: 10px;">';
+                            html += '<h5>📊 Sluttresultat</h5>';
+                            html += '<div class="table-wrapper">';
+                            html += '<table style="font-size: 11px;"><thead><tr><th>Pos</th><th>Spiller</th><th>Poeng</th></tr></thead><tbody>';
+                            
+                            yearData.archived.finalStandings.forEach(function(player, idx) {
+                                html += '<tr>';
+                                html += '<td>' + (idx + 1) + (idx === 0 ? ' 🥇' : idx === 1 ? ' 🥈' : idx === 2 ? ' 🥉' : '') + '</td>';
+                                html += '<td>' + player.name + '</td>';
+                                html += '<td>' + player.points + '</td>';
+                                html += '</tr>';
+                            });
+                            
+                            html += '</tbody></table></div>';
+                            html += '</div>';
+                        }
+                        
+                        html += '</div>';
+                        
+                        // Scramble Winners
+                        if (yearData.archived.scrambleWinners && yearData.archived.scrambleWinners.length > 0) {
+                            html += '<div style="margin-top: 15px;">';
+                            html += '<h5>🏌 Scramble Vinnere</h5>';
+                            html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px;">';
+                            
+                            yearData.archived.scrambleWinners.forEach(function(scrambleRound) {
+                                html += '<div style="background: #e6fffa; padding: 10px; border-radius: 8px; border: 2px solid #38b2ac;">';
+                                html += '<h6>' + scrambleRound.course + '</h6>';
+                                html += '<p style="font-size: 12px; color: #718096;">' + scrambleRound.date + '</p>';
+                                html += '<p><strong>' + scrambleRound.winner.team + '</strong></p>';
+                                html += '<p style="font-size: 12px;">Netto: ' + scrambleRound.winner.net + ' (Brutto: ' + scrambleRound.winner.gross + ', Slag: ' + scrambleRound.winner.handicap + ')</p>';
+                                html += '</div>';
+                            });
+                            
+                            html += '</div>';
+                            html += '</div>';
+                        }
+                        
+                        // Competition Winners
+                        if (yearData.archived.competitionWinners && Object.keys(yearData.archived.competitionWinners).length > 0) {
+                            html += '<div style="margin-top: 15px;">';
+                            html += '<h5>🎯 Konkurranser</h5>';
+                            html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; font-size: 12px;">';
+                            
+                            Object.keys(yearData.archived.competitionWinners).forEach(function(key) {
+                                var winner = yearData.archived.competitionWinners[key];
+                                if (winner) {
+                                    var parts = key.split('_');
+                                    var competitionType = parts[1] === 'ld' ? 'Lengste Drive' : 'Nærmest Pinnen';
+                                    var hole = parts[2];
+                                    
+                                    html += '<div style="background: #fef3c7; padding: 8px; border-radius: 6px;">';
+                                    html += '<strong>' + competitionType + '</strong><br>';
+                                    html += 'Hull ' + hole + ': ' + winner;
+                                    html += '</div>';
+                                }
+                            });
+                            
+                            html += '</div>';
+                            html += '</div>';
+                        }
+                        
+                        // Tournament Stats
+                        if (yearData.archived.tournamentStats) {
+                            var stats = yearData.archived.tournamentStats;
+                            html += '<div style="margin-top: 15px; padding: 10px; background: #f7fafc; border-radius: 8px; font-size: 12px;">';
+                            html += '<strong>Turnering Statistikk:</strong> ';
+                            html += stats.totalPlayers + ' spillere, ' + stats.totalRounds + ' runder, ';
+                            html += (stats.coursesPlayed ? stats.coursesPlayed.length : 0) + ' baner spilt';
+                            html += '</div>';
+                        }
+                        
+                    } else if (isCurrentYear) {
+                        // Show current year status
+                        var currentScores = Object.keys(scores).length;
+                        var currentScrambleScores = Object.keys(scrambleScores).length;
+                        var currentAwards = Object.keys(awards).length;
+                        
+                        html += '<div style="background: #fef5e7; padding: 15px; border-radius: 10px;">';
+                        html += '<p>🔄 <strong>Pågående turnering</strong></p>';
+                        html += '<div style="margin-top: 10px; font-size: 13px;">';
+                        html += '<p>Registrerte individuelle scorekort: ' + currentScores + '</p>';
+                        html += '<p>Registrerte scramble scorekort: ' + currentScrambleScores + '</p>';
+                        html += '<p>Tildelte konkurransepriser: ' + currentAwards + '</p>';
+                        html += '</div>';
+                        html += '<p style="font-size: 12px; color: #718096; margin-top: 10px;">Resultater vil bli arkivert når nytt år opprettes</p>';
+                        html += '</div>';
+                        
+                    } else {
+                        // Year exists but no archived data
+                        html += '<div style="background: #f3f4f6; padding: 15px; border-radius: 10px;">';
+                        html += '<p>Ingen arkiverte resultater tilgjengelig for dette året.</p>';
                         html += '</div>';
                     }
+                    
+                    html += '</div>';
                 });
             } else {
-                html += '<p>Kun data for inneværende år (' + currentYear + ') er tilgjengelig.</p>';
+                html += '<p>Ingen turnering data tilgjengelig.</p>';
             }
             
             document.getElementById('yearlyResultsContent').innerHTML = html;
@@ -1995,7 +2330,89 @@
             document.getElementById('historyContent').innerHTML = html;
         }
         
-        function loadWhisky() {
+        function loadTravel() {
+            var travelInfo = yearlyData[currentYear].travelInfo || {};
+            var html = '<div style="margin-bottom: 20px;">';
+            html += '<h3>Reiseinformasjon Scotland Golf ' + currentYear + '</h3>';
+            html += '<p style="color: #718096;">Hotel og transport informasjon for turen</p>';
+            html += '</div>';
+            
+            if (Object.keys(travelInfo).length === 0 || !travelInfo.hotelName) {
+                html += '<div style="background: #f3f4f6; padding: 20px; border-radius: 10px; text-align: center;">';
+                html += '<p>Ingen reiseinformasjon registrert ennå.</p>';
+                html += '<p style="color: #718096; font-size: 14px;">Administratoren kan legge inn informasjon i admin panelet.</p>';
+                html += '</div>';
+            } else {
+                html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">';
+                
+                // Hotel Information Card
+                html += '<div style="background: #f0f9ff; padding: 20px; border-radius: 15px; border: 2px solid #3b82f6;">';
+                html += '<h4 style="color: #1e40af; margin-bottom: 15px;">🏨 Hotel</h4>';
+                
+                if (travelInfo.hotelName) {
+                    html += '<h5 style="margin-bottom: 10px;">' + travelInfo.hotelName + '</h5>';
+                }
+                if (travelInfo.hotelAddress) {
+                    html += '<p style="margin-bottom: 8px;"><strong>Adresse:</strong><br>' + travelInfo.hotelAddress + '</p>';
+                }
+                if (travelInfo.hotelPhone) {
+                    html += '<p style="margin-bottom: 8px;"><strong>Telefon:</strong> <a href="tel:' + travelInfo.hotelPhone + '">' + travelInfo.hotelPhone + '</a></p>';
+                }
+                if (travelInfo.hotelWebsite) {
+                    html += '<p style="margin-bottom: 8px;"><strong>Nettside:</strong> <a href="' + travelInfo.hotelWebsite + '" target="_blank">Åpne nettside</a></p>';
+                }
+                
+                html += '</div>';
+                
+                // Transport Information Card  
+                html += '<div style="background: #f0fdf4; padding: 20px; border-radius: 15px; border: 2px solid #22c55e;">';
+                html += '<h4 style="color: #15803d; margin-bottom: 15px;">🚗 Transport</h4>';
+                
+                if (travelInfo.transportType) {
+                    var transportText = {
+                        'rental_car': 'Leiebil',
+                        'minibus': 'Minibuss', 
+                        'taxi': 'Taxi',
+                        'other': 'Annet'
+                    };
+                    html += '<p style="margin-bottom: 10px;"><strong>Type:</strong> ' + (transportText[travelInfo.transportType] || travelInfo.transportType) + '</p>';
+                }
+                if (travelInfo.transportDetails) {
+                    html += '<p style="margin-bottom: 10px;"><strong>Detaljer:</strong><br>' + travelInfo.transportDetails.replace(/\n/g, '<br>') + '</p>';
+                }
+                
+                html += '</div>';
+                
+                html += '</div>';
+                
+                // Airport Information
+                if (travelInfo.airportDistance || travelInfo.airportDriveTime) {
+                    html += '<div style="background: #fef3c7; padding: 20px; border-radius: 15px; border: 2px solid #f59e0b; margin-top: 20px;">';
+                    html += '<h4 style="color: #92400e; margin-bottom: 15px;">✈️ Fra Flyplass</h4>';
+                    html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">';
+                    
+                    if (travelInfo.airportDistance) {
+                        html += '<p><strong>Avstand:</strong> ' + travelInfo.airportDistance + '</p>';
+                    }
+                    if (travelInfo.airportDriveTime) {
+                        html += '<p><strong>Kjøretid:</strong> ' + travelInfo.airportDriveTime + '</p>';
+                    }
+                    
+                    html += '</div>';
+                    html += '</div>';
+                }
+                
+                // Additional Information
+                if (travelInfo.additionalInfo) {
+                    html += '<div style="background: #f7fafc; padding: 20px; border-radius: 15px; margin-top: 20px;">';
+                    html += '<h4 style="color: #2d3748; margin-bottom: 15px;">📋 Tilleggsinformasjon</h4>';
+                    html += '<div style="white-space: pre-line;">' + travelInfo.additionalInfo + '</div>';
+                    html += '</div>';
+                }
+            }
+            
+            document.getElementById('travelContent').innerHTML = html;
+        }
             var html = '<div style="margin-bottom: 20px;">';
             html += '<h3>Whisky Collection ' + currentYear + '</h3>';
             html += '<p style="color: #718096;">Hver deltaker tar med sin whisky til turen</p>';
@@ -2277,9 +2694,94 @@
                 
                 html += '<button onclick="saveCourseData()">Lagre Banedata</button>';
                 html += '<div id="courseDataMessage"></div>';
+                
+                // Course Data Import Section
+                html += '<div style="margin-top: 30px; padding: 15px; background: #fef5e7; border-radius: 10px;">';
+                html += '<h4>Importer Banedata fra CSV</h4>';
+                html += '<p style="color: #718096; font-size: 13px; margin-bottom: 10px;">CSV format: CourseName,SlopeRating,Par,CourseRating,Hole1Par,Hole1SI,Hole1Yards,...,Hole18Par,Hole18SI,Hole18Yards</p>';
+                html += '<input type="file" id="courseImportFile" accept=".csv" style="margin-bottom: 10px;">';
+                html += '<div style="display: flex; gap: 10px;">';
+                html += '<button onclick="importCourseData()" style="background: #8b5cf6;">Importer CSV</button>';
+                html += '<button onclick="downloadCourseTemplate()" style="background: #06b6d4;">Last ned mal</button>';
+                html += '</div>';
+                html += '<div id="importMessage" style="margin-top: 10px;"></div>';
+                html += '</div>';
+                
                 html += '</div>';
 
-                // 7. Historical Data Management
+                // 7. Travel Information Management
+                html += '<button class="collapsible" onclick="toggleSection(this)">✈️ Reise Informasjon</button>';
+                html += '<div class="collapsible-content">';
+                html += '<div style="background: #f0f9ff; padding: 15px; border-radius: 10px;">';
+                html += '<h4>Hotel & Transport Informasjon</h4>';
+                
+                // Load travel info
+                var travelInfo = yearlyData[currentYear].travelInfo || {
+                    hotelName: '',
+                    hotelAddress: '',
+                    hotelPhone: '',
+                    hotelWebsite: '',
+                    transportType: '',
+                    transportDetails: '',
+                    airportDistance: '',
+                    airportDriveTime: '',
+                    additionalInfo: ''
+                };
+                
+                html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin: 15px 0;">';
+                
+                // Hotel Information
+                html += '<div style="background: white; padding: 15px; border-radius: 8px;">';
+                html += '<h5>🏨 Hotel Informasjon</h5>';
+                html += '<label>Hotel Navn:</label>';
+                html += '<input type="text" id="hotelName" value="' + travelInfo.hotelName + '" placeholder="F.eks. Cullen Bay Hotel">';
+                html += '<label>Adresse:</label>';
+                html += '<input type="text" id="hotelAddress" value="' + travelInfo.hotelAddress + '" placeholder="Gate, postnummer, by">';
+                html += '<label>Telefon:</label>';
+                html += '<input type="text" id="hotelPhone" value="' + travelInfo.hotelPhone + '" placeholder="+44 1234 567890">';
+                html += '<label>Nettside:</label>';
+                html += '<input type="text" id="hotelWebsite" value="' + travelInfo.hotelWebsite + '" placeholder="https://...">';
+                html += '</div>';
+                
+                // Transport Information
+                html += '<div style="background: white; padding: 15px; border-radius: 8px;">';
+                html += '<h5>🚗 Transport Informasjon</h5>';
+                html += '<label>Transport Type:</label>';
+                html += '<select id="transportType">';
+                html += '<option value="">Velg transport</option>';
+                html += '<option value="rental_car" ' + (travelInfo.transportType === 'rental_car' ? 'selected' : '') + '>Leiebil</option>';
+                html += '<option value="minibus" ' + (travelInfo.transportType === 'minibus' ? 'selected' : '') + '>Minibuss</option>';
+                html += '<option value="taxi" ' + (travelInfo.transportType === 'taxi' ? 'selected' : '') + '>Taxi</option>';
+                html += '<option value="other" ' + (travelInfo.transportType === 'other' ? 'selected' : '') + '>Annet</option>';
+                html += '</select>';
+                html += '<label>Transport Detaljer:</label>';
+                html += '<textarea id="transportDetails" rows="3" placeholder="Biltype, leiefirma, booking referanse...">' + travelInfo.transportDetails + '</textarea>';
+                html += '</div>';
+                
+                html += '</div>';
+                
+                // Airport & Additional Info
+                html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">';
+                html += '<div>';
+                html += '<label>Avstand fra flyplass:</label>';
+                html += '<input type="text" id="airportDistance" value="' + travelInfo.airportDistance + '" placeholder="F.eks. 45 km">';
+                html += '</div>';
+                html += '<div>';
+                html += '<label>Kjøretid fra flyplass:</label>';
+                html += '<input type="text" id="airportDriveTime" value="' + travelInfo.airportDriveTime + '" placeholder="F.eks. 50 minutter">';
+                html += '</div>';
+                html += '</div>';
+                
+                html += '<label>Tilleggsinformasjon:</label>';
+                html += '<textarea id="additionalInfo" rows="4" placeholder="Check-in tider, parkeringsmuligheter, restauranter i nærheten...">' + travelInfo.additionalInfo + '</textarea>';
+                
+                html += '<button onclick="saveTravelInfo()" style="margin-top: 15px;">Lagre Reiseinformasjon</button>';
+                html += '<div id="travelMessage"></div>';
+                
+                html += '</div>';
+                html += '</div>';
+
+                // 8. Historical Data Management (renumbered)
                 html += '<button class="collapsible" onclick="toggleSection(this)">📚 Historiske Data</button>';
                 html += '<div class="collapsible-content">';
                 html += '<div style="background: #f0f9ff; padding: 15px; border-radius: 10px;">';
@@ -2332,7 +2834,52 @@
                 html += '<button onclick="saveWhisky()">Lagre Whisky Samling</button>';
                 html += '</div>';
 
-                // 9. Participant Management
+                // 10. Tournament Year Management
+                html += '<button class="collapsible" onclick="toggleSection(this)">📅 Turnering År Management</button>';
+                html += '<div class="collapsible-content">';
+                html += '<div style="background: #f0f9ff; padding: 15px; border-radius: 10px;">';
+                html += '<h4>Nytt Turnering År</h4>';
+                html += '<p style="color: #718096; margin-bottom: 15px;">Opprett nytt år og arkiver nåværende resultater</p>';
+                
+                html += '<div style="margin-bottom: 20px; padding: 15px; background: white; border-radius: 8px; border: 2px solid #fbbf24;">';
+                html += '<h5>⚠️ Viktig informasjon</h5>';
+                html += '<p style="font-size: 14px; margin-bottom: 10px;">Når du oppretter et nytt turnering år vil:</p>';
+                html += '<ul style="margin-left: 20px; font-size: 13px;">';
+                html += '<li>Alle resultater fra ' + currentYear + ' bli arkivert i historien</li>';
+                html += '<li>Individuell resultatliste bli lagret</li>';
+                html += '<li>Scramble resultater bli lagret</li>';
+                html += '<li>Konkurransevinnere (longest drive/closest to pin) bli lagret</li>';
+                html += '<li>Nye tomme scorekort bli opprettet for det nye året</li>';
+                html += '<li>Spillere og handicap bli beholdt</li>';
+                html += '</ul>';
+                html += '</div>';
+                
+                html += '<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin: 15px 0;">';
+                html += '<input type="number" id="newTournamentYear" placeholder="Nytt år (f.eks. 2026)" min="2025" max="2035" value="' + (currentYear + 1) + '">';
+                html += '<button onclick="createNewTournamentYear()" style="background: #10b981;">Opprett År</button>';
+                html += '</div>';
+                
+                // Show available years
+                var availableYears = Object.keys(yearlyData).sort().reverse();
+                html += '<div style="margin-top: 20px;">';
+                html += '<h5>Tilgjengelige Turnering År:</h5>';
+                html += '<div style="max-height: 150px; overflow-y: auto; margin-top: 10px;">';
+                availableYears.forEach(function(year) {
+                    var isCurrentYear = parseInt(year) === currentYear;
+                    html += '<div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #e2e8f0; ' + (isCurrentYear ? 'background: #fef3c7;' : '') + '">';
+                    html += '<span><strong>' + year + '</strong>' + (isCurrentYear ? ' (Aktiv)' : '') + '</span>';
+                    if (!isCurrentYear && availableYears.length > 1) {
+                        html += '<button onclick="switchToYear(' + year + ')" style="background: #3b82f6; padding: 5px 10px;">Bytt til</button>';
+                    }
+                    html += '</div>';
+                });
+                html += '</div>';
+                html += '</div>';
+                
+                html += '</div>';
+                html += '</div>';
+
+                // 11. Participant Management (moved down to make room)
                 html += '<button class="collapsible" onclick="toggleSection(this)">👥 Deltaker Management</button>';
                 html += '<div class="collapsible-content">';
                 html += '<div style="background: #fef5e7; padding: 15px; border-radius: 10px;">';
@@ -2614,28 +3161,218 @@
             showMessage('Whisky samling lagret!');
         }
         
-        function showMessage(message) {
-            // Create temporary message display
-            var messageDiv = document.createElement('div');
-            messageDiv.className = 'success-message';
-            messageDiv.textContent = message;
-            messageDiv.style.position = 'fixed';
-            messageDiv.style.top = '50px';
-            messageDiv.style.left = '50%';
-            messageDiv.style.transform = 'translateX(-50%)';
-            messageDiv.style.zIndex = '9999';
+        // Tournament year management functions
+        function createNewTournamentYear() {
+            var newYear = parseInt(document.getElementById('newTournamentYear').value);
             
-            document.body.appendChild(messageDiv);
+            if (!newYear || newYear <= currentYear || newYear > 2035) {
+                alert('Vennligst skriv inn et gyldig år større enn ' + currentYear);
+                return;
+            }
             
-            setTimeout(function() {
-                document.body.removeChild(messageDiv);
-            }, 3000);
+            var confirmMessage = 'Er du sikker på at du vil opprette turnering år ' + newYear + '?\n\n';
+            confirmMessage += 'Dette vil arkivere alle resultater fra ' + currentYear + ' og opprette nye tomme scorekort for ' + newYear + '.';
+            
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+            
+            // Archive current year results
+            archiveCurrentYearResults();
+            
+            // Create new year structure
+            yearlyData[newYear] = {
+                individual: {},
+                scramble: {},
+                awards: {},
+                courses: JSON.parse(JSON.stringify(courses)), // Deep copy current courses
+                schedule: JSON.parse(JSON.stringify(schedule)), // Deep copy schedule structure
+                flightTimes: {},
+                archived: {
+                    overallWinner: null,
+                    scrambleWinners: [],
+                    competitionWinners: {},
+                    finalStandings: [],
+                    tournamentStats: {}
+                }
+            };
+            
+            // Switch to new year
+            currentYear = newYear;
+            scores = {};
+            scrambleScores = {};
+            awards = {};
+            flightTimes = {};
+            
+            // Update schedule IDs for new year to avoid conflicts
+            schedule.forEach(function(round, idx) {
+                round.id = (newYear * 100) + idx + 1;
+            });
+            
+            saveToStorage();
+            
+            showMessage('Turnering år ' + newYear + ' opprettet! Alle ' + (newYear - 1) + ' resultater er arkivert.');
+            loadAdmin(); // Reload admin panel
+        }
+        
+        function archiveCurrentYearResults() {
+            if (!yearlyData[currentYear]) return;
+            
+            // Calculate final overall standings
+            var overallScores = {};
+            players.forEach(function(player) {
+                overallScores[player.name] = { points: 0, rounds: 0 };
+            });
+            
+            // Calculate individual tournament results
+            schedule.forEach(function(round) {
+                if (round.type === 'Individuell') {
+                    players.forEach(function(player) {
+                        var scoreKey = round.id + '_' + player.id;
+                        var roundScores = scores[scoreKey];
+                        
+                        if (roundScores && Object.keys(roundScores).length > 0) {
+                            var course = courses[round.course];
+                            var courseHandicap = calculateCourseHandicap(player.handicap, course.slopeRating);
+                            
+                            var totalPoints = 0;
+                            Object.keys(roundScores).forEach(function(hole) {
+                                var holeNum = parseInt(hole);
+                                var strokes = roundScores[hole];
+                                var par = course.pars[holeNum - 1];
+                                var hcpIndex = course.handicaps[holeNum - 1];
+                                
+                                var strokesOnHole = 0;
+                                if (courseHandicap >= 18) {
+                                    strokesOnHole = 1;
+                                    if (hcpIndex <= (courseHandicap - 18)) strokesOnHole = 2;
+                                    if (courseHandicap >= 36 && hcpIndex <= (courseHandicap - 36)) strokesOnHole = 3;
+                                } else {
+                                    if (hcpIndex <= courseHandicap) strokesOnHole = 1;
+                                }
+                                
+                                totalPoints += calculateStablefordPoints(strokes, par, strokesOnHole);
+                            });
+                            
+                            overallScores[player.name].points += totalPoints;
+                            overallScores[player.name].rounds++;
+                        }
+                    });
+                }
+            });
+            
+            // Sort final standings
+            var finalStandings = [];
+            Object.keys(overallScores).forEach(function(name) {
+                if (overallScores[name].rounds > 0) {
+                    finalStandings.push({
+                        name: name,
+                        points: overallScores[name].points,
+                        rounds: overallScores[name].rounds
+                    });
+                }
+            });
+            finalStandings.sort(function(a, b) { return b.points - a.points; });
+            
+            // Calculate scramble winners
+            var scrambleWinners = [];
+            schedule.forEach(function(round) {
+                if (round.type === 'Scramble') {
+                    var roundWinners = [];
+                    var scrambleResults = [];
+                    
+                    round.teams.forEach(function(team, idx) {
+                        var scoreKey = round.id + '_team_' + idx;
+                        var teamScores = scrambleScores[scoreKey];
+                        
+                        if (teamScores) {
+                            var totalStrokes = 0;
+                            var holesPlayed = 0;
+                            Object.keys(teamScores).forEach(function(hole) {
+                                totalStrokes += teamScores[hole];
+                                holesPlayed++;
+                            });
+                            
+                            if (holesPlayed > 0) {
+                                var teamHandicap = calculateScrambleHandicap(team, round.course);
+                                var allocatedStrokes = Math.round(teamHandicap);
+                                var netScore = totalStrokes - allocatedStrokes;
+                                
+                                scrambleResults.push({
+                                    team: team.join(' & '),
+                                    gross: totalStrokes,
+                                    handicap: allocatedStrokes,
+                                    net: netScore,
+                                    course: round.course,
+                                    date: round.date
+                                });
+                            }
+                        }
+                    });
+                    
+                    scrambleResults.sort(function(a, b) { return a.net - b.net; });
+                    if (scrambleResults.length > 0) {
+                        scrambleWinners.push({
+                            course: round.course,
+                            date: round.date,
+                            winner: scrambleResults[0],
+                            results: scrambleResults
+                        });
+                    }
+                }
+            });
+            
+            // Archive the results
+            yearlyData[currentYear].archived = {
+                overallWinner: finalStandings.length > 0 ? finalStandings[0] : null,
+                finalStandings: finalStandings,
+                scrambleWinners: scrambleWinners,
+                competitionWinners: awards,
+                tournamentStats: {
+                    totalPlayers: players.length,
+                    totalRounds: schedule.length,
+                    coursesPlayed: Object.keys(courses)
+                },
+                archivedDate: new Date().toISOString()
+            };
+        }
+        
+        function switchToYear(year) {
+            if (confirm('Bytte til turnering år ' + year + '? Alle endringer i nåværende år vil bli lagret.')) {
+                saveToStorage(); // Save current state
+                
+                currentYear = parseInt(year);
+                
+                // Load data for selected year
+                if (yearlyData[currentYear]) {
+                    scores = yearlyData[currentYear].individual || {};
+                    scrambleScores = yearlyData[currentYear].scramble || {};
+                    awards = yearlyData[currentYear].awards || {};
+                    flightTimes = yearlyData[currentYear].flightTimes || {};
+                    
+                    if (yearlyData[currentYear].courses) {
+                        courses = yearlyData[currentYear].courses;
+                    }
+                    if (yearlyData[currentYear].schedule) {
+                        schedule = yearlyData[currentYear].schedule;
+                    }
+                }
+                
+                saveToStorage();
+                showMessage('Byttet til turnering år ' + year);
+                
+                // Update page title
+                document.getElementById('appTitle').textContent = 'Scotland Golf ' + currentYear;
+                
+                loadAdmin(); // Reload admin panel
+            }
         }
         
         // Initialize on load
         window.onload = function() {
             loadFromStorage();
             updateLanguage();
+            updatePageTitle();
         };
         
         // Sync with server (placeholder for future server integration)
