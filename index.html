@@ -855,31 +855,47 @@
             }
         ];
         
-        // Course data from Excel
+        // Course data from Excel - enhanced with lengths and rating
         var courses = {
             'Cullen Links': { 
-                slopeRating: 93, 
+                slopeRating: 93,
+                courseRating: 67.2,
                 par: 63,
                 pars: [4,3,3,3,4,3,3,4,3,4,3,3,3,3,5,4,4,4],
-                handicaps: [9,7,1,11,3,13,5,17,15,14,6,2,4,8,10,12,18,16]
+                handicaps: [9,7,1,11,3,13,5,17,15,14,6,2,4,8,10,12,18,16],
+                yardsWhite: [345,121,233,129,360,181,224,279,195,311,245,179,152,206,511,352,270,330],
+                yardsYellow: [335,111,229,109,360,172,204,241,194,300,217,174,127,202,491,347,266,325],
+                meters: [306,101,210,99,329,157,187,220,177,275,198,159,116,185,449,317,243,297]
             },
             'Spey Bay': { 
-                slopeRating: 114, 
+                slopeRating: 114,
+                courseRating: 71.8,
                 par: 70,
                 pars: [4,4,4,3,4,4,4,3,5,4,4,4,3,4,3,5,4,4],
-                handicaps: [3,11,7,9,1,17,5,13,15,16,8,4,10,2,14,12,18,6]
+                handicaps: [3,11,7,9,1,17,5,13,15,16,8,4,10,2,14,12,18,6],
+                yardsYellow: [417,278,365,107,436,322,338,131,462,336,323,377,165,307,113,452,262,326],
+                yardsGold: [423,300,379,112,440,327,385,131,466,340,358,413,194,399,116,521,267,329],
+                meters: [381,254,334,98,399,294,309,120,422,307,295,345,151,281,103,413,239,298]
             },
             'Strathlene': { 
-                slopeRating: 114, 
+                slopeRating: 114,
+                courseRating: 69.5,
                 par: 70,
                 pars: [4,4,4,3,4,4,3,4,4,4,4,4,3,5,4,4,4,3],
-                handicaps: [12,16,7,5,9,10,18,3,1,14,8,2,17,11,4,15,6,13]
+                handicaps: [12,16,7,5,9,10,18,3,1,14,8,2,17,11,4,15,6,13],
+                yardsWhite: [347,344,369,210,305,350,190,440,425,318,368,385,147,515,396,272,408,188],
+                yardsYellow: [335,338,351,207,282,345,181,436,420,312,360,382,142,505,384,269,378,188],
+                meters: [306,309,321,189,258,315,165,399,384,285,329,349,130,462,351,246,345,172]
             },
             'Garmouth & Kingston': { 
-                slopeRating: 114, 
+                slopeRating: 114,
+                courseRating: 68.2,
                 par: 67,
                 pars: [4,4,4,3,4,4,4,4,3,4,4,4,3,4,3,4,4,3],
-                handicaps: [7,8,1,9,10,5,14,3,12,6,15,17,18,11,13,2,4,16]
+                handicaps: [7,8,1,9,10,5,14,3,12,6,15,17,18,11,13,2,4,16],
+                yardsWhite: [361,390,402,180,365,382,339,327,153,386,264,284,120,303,125,417,418,147],
+                yardsYellow: [323,363,394,117,355,351,335,319,136,382,233,263,110,301,125,412,402,125],
+                meters: [295,332,360,107,324,321,306,292,124,349,213,240,101,275,114,377,367,114]
             }
         };
         
@@ -1113,23 +1129,32 @@
                 html += round.course + '<br>';
                 html += '<span style="color: #4299e1;">' + round.type + '</span>';
                 
+                // Show course information
+                if (courses[round.course]) {
+                    var course = courses[round.course];
+                    html += '<div style="margin-top: 10px; padding: 8px; background: #f0f4f8; border-radius: 5px; font-size: 12px;">';
+                    html += '<strong>Baneinfo:</strong> Par ' + course.par + ' | Slope ' + course.slopeRating + ' | Course Rating ' + (course.courseRating || 'N/A');
+                    html += '</div>';
+                }
+                
                 if (round.type === 'Individuell' && round.flights && round.flights.length > 0) {
                     html += '<div class="flight-section"><strong>Flights:</strong>';
                     round.flights.forEach(function(flight, j) {
                         html += '<div class="flight-item">';
-                        html += '<strong>Flight ' + (j + 1) + ':</strong> ';
+                        html += '<strong>Flight ' + (j + 1) + ':</strong><br>';
                         
                         flight.players.forEach(function(playerName, idx) {
                             var player = players.find(function(p) { return p.name === playerName; });
                             if (player && courses[round.course]) {
                                 var courseHcp = calculateCourseHandicap(player.handicap, courses[round.course].slopeRating);
-                                html += playerName + ' (' + player.handicap + '/' + courseHcp + ')';
-                                if (idx < flight.players.length - 1) html += ', ';
+                                html += playerName + ' - <strong>Handicap:</strong> ' + player.handicap;
+                                html += ' | <strong>Tilleggsslag:</strong> ' + courseHcp + ' (' + player.handicap + ' × ' + courses[round.course].slopeRating + ' ÷ 113)';
+                                if (idx < flight.players.length - 1) html += '<br>';
                             }
                         });
                         
                         if (flight.time) {
-                            html += ' - ' + flight.time;
+                            html += '<br><strong>Tid:</strong> ' + flight.time;
                         }
                         html += '</div>';
                     });
@@ -1137,10 +1162,11 @@
                 }
                 
                 if (round.teams) {
-                    html += '<div class="team-section"><strong>Lag:</strong><br>';
+                    html += '<div class="team-section"><strong>Lag med tilleggsslag basert på baneindex:</strong><br>';
                     round.teams.forEach(function(team, j) {
                         var teamHandicap = calculateScrambleHandicap(team, round.course);
-                        html += '<div><strong>Lag ' + (j + 1) + ':</strong> ';
+                        html += '<div style="margin: 8px 0; padding: 8px; background: white; border-radius: 5px;">';
+                        html += '<strong>Lag ' + (j + 1) + ':</strong> ';
                         
                         team.forEach(function(memberName, idx) {
                             var player = players.find(function(p) { return p.name === memberName; });
@@ -1151,8 +1177,8 @@
                             }
                         });
                         
+                        html += '<br><div class="handicap-info">Lag tilleggsslag: <strong>' + teamHandicap + ' slag</strong> (70% laveste + 30% høyeste)</div>';
                         html += '</div>';
-                        html += '<div class="handicap-info">Team Handicap: <strong>' + teamHandicap + ' slag</strong></div>';
                     });
                     html += '</div>';
                 }
@@ -1934,21 +1960,151 @@
                 html += '<h3>Administrator Panel</h3>';
                 html += '<button onclick="logoutAdmin()" style="background: #fc8181;">Logg ut</button>';
                 
-                // Add new course section
-                html += '<button class="collapsible" onclick="toggleSection(this)">Legg til ny bane</button>';
+                // Add new tournament year
+                html += '<button class="collapsible" onclick="toggleSection(this)">🏆 Nytt Turneringsår</button>';
                 html += '<div class="collapsible-content">';
-                html += '<div class="course-form">';
-                html += '<h4>Opprett ny golfbane</h4>';
-                html += '<div class="course-input-row">';
-                html += '<input type="text" id="newCourseName" placeholder="Banenavn" style="padding: 8px;">';
-                html += '<input type="number" id="newSlope" placeholder="Slope" min="55" max="155" style="padding: 8px;">';
-                html += '<button onclick="addNewCourse()">Legg til bane</button>';
+                html += '<div style="background: #e6f4ff; padding: 15px; border-radius: 10px;">';
+                html += '<h4>Opprett nytt turneringsår</h4>';
+                html += '<div style="margin: 10px 0;">';
+                html += '<label>År:</label>';
+                html += '<input type="number" id="newTournamentYear" value="' + (currentYear + 1) + '" min="2020" max="2050" style="padding: 8px; margin: 0 10px;">';
+                html += '<button onclick="createNewYear()">Opprett år</button>';
+                html += '</div>';
+                html += '<p style="color: #718096; font-size: 12px;">Dette vil opprette en ny turneringssesong og nullstille alle resultater.</p>';
+                html += '</div>';
+                html += '</div>';
+                
+                // Participant management
+                html += '<button class="collapsible" onclick="toggleSection(this)">👥 Administrer Deltakere</button>';
+                html += '<div class="collapsible-content">';
+                html += '<div style="background: #f0fff4; padding: 15px; border-radius: 10px;">';
+                html += '<h4>Legg til ny deltaker</h4>';
+                html += '<div style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 10px; margin: 10px 0;">';
+                html += '<input type="text" id="newPlayerName" placeholder="Navn" style="padding: 8px;">';
+                html += '<input type="number" id="newPlayerHandicap" placeholder="Handicap" step="0.1" min="0" max="54" style="padding: 8px;">';
+                html += '<button onclick="addNewPlayer()">Legg til</button>';
+                html += '</div>';
+                
+                html += '<h5>Eksisterende deltakere</h5>';
+                html += '<div style="max-height: 300px; overflow-y: auto;">';
+                players.forEach(function(player) {
+                    html += '<div style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 10px; margin: 5px 0; padding: 8px; background: white; border-radius: 5px; align-items: center;">';
+                    html += '<strong>' + player.name + '</strong>';
+                    html += '<span>HCP: ' + player.handicap + '</span>';
+                    html += '<button onclick="removePlayer(' + player.id + ')" style="background: #fc8181; padding: 4px 8px; font-size: 12px;">Fjern</button>';
+                    html += '</div>';
+                });
                 html += '</div>';
                 html += '</div>';
                 html += '</div>';
                 
+                // Import course data from CSV/Excel
+                html += '<button class="collapsible" onclick="toggleSection(this)">📊 Import Banedata fra CSV</button>';
+                html += '<div class="collapsible-content">';
+                html += '<div style="background: #fff5f0; padding: 15px; border-radius: 10px;">';
+                html += '<h4>Import banedata fra CSV/Excel</h4>';
+                html += '<div style="margin: 10px 0;">';
+                html += '<label>Velg CSV-fil:</label>';
+                html += '<input type="file" id="csvImport" accept=".csv,.xlsx" onchange="handleFileImport()" style="margin: 10px 0;">';
+                html += '</div>';
+                html += '<div style="margin: 15px 0; padding: 10px; background: white; border-radius: 5px;">';
+                html += '<h5>CSV Format:</h5>';
+                html += '<p style="font-size: 12px; color: #718096;">Forventet format:</p>';
+                html += '<pre style="font-size: 10px; background: #f7fafc; padding: 8px; border-radius: 3px;">Hole,Par,StrokeIndex,YardsWhite,YardsYellow,Meters\n1,4,9,345,335,306\n2,3,7,121,111,101</pre>';
+                html += '</div>';
+                html += '<textarea id="csvData" placeholder="Eller lim inn CSV data her..." style="width: 100%; height: 150px; margin: 10px 0; padding: 8px;"></textarea>';
+                html += '<div style="margin: 10px 0;">';
+                html += '<input type="text" id="importCourseName" placeholder="Banenavn" style="padding: 8px; margin-right: 10px;">';
+                html += '<input type="number" id="importSlope" placeholder="Slope Rating" min="55" max="155" style="padding: 8px; margin-right: 10px;">';
+                html += '<input type="number" id="importRating" placeholder="Course Rating" step="0.1" style="padding: 8px; margin-right: 10px;">';
+                html += '<button onclick="importCourseData()">Import Data</button>';
+                html += '</div>';
+                html += '</div>';
+                html += '</div>';
+                
+                // Enhanced course management
+                html += '<button class="collapsible" onclick="toggleSection(this)">🏌 Administrer Baner</button>';
+                html += '<div class="collapsible-content">';
+                html += '<div style="background: #e6f4ff; padding: 15px; border-radius: 10px;">';
+                html += '<h4>Eksisterende baner</h4>';
+                
+                Object.keys(courses).forEach(function(courseName) {
+                    var course = courses[courseName];
+                    html += '<div style="margin: 15px 0; padding: 15px; background: white; border-radius: 10px; border: 1px solid #e2e8f0;">';
+                    html += '<h5>' + courseName + '</h5>';
+                    html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin: 10px 0;">';
+                    
+                    html += '<div>';
+                    html += '<label>Slope Rating:</label>';
+                    html += '<input type="number" id="slope_' + courseName.replace(/\s+/g, '_') + '" ';
+                    html += 'value="' + course.slopeRating + '" min="55" max="155" ';
+                    html += 'onchange="updateSlope(\'' + courseName + '\', this.value)" style="width: 100%; padding: 4px;">';
+                    html += '</div>';
+                    
+                    html += '<div>';
+                    html += '<label>Course Rating:</label>';
+                    html += '<input type="number" id="rating_' + courseName.replace(/\s+/g, '_') + '" ';
+                    html += 'value="' + (course.courseRating || course.par) + '" step="0.1" ';
+                    html += 'onchange="updateCourseRating(\'' + courseName + '\', this.value)" style="width: 100%; padding: 4px;">';
+                    html += '</div>';
+                    
+                    html += '<div>';
+                    html += '<label>Total Par:</label>';
+                    html += '<input type="number" value="' + course.par + '" readonly style="background: #f0f0f0; width: 100%; padding: 4px;">';
+                    html += '</div>';
+                    
+                    html += '<div>';
+                    html += '<label>Handlinger:</label>';
+                    html += '<div>';
+                    html += '<button onclick="editCourseDetails(\'' + courseName + '\')" style="background: #4299e1; margin: 2px; padding: 4px 8px; font-size: 12px;">Rediger</button>';
+                    html += '<button onclick="deleteCourse(\'' + courseName + '\')" style="background: #fc8181; margin: 2px; padding: 4px 8px; font-size: 12px;">Slett</button>';
+                    html += '</div>';
+                    html += '</div>';
+                    
+                    html += '</div>';
+                    html += '</div>';
+                });
+                
+                html += '<button onclick="saveCourseData()" style="margin-top: 15px;">Lagre Banedata</button>';
+                html += '<div id="courseMessage"></div>';
+                html += '</div>';
+                html += '</div>';
+                
+                // Competition management per course
+                html += '<button class="collapsible" onclick="toggleSection(this)">🎯 Administrer Konkurranser per Bane</button>';
+                html += '<div class="collapsible-content">';
+                
+                schedule.forEach(function(round) {
+                    html += '<div style="margin: 15px 0; padding: 15px; background: #f7fafc; border-radius: 10px;">';
+                    html += '<h5>' + round.date + ' - ' + round.course + ' (' + round.type + ')</h5>';
+                    
+                    html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 10px 0;">';
+                    
+                    // Longest Drive
+                    html += '<div>';
+                    html += '<label><strong>Lengste Drive Hull:</strong></label>';
+                    var ldValue = round.longestDrive ? round.longestDrive.join(',') : '';
+                    html += '<input type="text" id="ld_' + round.id + '" value="' + ldValue + '" ';
+                    html += 'placeholder="F.eks: 5,15" style="width: 100%; padding: 6px; margin-top: 5px;">';
+                    html += '</div>';
+                    
+                    // Closest to Pin
+                    html += '<div>';
+                    html += '<label><strong>Nærmest Pinnen Hull:</strong></label>';
+                    var ctpValue = round.closestToPin ? round.closestToPin.join(',') : '';
+                    html += '<input type="text" id="ctp_' + round.id + '" value="' + ctpValue + '" ';
+                    html += 'placeholder="F.eks: 2,13" style="width: 100%; padding: 6px; margin-top: 5px;">';
+                    html += '</div>';
+                    
+                    html += '</div>';
+                    html += '</div>';
+                });
+                
+                html += '<button onclick="saveCompetitions()">Lagre Konkurranser</button>';
+                html += '</div>';
+                
                 // Handicap editing
-                html += '<button class="collapsible" onclick="toggleSection(this)">Rediger Handicap</button>';
+                html += '<button class="collapsible" onclick="toggleSection(this)">⚖️ Rediger Handicap</button>';
                 html += '<div class="collapsible-content">';
                 html += '<div class="handicap-edit-grid">';
                 
@@ -1965,41 +2121,8 @@
                 html += '<div id="handicapMessage"></div>';
                 html += '</div>';
                 
-                // Course management
-                html += '<button class="collapsible" onclick="toggleSection(this)">Administrer Baner</button>';
-                html += '<div class="collapsible-content">';
-                html += '<div style="background: #e6f4ff; padding: 15px; border-radius: 10px;">';
-                html += '<h4>Eksisterende baner</h4>';
-                
-                Object.keys(courses).forEach(function(courseName) {
-                    var course = courses[courseName];
-                    html += '<div style="margin: 15px 0; padding: 15px; background: white; border-radius: 10px;">';
-                    html += '<h5>' + courseName + '</h5>';
-                    html += '<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 10px 0;">';
-                    html += '<div>';
-                    html += '<label>Slope Rating:</label>';
-                    html += '<input type="number" id="slope_' + courseName.replace(/\s+/g, '_') + '" ';
-                    html += 'value="' + course.slopeRating + '" min="55" max="155" ';
-                    html += 'onchange="updateSlope(\'' + courseName + '\', this.value)">';
-                    html += '</div>';
-                    html += '<div>';
-                    html += '<label>Total Par:</label>';
-                    html += '<input type="number" value="' + course.par + '" readonly style="background: #f0f0f0;">';
-                    html += '</div>';
-                    html += '<div>';
-                    html += '<button onclick="editCourseDetails(\'' + courseName + '\')" style="background: #4299e1;">Rediger detaljer</button>';
-                    html += '</div>';
-                    html += '</div>';
-                    html += '</div>';
-                });
-                
-                html += '<button onclick="saveCourseData()" style="margin-top: 15px;">Lagre Banedata</button>';
-                html += '<div id="courseMessage"></div>';
-                html += '</div>';
-                html += '</div>';
-                
                 // Competition winners
-                html += '<button class="collapsible" onclick="toggleSection(this)">Konkurransevinnere</button>';
+                html += '<button class="collapsible" onclick="toggleSection(this)">🏆 Konkurransevinnere</button>';
                 html += '<div class="collapsible-content">';
                 
                 schedule.forEach(function(round) {
@@ -2048,6 +2171,203 @@
             }
             
             document.getElementById('adminContent').innerHTML = html;
+        }
+        
+        // New admin functions
+        function createNewYear() {
+            var newYear = parseInt(document.getElementById('newTournamentYear').value);
+            if (isNaN(newYear) || newYear < 2020 || newYear > 2050) {
+                alert('Ugyldig år');
+                return;
+            }
+            
+            if (yearlyData[newYear]) {
+                if (!confirm('År ' + newYear + ' eksisterer allerede. Vil du overskrive det?')) {
+                    return;
+                }
+            }
+            
+            yearlyData[newYear] = {
+                individual: {},
+                scramble: {},
+                awards: {},
+                courses: JSON.parse(JSON.stringify(courses)), // Copy current courses
+                schedule: JSON.parse(JSON.stringify(schedule)) // Copy current schedule template
+            };
+            
+            currentYear = newYear;
+            scores = {};
+            scrambleScores = {};
+            awards = {};
+            
+            saveToStorage();
+            document.getElementById('appTitle').textContent = 'Scotland Golf ' + currentYear;
+            alert('Nytt turneringsår ' + newYear + ' opprettet!');
+            loadAdmin();
+        }
+        
+        function addNewPlayer() {
+            var name = document.getElementById('newPlayerName').value.trim();
+            var handicap = parseFloat(document.getElementById('newPlayerHandicap').value);
+            
+            if (!name || isNaN(handicap)) {
+                alert('Vennligst fyll inn både navn og handicap');
+                return;
+            }
+            
+            if (players.find(function(p) { return p.name.toLowerCase() === name.toLowerCase(); })) {
+                alert('Spiller med dette navnet eksisterer allerede');
+                return;
+            }
+            
+            var newId = Math.max.apply(null, players.map(function(p) { return p.id; })) + 1;
+            players.push({
+                id: newId,
+                name: name,
+                handicap: handicap
+            });
+            
+            saveToStorage();
+            document.getElementById('newPlayerName').value = '';
+            document.getElementById('newPlayerHandicap').value = '';
+            loadAdmin();
+            alert('Ny spiller lagt til!');
+        }
+        
+        function removePlayer(playerId) {
+            var player = players.find(function(p) { return p.id === playerId; });
+            if (!player) return;
+            
+            if (!confirm('Er du sikker på at du vil fjerne ' + player.name + '?')) {
+                return;
+            }
+            
+            players = players.filter(function(p) { return p.id !== playerId; });
+            saveToStorage();
+            loadAdmin();
+            alert('Spiller fjernet!');
+        }
+        
+        function handleFileImport() {
+            var file = document.getElementById('csvImport').files[0];
+            if (!file) return;
+            
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('csvData').value = e.target.result;
+            };
+            reader.readAsText(file);
+        }
+        
+        function importCourseData() {
+            var csvData = document.getElementById('csvData').value;
+            var courseName = document.getElementById('importCourseName').value.trim();
+            var slope = parseInt(document.getElementById('importSlope').value);
+            var rating = parseFloat(document.getElementById('importRating').value);
+            
+            if (!csvData || !courseName || !slope) {
+                alert('Vennligst fyll inn alle påkrevde felt');
+                return;
+            }
+            
+            try {
+                var lines = csvData.split('\n');
+                var headers = lines[0].split(',').map(function(h) { return h.trim(); });
+                
+                var pars = [];
+                var handicaps = [];
+                var yardsWhite = [];
+                var yardsYellow = [];
+                var meters = [];
+                
+                for (var i = 1; i < lines.length; i++) {
+                    if (lines[i].trim() === '') continue;
+                    
+                    var values = lines[i].split(',').map(function(v) { return v.trim(); });
+                    if (values.length < 3) continue;
+                    
+                    pars.push(parseInt(values[1]) || 4);
+                    handicaps.push(parseInt(values[2]) || i);
+                    if (values[3]) yardsWhite.push(parseInt(values[3]) || 350);
+                    if (values[4]) yardsYellow.push(parseInt(values[4]) || 340);
+                    if (values[5]) meters.push(parseInt(values[5]) || 320);
+                }
+                
+                if (pars.length !== 18) {
+                    alert('CSV må inneholde nøyaktig 18 hull');
+                    return;
+                }
+                
+                courses[courseName] = {
+                    slopeRating: slope,
+                    courseRating: rating || pars.reduce(function(a, b) { return a + b; }, 0),
+                    par: pars.reduce(function(a, b) { return a + b; }, 0),
+                    pars: pars,
+                    handicaps: handicaps,
+                    yardsWhite: yardsWhite.length === 18 ? yardsWhite : undefined,
+                    yardsYellow: yardsYellow.length === 18 ? yardsYellow : undefined,
+                    meters: meters.length === 18 ? meters : undefined
+                };
+                
+                saveToStorage();
+                document.getElementById('csvData').value = '';
+                document.getElementById('importCourseName').value = '';
+                document.getElementById('importSlope').value = '';
+                document.getElementById('importRating').value = '';
+                loadAdmin();
+                alert('Banedata importert for ' + courseName + '!');
+                
+            } catch (e) {
+                alert('Feil i CSV format: ' + e.message);
+            }
+        }
+        
+        function updateCourseRating(courseName, value) {
+            courses[courseName].courseRating = parseFloat(value);
+        }
+        
+        function deleteCourse(courseName) {
+            if (!confirm('Er du sikker på at du vil slette banen "' + courseName + '"?')) {
+                return;
+            }
+            
+            delete courses[courseName];
+            saveToStorage();
+            loadAdmin();
+            alert('Bane slettet!');
+        }
+        
+        function saveCompetitions() {
+            schedule.forEach(function(round) {
+                var ldInput = document.getElementById('ld_' + round.id);
+                var ctpInput = document.getElementById('ctp_' + round.id);
+                
+                if (ldInput) {
+                    var ldValue = ldInput.value.trim();
+                    if (ldValue) {
+                        round.longestDrive = ldValue.split(',').map(function(h) { 
+                            return parseInt(h.trim()); 
+                        }).filter(function(h) { return !isNaN(h) && h >= 1 && h <= 18; });
+                    } else {
+                        round.longestDrive = [];
+                    }
+                }
+                
+                if (ctpInput) {
+                    var ctpValue = ctpInput.value.trim();
+                    if (ctpValue) {
+                        round.closestToPin = ctpValue.split(',').map(function(h) { 
+                            return parseInt(h.trim()); 
+                        }).filter(function(h) { return !isNaN(h) && h >= 1 && h <= 18; });
+                    } else {
+                        round.closestToPin = [];
+                    }
+                }
+            });
+            
+            saveToStorage();
+            alert('Konkurranser lagret!');
+            loadAdmin(); // Reload to update award selectors
         }
         
         function loginAdmin() {
