@@ -2989,72 +2989,277 @@
             updatePageTitle();
         };
         
-        // Sync with server (placeholder for future server integration)
-        async function syncWithServer() {
-            try {
-                var response = await fetch('/api/scores');
-                if (response.ok) {
-                    var serverData = await response.json();
-                    
-                    if (serverData.players) players = serverData.players;
-                    if (serverData.scores) scores = serverData.scores;
-                    if (serverData.scrambleScores) scrambleScores = serverData.scrambleScores;
-                    if (serverData.awards) awards = serverData.awards;
-                    if (serverData.flightTimes) flightTimes = serverData.flightTimes;
-                    if (serverData.useSlope !== undefined) useSlope = serverData.useSlope;
-                    if (serverData.scrambleFormula) scrambleFormula = serverData.scrambleFormula;
-                    
-                    saveToStorage();
-                }
-            } catch (e) {
-                console.log('Server sync not available');
+        // Enhanced sync with server
+async function syncWithServer() {
+    try {
+        console.log('Syncing with server...');
+        var response = await fetch('/api/scores');
+        if (response.ok) {
+            var serverData = await response.json();
+            console.log('Server data received:', Object.keys(serverData));
+            
+            // Load yearlyData structure
+            if (serverData.yearlyData && Object.keys(serverData.yearlyData).length > 0) {
+                yearlyData = serverData.yearlyData;
+                
+                // Set current year data shortcuts
+                scores = yearlyData[currentYear]?.individual || {};
+                scrambleScores = yearlyData[currentYear]?.scramble || {};
+                awards = yearlyData[currentYear]?.awards || {};
+                flightTimes = yearlyData[currentYear]?.flightTimes || {};
+                
+                console.log('Loaded yearly data for', currentYear);
             }
+            
+            // Load other data
+            if (serverData.players && Array.isArray(serverData.players) && serverData.players.length > 0) {
+                players = serverData.players;
+                console.log('Loaded', players.length, 'players');
+            }
+            
+            if (serverData.playedCourses && Array.isArray(serverData.playedCourses)) {
+                playedCourses = serverData.playedCourses;
+                console.log('Loaded', playedCourses.length, 'played courses');
+            }
+            
+            if (serverData.whiskyCollection && Array.isArray(serverData.whiskyCollection)) {
+                whiskyCollection = serverData.whiskyCollection;
+                console.log('Loaded whisky collection');
+            }
+            
+            // Load settings
+            if (serverData.useSlope !== undefined) {
+                useSlope = serverData.useSlope;
+            }
+            if (serverData.scrambleFormula) {
+                scrambleFormula = serverData.scrambleFormula;
+            }
+            if (serverData.currentYear) {
+                currentYear = serverData.currentYear;
+            }
+            
+            // Update courses and schedule if available
+            if (serverData.courses && Object.keys(serverData.courses).length > 0) {
+                courses = serverData.courses;
+            }
+            if (serverData.schedule && Array.isArray(serverData.schedule)) {
+                schedule = serverData.schedule;
+            }
+            
+            // Save to localStorage after successful sync
+            saveToStorage();
+            console.log('Server sync completed successfully');
+            
+        } else {
+            console.log('Server response not ok:', response.status);
+            // Load from localStorage as fallback
+            loadFromStorage();
+        }
+    } catch (e) {
+        console.log('Server sync failed:', e.message);
+        // Load from localStorage as fallback
+        loadFromStorage();
+    }
+}
+
+// Enhanced save to server
+async function saveToServer() {
+    try {
+        console.log('Saving to server...');
+        
+        // Ensure current year data is up to date
+        if (!yearlyData[currentYear]) {
+            yearlyData[currentYear] = {
+                individual: {},
+                scramble: {},
+                awards: {},
+                courses: {},
+                schedule: [],
+                flightTimes: {}
+            };
         }
         
-        // Save to server (placeholder for future server integration)
-        async function saveToServer() {
-            try {
-                await fetch('/api/scores', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        players: players,
-                        scores: scores,
-                        scrambleScores: scrambleScores,
-                        awards: awards,
-                        flightTimes: flightTimes,
-                        courses: courses,
-                        schedule: schedule,
-                        yearlyData: yearlyData,
-                        useSlope: useSlope,
-                        scrambleFormula: scrambleFormula,
-                        timestamp: new Date().toISOString()
-                    })
-                });
-            } catch (e) {
-                console.log('Server save not available');
-            }
-        }
+        yearlyData[currentYear].individual = scores;
+        yearlyData[currentYear].scramble = scrambleScores;
+        yearlyData[currentYear].awards = awards;
+        yearlyData[currentYear].courses = courses;
+        yearlyData[currentYear].schedule = schedule;
+        yearlyData[currentYear].flightTimes = flightTimes;
         
-        // Enhanced save function that includes server sync
-        function saveToStorage() {
-            yearlyData[currentYear].individual = scores;
-            yearlyData[currentYear].scramble = scrambleScores;
-            yearlyData[currentYear].awards = awards;
-            yearlyData[currentYear].courses = courses;
-            yearlyData[currentYear].schedule = schedule;
-            yearlyData[currentYear].flightTimes = flightTimes;
+        var dataToSend = {
+            yearlyData: yearlyData,
+            players: players,
+            playedCourses: playedCourses,
+            whiskyCollection: whiskyCollection,
+            courses: courses,
+            schedule: schedule,
+            useSlope: useSlope,
+            scrambleFormula: scrambleFormula,
+            currentYear: currentYear,
+            timestamp: new Date().toISOString(),
             
-            localStorage.setItem('golfYearlyData', JSON.stringify(yearlyData));
-            localStorage.setItem('golfPlayers', JSON.stringify(players));
-            localStorage.setItem('useSlope', useSlope.toString());
-            localStorage.setItem('scrambleFormula', scrambleFormula);
-            
-            // Try to sync with server
-            saveToServer().catch(function() {
-                console.log('Server sync failed, data saved locally only');
-            });
+            // Current year shortcuts for legacy compatibility
+            scores: scores,
+            scrambleScores: scrambleScores,
+            awards: awards,
+            flightTimes: flightTimes
+        };
+        
+        var response = await fetch('/api/scores', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dataToSend)
+        });
+        
+        if (response.ok) {
+            var result = await response.json();
+            console.log('Server save successful:', result.timestamp);
+            return true;
+        } else {
+            console.error('Server save failed:', response.status);
+            return false;
         }
+    } catch (e) {
+        console.error('Server save error:', e.message);
+        return false;
+    }
+}
+
+// Enhanced localStorage functions
+function loadFromStorage() {
+    console.log('Loading from localStorage...');
+    
+    var savedYearlyData = localStorage.getItem('golfYearlyData');
+    if (savedYearlyData) {
+        try {
+            yearlyData = JSON.parse(savedYearlyData);
+            if (!yearlyData[currentYear]) {
+                yearlyData[currentYear] = {
+                    individual: {},
+                    scramble: {},
+                    awards: {},
+                    courses: {},
+                    schedule: [],
+                    flightTimes: {}
+                };
+            }
+            console.log('Loaded yearly data from localStorage');
+        } catch (e) {
+            console.log('Error loading yearly data from localStorage');
+        }
+    }
+    
+    scores = yearlyData[currentYear].individual || {};
+    scrambleScores = yearlyData[currentYear].scramble || {};
+    awards = yearlyData[currentYear].awards || {};
+    flightTimes = yearlyData[currentYear].flightTimes || {};
+    
+    var savedPlayers = localStorage.getItem('golfPlayers');
+    if (savedPlayers) {
+        try {
+            var parsed = JSON.parse(savedPlayers);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                players = parsed;
+                console.log('Loaded players from localStorage');
+            }
+        } catch (e) {
+            console.log('Error loading players from localStorage');
+        }
+    }
+    
+    // Load admin settings
+    useSlope = localStorage.getItem('useSlope') === 'false' ? false : true;
+    scrambleFormula = localStorage.getItem('scrambleFormula') || 'standard';
+    
+    console.log('localStorage load completed');
+}
+
+function saveToStorage() {
+    try {
+        // Ensure current year data is up to date
+        yearlyData[currentYear].individual = scores;
+        yearlyData[currentYear].scramble = scrambleScores;
+        yearlyData[currentYear].awards = awards;
+        yearlyData[currentYear].courses = courses;
+        yearlyData[currentYear].schedule = schedule;
+        yearlyData[currentYear].flightTimes = flightTimes;
+        
+        localStorage.setItem('golfYearlyData', JSON.stringify(yearlyData));
+        localStorage.setItem('golfPlayers', JSON.stringify(players));
+        localStorage.setItem('useSlope', useSlope.toString());
+        localStorage.setItem('scrambleFormula', scrambleFormula);
+        
+        // Try to sync with server in background
+        saveToServer().catch(function(error) {
+            console.log('Background server sync failed:', error);
+        });
+        
+        console.log('Data saved to localStorage');
+    } catch (e) {
+        console.error('Error saving to localStorage:', e);
+    }
+}
+
+// Update the window.onload function
+window.onload = function() {
+    console.log('App initializing...');
+    
+    // First try to sync with server, fallback to localStorage
+    syncWithServer().then(function() {
+        updateLanguage();
+        updatePageTitle();
+        console.log('App initialization completed');
+    }).catch(function(error) {
+        console.error('Initialization error:', error);
+        updateLanguage();
+        updatePageTitle();
+    });
+};
+
+// Auto-save functions should also trigger server sync
+function autoSaveScore(playerId, roundId, hole) {
+    var scoreKey = roundId + '_' + playerId;
+    var value = document.getElementById('hole' + hole).value;
+    
+    if (!scores[scoreKey]) scores[scoreKey] = {};
+    
+    if (value === '') {
+        delete scores[scoreKey][hole];
+        var holeDiv = document.getElementById('hole' + hole).closest('.hole-input');
+        holeDiv.classList.remove('pickup-score');
+    } else {
+        scores[scoreKey][hole] = parseInt(value);
+    }
+    
+    saveToStorage(); // This will trigger server sync
+    
+    var input = document.getElementById('hole' + hole);
+    input.style.backgroundColor = '#c6f6d5';
+    setTimeout(function() {
+        input.style.backgroundColor = '';
+    }, 500);
+}
+
+function autoSaveTeamScore(roundId, teamIdx, hole) {
+    var scoreKey = roundId + '_team_' + teamIdx;
+    var value = document.getElementById('hole' + hole).value;
+    
+    if (!scrambleScores[scoreKey]) scrambleScores[scoreKey] = {};
+    
+    if (value === '') {
+        delete scrambleScores[scoreKey][hole];
+    } else {
+        scrambleScores[scoreKey][hole] = parseInt(value);
+    }
+    
+    saveToStorage(); // This will trigger server sync
+    
+    var input = document.getElementById('hole' + hole);
+    input.style.backgroundColor = '#c6f6d5';
+    setTimeout(function() {
+        input.style.backgroundColor = '';
+    }, 500);
+}
     </script>
 </body>
 </html>
