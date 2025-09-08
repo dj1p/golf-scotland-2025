@@ -4,7 +4,7 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
+app.use(express.json({ limit: '10mb' })); // Increase limit for large data
 app.use(express.static(__dirname));
 
 // Use persistent storage path
@@ -26,60 +26,75 @@ app.get('/api/scores', (req, res) => {
     try {
         if (fs.existsSync(dataFile)) {
             const data = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
+            console.log('Data loaded from:', dataFile);
             res.json(data);
         } else {
-            res.json({
-                scores: {},
-                scrambleScores: {},
-                awards: {},
-                scrambleWinners: {},
+            // Return empty structure that matches frontend expectations
+            const emptyData = {
+                yearlyData: {},
                 players: [],
-                schedule: [],
                 playedCourses: [],
-                whiskyCollection: []
-            });
+                whiskyCollection: [],
+                useSlope: true,
+                scrambleFormula: 'standard',
+                currentYear: 2025
+            };
+            console.log('No data file found, returning empty structure');
+            res.json(emptyData);
         }
     } catch (error) {
-        console.error('Error reading scores:', error);
-        res.json({
-            scores: {},
-            scrambleScores: {},
-            awards: {},
-            scrambleWinners: {},
-            players: [],
-            schedule: [],
-            playedCourses: [],
-            whiskyCollection: []
-        });
+        console.error('Error reading data:', error);
+        res.status(500).json({ error: 'Failed to read data' });
     }
 });
 
 // API endpoint to save all data
 app.post('/api/scores', (req, res) => {
     try {
+        // Save the entire request body which should contain all frontend data
         const data = {
+            yearlyData: req.body.yearlyData || {},
+            players: req.body.players || [],
+            playedCourses: req.body.playedCourses || [],
+            whiskyCollection: req.body.whiskyCollection || [],
+            courses: req.body.courses || {},
+            schedule: req.body.schedule || [],
+            useSlope: req.body.useSlope !== undefined ? req.body.useSlope : true,
+            scrambleFormula: req.body.scrambleFormula || 'standard',
+            currentYear: req.body.currentYear || 2025,
+            timestamp: req.body.timestamp || new Date().toISOString(),
+            
+            // Legacy support - these might be sent separately
             scores: req.body.scores || {},
             scrambleScores: req.body.scrambleScores || {},
             awards: req.body.awards || {},
-            scrambleWinners: req.body.scrambleWinners || {},
-            players: req.body.players || [],
-            courses: req.body.courses || {},
-            schedule: req.body.schedule || [],
-            playedCourses: req.body.playedCourses || [],
-            whiskyCollection: req.body.whiskyCollection || []
+            flightTimes: req.body.flightTimes || {}
         };
         
         // Write data to file with pretty formatting
         fs.writeFileSync(dataFile, JSON.stringify(data, null, 2));
-        console.log('Data saved to:', dataFile);
-        res.json({ success: true });
+        console.log('Data saved successfully to:', dataFile);
+        console.log('Data size:', JSON.stringify(data).length, 'characters');
+        res.json({ success: true, timestamp: data.timestamp });
     } catch (error) {
-        console.error('Error saving scores:', error);
-        res.status(500).json({ error: 'Failed to save scores' });
+        console.error('Error saving data:', error);
+        res.status(500).json({ error: 'Failed to save data', details: error.message });
     }
 });
 
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+    res.json({ 
+        status: 'healthy', 
+        dataFileExists: fs.existsSync(dataFile),
+        dataDir: dataDir,
+        timestamp: new Date().toISOString()
+    });
+});
+
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log(`Data will be stored in: ${dataFile}`);
+    console.log(`Golf Scotland server running on port ${PORT}`);
+    console.log(`Data directory: ${dataDir}`);
+    console.log(`Data file: ${dataFile}`);
+    console.log(`Data file exists: ${fs.existsSync(dataFile)}`);
 });
