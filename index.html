@@ -2984,21 +2984,19 @@
         
         // Initialize on load
 window.onload = function() {
-    console.log('App initializing...');
+    console.log('App initializing - reading from server only...');
     
-    // Always load from localStorage first to ensure data is available immediately
-    loadFromStorage();
-    
-    // Then sync with server in background, but don't overwrite good data with empty data
+    // Only sync with server, no localStorage fallback
     syncWithServer().then(function() {
-        console.log('Background server sync completed');
+        updateLanguage();
+        updatePageTitle();
+        console.log('Server-only initialization completed');
     }).catch(function(error) {
-        console.log('Background server sync failed, using localStorage data');
+        console.error('Server initialization failed:', error);
+        // If server fails, use default hardcoded data only
+        updateLanguage();
+        updatePageTitle();
     });
-    
-    updateLanguage();
-    updatePageTitle();
-    console.log('App initialization completed');
 };
         // Add this function to your JavaScript (around line 2000, near other utility functions)
 
@@ -3056,57 +3054,51 @@ function showMessage(message, type = 'success') {
         // Enhanced sync with server
 async function syncWithServer() {
     try {
-        console.log('Syncing with server...');
+        console.log('Loading from server...');
         var response = await fetch('/api/scores');
         if (response.ok) {
             var serverData = await response.json();
+            console.log('Server data loaded successfully');
             
-            // Only use server data if it has meaningful content
-            // Count non-empty properties to determine if server has real data
-            var serverHasData = false;
-            if (serverData.yearlyData && Object.keys(serverData.yearlyData).length > 0) {
-                // Check if any year has actual scores
-                Object.keys(serverData.yearlyData).forEach(function(year) {
-                    var yearData = serverData.yearlyData[year];
-                    if (yearData.individual && Object.keys(yearData.individual).length > 0) {
-                        serverHasData = true;
-                    }
-                    if (yearData.scramble && Object.keys(yearData.scramble).length > 0) {
-                        serverHasData = true;
-                    }
-                });
-            }
-            
-            if (serverHasData) {
-                console.log('Server has meaningful data, using it');
-                // Use the existing server sync logic
+            // Always use server data if available
+            if (serverData.yearlyData) {
                 yearlyData = serverData.yearlyData;
                 scores = yearlyData[currentYear]?.individual || {};
                 scrambleScores = yearlyData[currentYear]?.scramble || {};
                 awards = yearlyData[currentYear]?.awards || {};
                 flightTimes = yearlyData[currentYear]?.flightTimes || {};
-            } else {
-                console.log('Server data is empty, keeping localStorage data');
-                // Don't overwrite localStorage data, but save current data to server
-                saveToServer();
             }
             
-            // Always preserve these if server data is present and not empty
-            if (serverData.players && serverData.players.length > 0) {
+            if (serverData.players) {
                 players = serverData.players;
             }
-            if (serverData.playedCourses && serverData.playedCourses.length > 0) {
+            if (serverData.playedCourses) {
                 playedCourses = serverData.playedCourses;
             }
-            if (serverData.whiskyCollection && serverData.whiskyCollection.length > 0) {
+            if (serverData.whiskyCollection) {
                 whiskyCollection = serverData.whiskyCollection;
             }
+            if (serverData.useSlope !== undefined) {
+                useSlope = serverData.useSlope;
+            }
+            if (serverData.scrambleFormula) {
+                scrambleFormula = serverData.scrambleFormula;
+            }
+            if (serverData.courses) {
+                courses = serverData.courses;
+            }
+            if (serverData.schedule) {
+                schedule = serverData.schedule;
+            }
+            
+            console.log('All data loaded from server');
             
         } else {
-            console.log('Server not available, using localStorage');
+            throw new Error('Server response not ok: ' + response.status);
         }
     } catch (e) {
-        console.log('Server sync failed:', e.message);
+        console.error('Server load failed:', e.message);
+        throw e;
     }
 }
 // Enhanced save to server
