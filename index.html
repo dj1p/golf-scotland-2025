@@ -773,6 +773,65 @@
         var isAdmin = false;
         var useSlope = true; // Toggle for handicap calculation method
         var scrambleFormula = 'standard'; // 'standard', 'usga', or 'custom'
+
+        // Add this function anywhere in your <script> section
+function restoreDefaultData() {
+    // Restore default playedCourses
+    playedCourses = [
+        { id: 1, name: 'Murrayshall GC - Old Course', years: [2010, 2014, 2018] },
+        { id: 2, name: 'Murrayshall GC - New Course', years: [2010, 2014, 2018] },
+        { id: 3, name: 'Newmacher GC - Hawkshill', years: [2010, 2011, 2012, 2018, 2022] },
+        { id: 4, name: 'Newmacher GC - Swailend', years: [2013] },
+        { id: 5, name: 'Cruden Bay', years: [2011, 2013, 2015] },
+        { id: 6, name: 'Criff GC', years: [2010] },
+        { id: 7, name: 'Gleneagle GC - Kings Course', years: [2010] },
+        { id: 8, name: 'Royal Aberdeen GC', years: [2012] },
+        { id: 9, name: 'Craibstone GC', years: [2011, 2016] },
+        { id: 10, name: 'Hazelhead GC - Bane 1', years: [2012] },
+        { id: 11, name: 'Hazelhead GC - Bane 2', years: [2012] },
+        { id: 12, name: 'Newburgh on Ythan GC', years: [2013] },
+        { id: 13, name: 'Meldrum', years: [2015] },
+        { id: 14, name: 'Cullen GC', years: [2016] },
+        { id: 15, name: 'Duff House Royal GC', years: [2016] },
+        { id: 16, name: 'Lundin GC', years: [2017] },
+        { id: 17, name: 'Craighead Links', years: [2017] },
+        { id: 18, name: 'Balcomie Links', years: [2017] },
+        { id: 19, name: 'St. Andrew Eden Course', years: [2017] },
+        { id: 20, name: 'St. Andrew GC', years: [2019] },
+        { id: 21, name: 'Crail Golf Society', years: [2021] },
+        { id: 22, name: 'Stonehaven GC', years: [2021] },
+        { id: 23, name: 'Leven GC', years: [2021] },
+        { id: 24, name: 'Nairn Golf Club', years: [2022] },
+        { id: 25, name: 'Nairn Dunbar Golf Club', years: [2022] },
+        { id: 26, name: 'Cullen Links', years: [2023, 2024, 2025] },
+        { id: 27, name: 'Spey Bay', years: [2023, 2024, 2025] },
+        { id: 28, name: 'Strathlene', years: [2023, 2024, 2025] },
+        { id: 29, name: 'Garmouth & Kingston', years: [2023, 2024, 2025] }
+    ];
+    
+    // Restore default whiskyCollection  
+    whiskyCollection = [
+        { id: 1, owner: 'Ruben', primary: '', reserve: '' },
+        { id: 2, owner: 'Dag', primary: 'Glenmorangie', reserve: '' },
+        { id: 3, owner: 'Björn', primary: 'Highland Park', reserve: '' },
+        { id: 4, owner: 'Sigbjørn', primary: 'MacAllan', reserve: '' },
+        { id: 5, owner: 'Truls', primary: 'Dalmore', reserve: 'Old Pultney' },
+        { id: 6, owner: 'Roar', primary: 'Glenfiddich', reserve: '' },
+        { id: 7, owner: 'Tor Espen', primary: 'Ben Nevis', reserve: '' },
+        { id: 8, owner: 'Klaus', primary: 'Balvenie', reserve: '' }
+    ];
+    
+    console.log('Default data restored');
+    
+    // Save to server immediately
+    saveToServer().then(function() {
+        alert('Default data restored and saved to server! Refreshing page...');
+        location.reload();
+    }).catch(function(error) {
+        console.error('Error saving:', error);
+        alert('Error saving to server, but local data restored');
+    });
+}
         
         // Data structure for yearly results
         var yearlyData = JSON.parse(localStorage.getItem('golfYearlyData') || '{}');
@@ -3300,64 +3359,7 @@ function autoSaveTeamScore(roundId, teamIdx, hole) {
     }, 500);
 }
 
-        // Add this function anywhere in your <script> section
-function restoreDefaultData() {
-    // Restore default playedCourses
-    playedCourses = [
-        { id: 1, name: 'Murrayshall GC - Old Course', years: [2010, 2014, 2018] },
-        { id: 2, name: 'Murrayshall GC - New Course', years: [2010, 2014, 2018] },
-        { id: 3, name: 'Newmacher GC - Hawkshill', years: [2010, 2011, 2012, 2018, 2022] },
-        { id: 4, name: 'Newmacher GC - Swailend', years: [2013] },
-        { id: 5, name: 'Cruden Bay', years: [2011, 2013, 2015] },
-        { id: 6, name: 'Criff GC', years: [2010] },
-        { id: 7, name: 'Gleneagle GC - Kings Course', years: [2010] },
-        { id: 8, name: 'Royal Aberdeen GC', years: [2012] },
-        { id: 9, name: 'Craibstone GC', years: [2011, 2016] },
-        { id: 10, name: 'Hazelhead GC - Bane 1', years: [2012] },
-        { id: 11, name: 'Hazelhead GC - Bane 2', years: [2012] },
-        { id: 12, name: 'Newburgh on Ythan GC', years: [2013] },
-        { id: 13, name: 'Meldrum', years: [2015] },
-        { id: 14, name: 'Cullen GC', years: [2016] },
-        { id: 15, name: 'Duff House Royal GC', years: [2016] },
-        { id: 16, name: 'Lundin GC', years: [2017] },
-        { id: 17, name: 'Craighead Links', years: [2017] },
-        { id: 18, name: 'Balcomie Links', years: [2017] },
-        { id: 19, name: 'St. Andrew Eden Course', years: [2017] },
-        { id: 20, name: 'St. Andrew GC', years: [2019] },
-        { id: 21, name: 'Crail Golf Society', years: [2021] },
-        { id: 22, name: 'Stonehaven GC', years: [2021] },
-        { id: 23, name: 'Leven GC', years: [2021] },
-        { id: 24, name: 'Nairn Golf Club', years: [2022] },
-        { id: 25, name: 'Nairn Dunbar Golf Club', years: [2022] },
-        { id: 26, name: 'Cullen Links', years: [2023, 2024, 2025] },
-        { id: 27, name: 'Spey Bay', years: [2023, 2024, 2025] },
-        { id: 28, name: 'Strathlene', years: [2023, 2024, 2025] },
-        { id: 29, name: 'Garmouth & Kingston', years: [2023, 2024, 2025] }
-    ];
     
-    // Restore default whiskyCollection  
-    whiskyCollection = [
-        { id: 1, owner: 'Ruben', primary: '', reserve: '' },
-        { id: 2, owner: 'Dag', primary: 'Glenmorangie', reserve: '' },
-        { id: 3, owner: 'Björn', primary: 'Highland Park', reserve: '' },
-        { id: 4, owner: 'Sigbjørn', primary: 'MacAllan', reserve: '' },
-        { id: 5, owner: 'Truls', primary: 'Dalmore', reserve: 'Old Pultney' },
-        { id: 6, owner: 'Roar', primary: 'Glenfiddich', reserve: '' },
-        { id: 7, owner: 'Tor Espen', primary: 'Ben Nevis', reserve: '' },
-        { id: 8, owner: 'Klaus', primary: 'Balvenie', reserve: '' }
-    ];
-    
-    console.log('Default data restored');
-    
-    // Save to server immediately
-    saveToServer().then(function() {
-        alert('Default data restored and saved to server! Refreshing page...');
-        location.reload();
-    }).catch(function(error) {
-        console.error('Error saving:', error);
-        alert('Error saving to server, but local data restored');
-    });
-}
     </script>
 </body>
 </html>
