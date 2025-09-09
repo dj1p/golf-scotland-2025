@@ -2983,11 +2983,23 @@
         }
         
         // Initialize on load
-        window.onload = function() {
-            loadFromStorage();
-            updateLanguage();
-            updatePageTitle();
-        };
+window.onload = function() {
+    console.log('App initializing...');
+    
+    // Always load from localStorage first to ensure data is available immediately
+    loadFromStorage();
+    
+    // Then sync with server in background, but don't overwrite good data with empty data
+    syncWithServer().then(function() {
+        console.log('Background server sync completed');
+    }).catch(function(error) {
+        console.log('Background server sync failed, using localStorage data');
+    });
+    
+    updateLanguage();
+    updatePageTitle();
+    console.log('App initialization completed');
+};
         // Add this function to your JavaScript (around line 2000, near other utility functions)
 
 function showMessage(message, type = 'success') {
@@ -3048,72 +3060,55 @@ async function syncWithServer() {
         var response = await fetch('/api/scores');
         if (response.ok) {
             var serverData = await response.json();
-            console.log('Server data received:', Object.keys(serverData));
             
-            // Load yearlyData structure
+            // Only use server data if it has meaningful content
+            // Count non-empty properties to determine if server has real data
+            var serverHasData = false;
             if (serverData.yearlyData && Object.keys(serverData.yearlyData).length > 0) {
+                // Check if any year has actual scores
+                Object.keys(serverData.yearlyData).forEach(function(year) {
+                    var yearData = serverData.yearlyData[year];
+                    if (yearData.individual && Object.keys(yearData.individual).length > 0) {
+                        serverHasData = true;
+                    }
+                    if (yearData.scramble && Object.keys(yearData.scramble).length > 0) {
+                        serverHasData = true;
+                    }
+                });
+            }
+            
+            if (serverHasData) {
+                console.log('Server has meaningful data, using it');
+                // Use the existing server sync logic
                 yearlyData = serverData.yearlyData;
-                
-                // Set current year data shortcuts
                 scores = yearlyData[currentYear]?.individual || {};
                 scrambleScores = yearlyData[currentYear]?.scramble || {};
                 awards = yearlyData[currentYear]?.awards || {};
                 flightTimes = yearlyData[currentYear]?.flightTimes || {};
-                
-                console.log('Loaded yearly data for', currentYear);
+            } else {
+                console.log('Server data is empty, keeping localStorage data');
+                // Don't overwrite localStorage data, but save current data to server
+                saveToServer();
             }
             
-            // Load other data
-            if (serverData.players && Array.isArray(serverData.players) && serverData.players.length > 0) {
+            // Always preserve these if server data is present and not empty
+            if (serverData.players && serverData.players.length > 0) {
                 players = serverData.players;
-                console.log('Loaded', players.length, 'players');
             }
-            
-            if (serverData.playedCourses && Array.isArray(serverData.playedCourses)) {
+            if (serverData.playedCourses && serverData.playedCourses.length > 0) {
                 playedCourses = serverData.playedCourses;
-                console.log('Loaded', playedCourses.length, 'played courses');
             }
-            
-            if (serverData.whiskyCollection && Array.isArray(serverData.whiskyCollection)) {
+            if (serverData.whiskyCollection && serverData.whiskyCollection.length > 0) {
                 whiskyCollection = serverData.whiskyCollection;
-                console.log('Loaded whisky collection');
             }
-            
-            // Load settings
-            if (serverData.useSlope !== undefined) {
-                useSlope = serverData.useSlope;
-            }
-            if (serverData.scrambleFormula) {
-                scrambleFormula = serverData.scrambleFormula;
-            }
-            if (serverData.currentYear) {
-                currentYear = serverData.currentYear;
-            }
-            
-            // Update courses and schedule if available
-            if (serverData.courses && Object.keys(serverData.courses).length > 0) {
-                courses = serverData.courses;
-            }
-            if (serverData.schedule && Array.isArray(serverData.schedule)) {
-                schedule = serverData.schedule;
-            }
-            
-            // Save to localStorage after successful sync
-            saveToStorage();
-            console.log('Server sync completed successfully');
             
         } else {
-            console.log('Server response not ok:', response.status);
-            // Load from localStorage as fallback
-            loadFromStorage();
+            console.log('Server not available, using localStorage');
         }
     } catch (e) {
         console.log('Server sync failed:', e.message);
-        // Load from localStorage as fallback
-        loadFromStorage();
     }
 }
-
 // Enhanced save to server
 async function saveToServer() {
     try {
