@@ -1283,10 +1283,19 @@ function displaySearchResults(courses) {
 async function selectCourseFromSearch(index) {
     var course = currentSearchResults[index];
     
+    if (!course) {
+        console.error('No course found at index:', index);
+        document.getElementById('selectedCourseDetails').innerHTML = 
+            '<div style="color: red; padding: 15px;">Feil: Ingen bane funnet</div>';
+        return;
+    }
+    
     // Highlight selected course
     document.querySelectorAll('.course-result-item').forEach(function(item, i) {
         item.classList.toggle('selected', i === index);
     });
+    
+    console.log('Fetching course details for:', course.club_name, 'ID:', course.id);
     
     try {
         var response = await fetch(`${API_BASE_URL}/v1/courses/${course.id}`, {
@@ -1300,9 +1309,16 @@ async function selectCourseFromSearch(index) {
         }
         
         var detailedCourse = await response.json();
+        console.log('Received course data:', detailedCourse);
+        
+        if (!detailedCourse) {
+            throw new Error('No course data received');
+        }
+        
         selectedCourseData = detailedCourse;
         displayCourseDetails(detailedCourse);
     } catch (error) {
+        console.error('Error fetching course details:', error);
         document.getElementById('selectedCourseDetails').innerHTML = 
             `<div style="color: red; padding: 15px;">Feil ved lasting av banedetaljer: ${error.message}</div>`;
     }
