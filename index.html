@@ -1325,8 +1325,17 @@ async function selectCourseFromSearch(index) {
 }
 
 function displayCourseDetails(course) {
+    console.log('displayCourseDetails called with:', course);
+    
+    if (!course) {
+        console.error('displayCourseDetails called with undefined course');
+        document.getElementById('selectedCourseDetails').innerHTML = 
+            '<div style="color: red; padding: 15px;">Feil: Ingen banedata mottatt</div>';
+        return;
+    }
+    
     var html = `<div style="margin-top: 20px; padding: 20px; background: #f0fdf4; border-radius: 10px;">`;
-    html += `<h4>${course.club_name}`;
+    html += `<h4>${course.club_name || 'Unknown Course'}`;
     if (course.course_name && course.course_name !== course.club_name) {
         html += ` - ${course.course_name}`;
     }
@@ -1346,25 +1355,38 @@ function displayCourseDetails(course) {
         }
     }
     
+    // Debug tees structure
+    console.log('Course tees structure:', course.tees);
+    
     // Properly handle tees - avoid ES6 spread syntax
     var allTees = [];
     if (course.tees) {
         if (course.tees.male && Array.isArray(course.tees.male)) {
+            console.log('Found male tees:', course.tees.male.length);
             allTees = allTees.concat(course.tees.male);
         }
         if (course.tees.female && Array.isArray(course.tees.female)) {
+            console.log('Found female tees:', course.tees.female.length);
             allTees = allTees.concat(course.tees.female);
         }
+    } else {
+        console.log('No tees object found in course data');
     }
     
-    console.log('Found tees:', allTees.length); // Debug log
+    console.log('Total tees found:', allTees.length);
+    console.log('All tees:', allTees);
     
     if (allTees.length > 0) {
         html += '<h5>Velg tee:</h5>';
         html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 15px 0;">';
         
         allTees.forEach(function(tee, index) {
-            html += `<div style="background: white; border: 2px solid #e2e8f0; border-radius: 8px; padding: 12px; cursor: pointer; transition: all 0.3s;" onclick="selectTee(${index}, '${JSON.stringify(tee).replace(/"/g, '&quot;')}')" id="tee_${index}">`;
+            console.log('Processing tee', index, ':', tee);
+            
+            // Escape JSON for HTML attribute
+            var teeDataString = JSON.stringify(tee).replace(/"/g, '&quot;');
+            
+            html += `<div style="background: white; border: 2px solid #e2e8f0; border-radius: 8px; padding: 12px; cursor: pointer; transition: all 0.3s;" onclick="selectTee(${index}, '${teeDataString}')" id="tee_${index}">`;
             html += `<div style="font-weight: bold; margin-bottom: 5px;">${tee.tee_name || 'Unknown Tee'}</div>`;
             html += `<div style="font-size: 12px; color: #718096;">`;
             html += `Par: ${tee.par_total || 'N/A'}`;
@@ -1383,7 +1405,14 @@ function displayCourseDetails(course) {
         html += '</div>';
     } else {
         html += '<p style="color: #e53e3e;">Ingen tee-data tilgjengelig for denne banen.</p>';
-        console.log('No tees found. Course structure:', course); // Debug log
+        html += '<div style="margin-top: 10px; padding: 10px; background: #fff3cd; border-radius: 5px; font-size: 12px;">';
+        html += '<strong>Debug info:</strong><br>';
+        html += 'Course has tees object: ' + (course.tees ? 'Yes' : 'No') + '<br>';
+        if (course.tees) {
+            html += 'Male tees: ' + (course.tees.male ? course.tees.male.length : 'None') + '<br>';
+            html += 'Female tees: ' + (course.tees.female ? course.tees.female.length : 'None');
+        }
+        html += '</div>';
     }
     
     html += '</div>';
