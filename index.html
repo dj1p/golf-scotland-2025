@@ -1301,14 +1301,7 @@ async function selectCourseFromSearch(index) {
         
         var detailedCourse = await response.json();
         selectedCourseData = detailedCourse;
-        displayCourseDetails(detailedCourse);
-    } catch (error) {
-        document.getElementById('selectedCourseDetails').innerHTML = 
-            `<div style="color: red; padding: 15px;">Feil ved lasting av banedetaljer: ${error.message}</div>`;
-    }
-}
-
-function displayCourseDetails(course) {
+ function displayCourseDetails(course) {
     var html = `<div style="margin-top: 20px; padding: 20px; background: #f0fdf4; border-radius: 10px;">`;
     html += `<h4>${course.club_name}`;
     if (course.course_name && course.course_name !== course.club_name) {
@@ -1330,11 +1323,18 @@ function displayCourseDetails(course) {
         }
     }
     
+    // Properly handle tees - avoid ES6 spread syntax
     var allTees = [];
     if (course.tees) {
-        if (course.tees.male) allTees = allTees.concat(course.tees.male);
-        if (course.tees.female) allTees = allTees.concat(course.tees.female);
+        if (course.tees.male && Array.isArray(course.tees.male)) {
+            allTees = allTees.concat(course.tees.male);
+        }
+        if (course.tees.female && Array.isArray(course.tees.female)) {
+            allTees = allTees.concat(course.tees.female);
+        }
     }
+    
+    console.log('Found tees:', allTees.length); // Debug log
     
     if (allTees.length > 0) {
         html += '<h5>Velg tee:</h5>';
@@ -1360,6 +1360,7 @@ function displayCourseDetails(course) {
         html += '</div>';
     } else {
         html += '<p style="color: #e53e3e;">Ingen tee-data tilgjengelig for denne banen.</p>';
+        console.log('No tees found. Course structure:', course); // Debug log
     }
     
     html += '</div>';
@@ -1395,16 +1396,13 @@ function confirmCourseSelection() {
         round.courseId = selectedCourseData.id;
         round.teeData = selectedTeeData;
         
-        // Update courses object with API data - handle missing hole details
+        // Update courses object with API data - handle the actual API structure
         var courseName = round.course;
         var pars = [];
         var handicaps = [];
         
-        if (selectedTeeData.hole_details && Array.isArray(selectedTeeData.hole_details)) {
-            pars = selectedTeeData.hole_details.map(function(hole) { return hole.par || 4; });
-            handicaps = selectedTeeData.hole_details.map(function(hole) { return hole.stroke_index || hole.handicap || 1; });
-        } else if (selectedTeeData.holes && Array.isArray(selectedTeeData.holes)) {
-            // Fallback to 'holes' property if 'hole_details' doesn't exist
+        // API uses 'holes' array (confirmed from your JSON example)
+        if (selectedTeeData.holes && Array.isArray(selectedTeeData.holes)) {
             pars = selectedTeeData.holes.map(function(hole) { return hole.par || 4; });
             handicaps = selectedTeeData.holes.map(function(hole) { return hole.handicap || 1; });
         } else {
@@ -1419,6 +1417,8 @@ function confirmCourseSelection() {
             pars: pars,
             handicaps: handicaps
         };
+        
+        console.log('Course created:', courses[courseName]); // Debug log
         
         saveToServer();
         alert('Bane valgt: ' + courseName);
