@@ -1301,7 +1301,14 @@ async function selectCourseFromSearch(index) {
         
         var detailedCourse = await response.json();
         selectedCourseData = detailedCourse;
- function displayCourseDetails(course) {
+        displayCourseDetails(detailedCourse);
+    } catch (error) {
+        document.getElementById('selectedCourseDetails').innerHTML = 
+            `<div style="color: red; padding: 15px;">Feil ved lasting av banedetaljer: ${error.message}</div>`;
+    }
+}
+
+function displayCourseDetails(course) {
     var html = `<div style="margin-top: 20px; padding: 20px; background: #f0fdf4; border-radius: 10px;">`;
     html += `<h4>${course.club_name}`;
     if (course.course_name && course.course_name !== course.club_name) {
