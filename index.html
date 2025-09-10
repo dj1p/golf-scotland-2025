@@ -893,6 +893,75 @@ function loadAdmin() {
         html += '</div>';
         html += '</div>';
         html += '</div>';
+        // Schedule management
+html += '<button class="collapsible" onclick="toggleSection(this)">📅 Turneringsplan</button>';
+html += '<div class="collapsible-content">';
+html += '<div style="background: #f0f8ff; padding: 15px; border-radius: 10px;">';
+html += '<h4>Rediger Datoer og Tider</h4>';
+
+schedule.forEach(function(round, index) {
+    html += '<div style="background: white; padding: 15px; margin: 10px 0; border-radius: 8px; border: 1px solid #e2e8f0;">';
+    html += '<h5>Runde ' + (index + 1) + ': ' + round.type + '</h5>';
+    
+    // Date editing
+    html += '<div style="margin: 10px 0;">';
+    html += '<label for="date_' + round.id + '">Dato:</label>';
+    html += '<input type="text" id="date_' + round.id + '" value="' + round.date + '" placeholder="f.eks. Fredag 29. aug" onchange="updateRoundDate(' + round.id + ', this.value)">';
+    html += '</div>';
+    
+    // Time editing
+    html += '<div style="margin: 10px 0;">';
+    html += '<label for="time_' + round.id + '">Tid:</label>';
+    html += '<input type="text" id="time_' + round.id + '" value="' + round.time + '" placeholder="f.eks. Morgen, Ettermiddag" onchange="updateRoundTime(' + round.id + ', this.value)">';
+    html += '</div>';
+    
+    // Course display
+    html += '<div style="margin: 10px 0;">';
+    html += '<label>Bane:</label>';
+    html += '<span style="padding: 8px; background: #f7fafc; border-radius: 4px; display: inline-block;">' + (round.course || 'Ikke valgt') + '</span>';
+    html += '</div>';
+    
+    // Tee time for the course (single time per round)
+    html += '<div style="margin: 10px 0;">';
+    html += '<label for="tee_time_' + round.id + '">Tee Time:</label>';
+    html += '<input type="time" id="tee_time_' + round.id + '" value="' + (round.teeTime || '') + '" onchange="updateTeeTime(' + round.id + ', this.value)">';
+    html += '</div>';
+    
+    // Show flight details for individual rounds
+    if (round.type === 'Individuell' && round.flights) {
+        html += '<div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px;">';
+        html += '<h6>Flight Detaljer:</h6>';
+        round.flights.forEach(function(flight, flightIndex) {
+            html += '<div style="margin: 5px 0; font-size: 12px;">';
+            html += '<strong>Flight ' + (flightIndex + 1) + ':</strong> ' + flight.players.join(', ');
+            html += ' <em>(Tid: ' + (flight.time || 'Ikke satt') + ')</em>';
+            html += '</div>';
+        });
+        html += '</div>';
+    }
+    
+    // Show team details for scramble rounds
+    if (round.type === 'Scramble' && round.teams) {
+        html += '<div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px;">';
+        html += '<h6>Lag:</h6>';
+        round.teams.forEach(function(team, teamIndex) {
+            html += '<div style="margin: 5px 0; font-size: 12px;">';
+            html += '<strong>Lag ' + (teamIndex + 1) + ':</strong> ' + team.join(' & ');
+            html += '</div>';
+        });
+        html += '</div>';
+    }
+    
+    html += '</div>';
+});
+
+html += '<div style="margin-top: 15px; text-align: center;">';
+html += '<button onclick="saveSchedule()" style="background: #48bb78; margin-right: 10px;">Lagre Endringer</button>';
+html += '<button onclick="resetSchedule()" style="background: #e53e3e;">Tilbakestill</button>';
+html += '</div>';
+
+html += '</div>';
+html += '</div>';
         
         // Handicap editing
         html += '<button class="collapsible" onclick="toggleSection(this)">✏️ Rediger Handicap</button>';
