@@ -1069,116 +1069,7 @@ html += '</div>';
         html += '<button onclick="saveFlightTimes()" style="margin-top: 15px;">Lagre Tider</button>';
         html += '</div>';
         html += '</div>';
-        function createNewTournamentYear() {
-    var newYear = document.getElementById('newTournamentYear').value;
-    
-    if (!newYear || newYear < 2025 || newYear > 2030) {
-        alert('Vennligst velg et gyldig år (2025-2030)');
-        return;
-    }
-    
-    var confirmMessage = 'Er du SIKKER på at du vil starte nytt turneringsår ' + newYear + '?\n\n';
-    confirmMessage += 'Dette vil PERMANENT slette:\n';
-    confirmMessage += '- Alle scorer fra ' + currentYear + '\n';
-    confirmMessage += '- Alle resultater og premieutdelinger\n';
-    confirmMessage += '- Flight og tee tider\n\n';
-    confirmMessage += 'Skriv "RESET" for å bekrefte:';
-    
-    var confirmation = prompt(confirmMessage);
-    
-    if (confirmation !== 'RESET') {
-        alert('Operasjon avbrutt');
-        return;
-    }
-    
-    // Archive current year data
-    archiveCurrentYear();
-    
-    // Reset tournament data
-    resetTournamentData(parseInt(newYear));
-    
-    // Save changes
-    saveToServer();
-    
-    alert('Nytt turneringsår ' + newYear + ' opprettet!\n\nAlle data er nullstilt og klar for ny sesong.');
-    
-    // Refresh admin view
-    loadAdmin();
-}
-
-function archiveCurrentYear() {
-    // Store current year data in localStorage for potential recovery
-    var archiveData = {
-        year: currentYear,
-        scores: scores,
-        scrambleScores: scrambleScores,
-        awards: awards,
-        flightTimes: flightTimes,
-        archivedDate: new Date().toISOString()
-    };
-    
-    localStorage.setItem('golfArchive_' + currentYear, JSON.stringify(archiveData));
-    console.log('Data for year ' + currentYear + ' archived to localStorage');
-}
-
-function resetTournamentData(newYear) {
-    // Update current year
-    currentYear = newYear;
-    
-    // Clear all tournament data
-    scores = {};
-    scrambleScores = {};
-    awards = {};
-    flightTimes = {};
-    
-    // Reset schedule dates and times but keep structure
-    schedule.forEach(function(round) {
-        // Clear times
-        round.teeTime = '';
-        
-        // Reset flight times for individual rounds
-        if (round.flights) {
-            round.flights.forEach(function(flight) {
-                flight.time = '';
-            });
-        }
-        
-        // You can update default dates here if needed
-        // For now, keeping original date structure
-    });
-    
-    // Reset admin status
-    isAdmin = false;
-    
-    console.log('Tournament data reset for year ' + newYear);
-}
-
-function restoreArchivedYear(year) {
-    var archiveKey = 'golfArchive_' + year;
-    var archivedData = localStorage.getItem(archiveKey);
-    
-    if (!archivedData) {
-        alert('Ingen arkiverte data funnet for år ' + year);
-        return false;
-    }
-    
-    try {
-        var data = JSON.parse(archivedData);
-        
-        currentYear = data.year;
-        scores = data.scores || {};
-        scrambleScores = data.scrambleScores || {};
-        awards = data.awards || {};
-        flightTimes = data.flightTimes || {};
-        
-        saveToServer();
-        alert('Data for år ' + year + ' gjenopprettet!');
-        return true;
-    } catch (error) {
-        alert('Feil ved gjenoppretting av data: ' + error.message);
-        return false;
-    }
-}
+       
         // Competition holes
         html += '<button class="collapsible" onclick="toggleSection(this)">🎯 Konkurransehull</button>';
         html += '<div class="collapsible-content">';
@@ -1375,6 +1266,117 @@ function resetSchedule() {
         loadAdmin(); // Refresh admin view
     }
 }
+     function createNewTournamentYear() {
+    var newYear = document.getElementById('newTournamentYear').value;
+    
+    if (!newYear || newYear < 2025 || newYear > 2030) {
+        alert('Vennligst velg et gyldig år (2025-2030)');
+        return;
+    }
+    
+    var confirmMessage = 'Er du SIKKER på at du vil starte nytt turneringsår ' + newYear + '?\n\n';
+    confirmMessage += 'Dette vil PERMANENT slette:\n';
+    confirmMessage += '- Alle scorer fra ' + currentYear + '\n';
+    confirmMessage += '- Alle resultater og premieutdelinger\n';
+    confirmMessage += '- Flight og tee tider\n\n';
+    confirmMessage += 'Skriv "RESET" for å bekrefte:';
+    
+    var confirmation = prompt(confirmMessage);
+    
+    if (confirmation !== 'RESET') {
+        alert('Operasjon avbrutt');
+        return;
+    }
+    
+    // Archive current year data
+    archiveCurrentYear();
+    
+    // Reset tournament data
+    resetTournamentData(parseInt(newYear));
+    
+    // Save changes
+    saveToServer();
+    
+    alert('Nytt turneringsår ' + newYear + ' opprettet!\n\nAlle data er nullstilt og klar for ny sesong.');
+    
+    // Refresh admin view
+    loadAdmin();
+}
+
+function archiveCurrentYear() {
+    // Store current year data in localStorage for potential recovery
+    var archiveData = {
+        year: currentYear,
+        scores: scores,
+        scrambleScores: scrambleScores,
+        awards: awards,
+        flightTimes: flightTimes,
+        archivedDate: new Date().toISOString()
+    };
+    
+    localStorage.setItem('golfArchive_' + currentYear, JSON.stringify(archiveData));
+    console.log('Data for year ' + currentYear + ' archived to localStorage');
+}
+
+function resetTournamentData(newYear) {
+    // Update current year
+    currentYear = newYear;
+    
+    // Clear all tournament data
+    scores = {};
+    scrambleScores = {};
+    awards = {};
+    flightTimes = {};
+    
+    // Reset schedule dates and times but keep structure
+    schedule.forEach(function(round) {
+        // Clear times
+        round.teeTime = '';
+        
+        // Reset flight times for individual rounds
+        if (round.flights) {
+            round.flights.forEach(function(flight) {
+                flight.time = '';
+            });
+        }
+        
+        // You can update default dates here if needed
+        // For now, keeping original date structure
+    });
+    
+    // Reset admin status
+    isAdmin = false;
+    
+    console.log('Tournament data reset for year ' + newYear);
+}
+
+function restoreArchivedYear(year) {
+    var archiveKey = 'golfArchive_' + year;
+    var archivedData = localStorage.getItem(archiveKey);
+    
+    if (!archivedData) {
+        alert('Ingen arkiverte data funnet for år ' + year);
+        return false;
+    }
+    
+    try {
+        var data = JSON.parse(archivedData);
+        
+        currentYear = data.year;
+        scores = data.scores || {};
+        scrambleScores = data.scrambleScores || {};
+        awards = data.awards || {};
+        flightTimes = data.flightTimes || {};
+        
+        saveToServer();
+        alert('Data for år ' + year + ' gjenopprettet!');
+        return true;
+    } catch (error) {
+        alert('Feil ved gjenoppretting av data: ' + error.message);
+        return false;
+    }
+}
+    
 // Handicap calculation functions
 function toggleHandicapMethod(useSlope) {
     window.useSlope = useSlope;
@@ -2734,6 +2736,8 @@ window.saveSchedule = saveSchedule;
 window.resetSchedule = resetSchedule;
 window.createNewTournamentYear = createNewTournamentYear;
 window.restoreArchivedYear = restoreArchivedYear;
+window.archiveCurrentYear = archiveCurrentYear;
+window.resetTournamentData = resetTournamentData;
 
 </script>
 </body>
