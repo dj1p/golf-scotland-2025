@@ -1069,7 +1069,75 @@ html += '</div>';
         html += '<button onclick="saveFlightTimes()" style="margin-top: 15px;">Lagre Tider</button>';
         html += '</div>';
         html += '</div>';
-       
+           // Flight Management
+html += '<button class="collapsible" onclick="toggleSection(this)">👥 Flight Administrasjon</button>';
+html += '<div class="collapsible-content">';
+html += '<div style="background: #f0f8ff; padding: 15px; border-radius: 10px;">';
+html += '<h4>Administrer Flight Sammensetning</h4>';
+
+schedule.forEach(function(round) {
+    if (round.type === 'Individuell' && round.flights) {
+        html += '<div style="background: white; padding: 15px; margin: 10px 0; border-radius: 8px; border: 1px solid #e2e8f0;">';
+        html += '<h5>' + round.date + ' - ' + round.time + '</h5>';
+        
+        round.flights.forEach(function(flight, flightIndex) {
+            html += '<div style="margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 5px;">';
+            html += '<h6>Flight ' + (flightIndex + 1) + '</h6>';
+            
+            // Current players in this flight
+            html += '<div style="margin: 10px 0;">';
+            html += '<label>Spillere i flight:</label>';
+            html += '<div style="display: flex; flex-wrap: wrap; gap: 5px; margin: 5px 0;">';
+            
+            flight.players.forEach(function(playerName, playerIndex) {
+                html += '<span style="background: #4299e1; color: white; padding: 5px 10px; border-radius: 15px; font-size: 12px;">';
+                html += playerName;
+                html += '<button onclick="removePlayerFromFlight(' + round.id + ', ' + flightIndex + ', ' + playerIndex + ')" style="background: none; border: none; color: white; margin-left: 5px; cursor: pointer;">×</button>';
+                html += '</span>';
+            });
+            
+            html += '</div>';
+            html += '</div>';
+            
+            // Add player dropdown
+            html += '<div style="margin: 10px 0;">';
+            html += '<select id="addPlayer_' + round.id + '_' + flightIndex + '" style="width: 150px; margin-right: 10px;">';
+            html += '<option value="">Legg til spiller</option>';
+            
+            // Show available players (not already in this round)
+            var playersInRound = [];
+            round.flights.forEach(function(f) {
+                playersInRound = playersInRound.concat(f.players);
+            });
+            
+            players.forEach(function(player) {
+                if (playersInRound.indexOf(player.name) === -1) {
+                    html += '<option value="' + player.name + '">' + player.name + '</option>';
+                }
+            });
+            
+            html += '</select>';
+            html += '<button onclick="addPlayerToFlight(' + round.id + ', ' + flightIndex + ')" style="font-size: 12px; padding: 5px 10px;">Legg til</button>';
+            html += '</div>';
+            
+            html += '</div>';
+        });
+        
+        // Add/Remove Flight buttons
+        html += '<div style="margin-top: 15px; text-align: center;">';
+        html += '<button onclick="addFlight(' + round.id + ')" style="background: #48bb78; font-size: 12px; padding: 5px 15px;">Legg til Flight</button>';
+        if (round.flights.length > 1) {
+            html += '<button onclick="removeFlight(' + round.id + ')" style="background: #e53e3e; font-size: 12px; padding: 5px 15px; margin-left: 10px;">Fjern Flight</button>';
+        }
+        html += '</div>';
+        
+        html += '</div>';
+    }
+});
+
+html += '<button onclick="saveFlightComposition()" style="margin-top: 15px;">Lagre Flight Sammensetning</button>';
+html += '</div>';
+html += '</div>';
         // Competition holes
         html += '<button class="collapsible" onclick="toggleSection(this)">🎯 Konkurransehull</button>';
         html += '<div class="collapsible-content">';
@@ -1549,6 +1617,52 @@ function saveWhisky() {
     alert('Whisky data lagret!');
 }
 
+      function addPlayerToFlight(roundId, flightIndex) {
+    var select = document.getElementById('addPlayer_' + roundId + '_' + flightIndex);
+    var playerName = select.value;
+    
+    if (!playerName) return;
+    
+    var round = schedule.find(function(r) { return r.id === roundId; });
+    if (round && round.flights && round.flights[flightIndex]) {
+        round.flights[flightIndex].players.push(playerName);
+        saveToServer();
+        loadAdmin(); // Refresh admin view
+    }
+}
+
+function removePlayerFromFlight(roundId, flightIndex, playerIndex) {
+    var round = schedule.find(function(r) { return r.id === roundId; });
+    if (round && round.flights && round.flights[flightIndex]) {
+        round.flights[flightIndex].players.splice(playerIndex, 1);
+        saveToServer();
+        loadAdmin(); // Refresh admin view
+    }
+}
+
+function addFlight(roundId) {
+    var round = schedule.find(function(r) { return r.id === roundId; });
+    if (round && round.flights) {
+        round.flights.push({ time: '', players: [] });
+        saveToServer();
+        loadAdmin(); // Refresh admin view
+    }
+}
+
+function removeFlight(roundId) {
+    var round = schedule.find(function(r) { return r.id === roundId; });
+    if (round && round.flights && round.flights.length > 1) {
+        round.flights.pop();
+        saveToServer();
+        loadAdmin(); // Refresh admin view
+    }
+}
+
+function saveFlightComposition() {
+    saveToServer();
+    alert('Flight sammensetning lagret!');
+}
+    
 // Course Search and API functions
 function showCourseSearch(roundId) {
     selectedCourseForRound = roundId;
@@ -2123,75 +2237,7 @@ function getScrambleFormulaText() {
     }
 }
 
-    // Flight Management
-html += '<button class="collapsible" onclick="toggleSection(this)">👥 Flight Administrasjon</button>';
-html += '<div class="collapsible-content">';
-html += '<div style="background: #f0f8ff; padding: 15px; border-radius: 10px;">';
-html += '<h4>Administrer Flight Sammensetning</h4>';
 
-schedule.forEach(function(round) {
-    if (round.type === 'Individuell' && round.flights) {
-        html += '<div style="background: white; padding: 15px; margin: 10px 0; border-radius: 8px; border: 1px solid #e2e8f0;">';
-        html += '<h5>' + round.date + ' - ' + round.time + '</h5>';
-        
-        round.flights.forEach(function(flight, flightIndex) {
-            html += '<div style="margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 5px;">';
-            html += '<h6>Flight ' + (flightIndex + 1) + '</h6>';
-            
-            // Current players in this flight
-            html += '<div style="margin: 10px 0;">';
-            html += '<label>Spillere i flight:</label>';
-            html += '<div style="display: flex; flex-wrap: wrap; gap: 5px; margin: 5px 0;">';
-            
-            flight.players.forEach(function(playerName, playerIndex) {
-                html += '<span style="background: #4299e1; color: white; padding: 5px 10px; border-radius: 15px; font-size: 12px;">';
-                html += playerName;
-                html += '<button onclick="removePlayerFromFlight(' + round.id + ', ' + flightIndex + ', ' + playerIndex + ')" style="background: none; border: none; color: white; margin-left: 5px; cursor: pointer;">×</button>';
-                html += '</span>';
-            });
-            
-            html += '</div>';
-            html += '</div>';
-            
-            // Add player dropdown
-            html += '<div style="margin: 10px 0;">';
-            html += '<select id="addPlayer_' + round.id + '_' + flightIndex + '" style="width: 150px; margin-right: 10px;">';
-            html += '<option value="">Legg til spiller</option>';
-            
-            // Show available players (not already in this round)
-            var playersInRound = [];
-            round.flights.forEach(function(f) {
-                playersInRound = playersInRound.concat(f.players);
-            });
-            
-            players.forEach(function(player) {
-                if (playersInRound.indexOf(player.name) === -1) {
-                    html += '<option value="' + player.name + '">' + player.name + '</option>';
-                }
-            });
-            
-            html += '</select>';
-            html += '<button onclick="addPlayerToFlight(' + round.id + ', ' + flightIndex + ')" style="font-size: 12px; padding: 5px 10px;">Legg til</button>';
-            html += '</div>';
-            
-            html += '</div>';
-        });
-        
-        // Add/Remove Flight buttons
-        html += '<div style="margin-top: 15px; text-align: center;">';
-        html += '<button onclick="addFlight(' + round.id + ')" style="background: #48bb78; font-size: 12px; padding: 5px 15px;">Legg til Flight</button>';
-        if (round.flights.length > 1) {
-            html += '<button onclick="removeFlight(' + round.id + ')" style="background: #e53e3e; font-size: 12px; padding: 5px 15px; margin-left: 10px;">Fjern Flight</button>';
-        }
-        html += '</div>';
-        
-        html += '</div>';
-    }
-});
-
-html += '<button onclick="saveFlightComposition()" style="margin-top: 15px;">Lagre Flight Sammensetning</button>';
-html += '</div>';
-html += '</div>';
     
 // Leaderboard view functions
 function loadLeaderboard() {
@@ -2638,51 +2684,7 @@ function loadYearlyResults() {
     }
     
     html += '</div>';
-    function addPlayerToFlight(roundId, flightIndex) {
-    var select = document.getElementById('addPlayer_' + roundId + '_' + flightIndex);
-    var playerName = select.value;
-    
-    if (!playerName) return;
-    
-    var round = schedule.find(function(r) { return r.id === roundId; });
-    if (round && round.flights && round.flights[flightIndex]) {
-        round.flights[flightIndex].players.push(playerName);
-        saveToServer();
-        loadAdmin(); // Refresh admin view
-    }
-}
-
-function removePlayerFromFlight(roundId, flightIndex, playerIndex) {
-    var round = schedule.find(function(r) { return r.id === roundId; });
-    if (round && round.flights && round.flights[flightIndex]) {
-        round.flights[flightIndex].players.splice(playerIndex, 1);
-        saveToServer();
-        loadAdmin(); // Refresh admin view
-    }
-}
-
-function addFlight(roundId) {
-    var round = schedule.find(function(r) { return r.id === roundId; });
-    if (round && round.flights) {
-        round.flights.push({ time: '', players: [] });
-        saveToServer();
-        loadAdmin(); // Refresh admin view
-    }
-}
-
-function removeFlight(roundId) {
-    var round = schedule.find(function(r) { return r.id === roundId; });
-    if (round && round.flights && round.flights.length > 1) {
-        round.flights.pop();
-        saveToServer();
-        loadAdmin(); // Refresh admin view
-    }
-}
-
-function saveFlightComposition() {
-    saveToServer();
-    alert('Flight sammensetning lagret!');
-}
+  
     // Historical winners (placeholder data)
     html += '<h4>Historiske Vinnere</h4>';
     html += '<div style="background: white; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0;">';
