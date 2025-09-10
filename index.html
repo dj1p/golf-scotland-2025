@@ -1295,33 +1295,12 @@ async function selectCourseFromSearch(index) {
         item.classList.toggle('selected', i === index);
     });
     
-    console.log('Fetching course details for:', course.club_name, 'ID:', course.id);
+    console.log('Using search result data for:', course.club_name);
+    console.log('Course data:', course);
     
-    try {
-        var response = await fetch(`${API_BASE_URL}/v1/courses/${course.id}`, {
-            headers: {
-                'Authorization': 'Key ' + API_KEY
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error(`API request failed: ${response.status}`);
-        }
-        
-        var detailedCourse = await response.json();
-        console.log('Received course data:', detailedCourse);
-        
-        if (!detailedCourse) {
-            throw new Error('No course data received');
-        }
-        
-        selectedCourseData = detailedCourse;
-        displayCourseDetails(detailedCourse);
-    } catch (error) {
-        console.error('Error fetching course details:', error);
-        document.getElementById('selectedCourseDetails').innerHTML = 
-            `<div style="color: red; padding: 15px;">Feil ved lasting av banedetaljer: ${error.message}</div>`;
-    }
+    // Use the course data directly from search results instead of making another API call
+    selectedCourseData = course;
+    displayCourseDetails(course);
 }
 
 function displayCourseDetails(course) {
