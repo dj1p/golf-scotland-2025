@@ -1113,7 +1113,88 @@ function logoutAdmin() {
     loadAdmin();
     saveToServer();
 }
+// Schedule editing functions
+function updateRoundDate(roundId, newDate) {
+    var round = schedule.find(function(r) { return r.id === roundId; });
+    if (round) {
+        round.date = newDate;
+    }
+}
 
+function updateRoundTime(roundId, newTime) {
+    var round = schedule.find(function(r) { return r.id === roundId; });
+    if (round) {
+        round.time = newTime;
+    }
+}
+
+function updateTeeTime(roundId, newTeeTime) {
+    var round = schedule.find(function(r) { return r.id === roundId; });
+    if (round) {
+        round.teeTime = newTeeTime;
+    }
+}
+
+function saveSchedule() {
+    // Validate that all rounds have dates and times
+    var hasErrors = false;
+    var errorMessages = [];
+    
+    schedule.forEach(function(round, index) {
+        if (!round.date || round.date.trim() === '') {
+            hasErrors = true;
+            errorMessages.push('Runde ' + (index + 1) + ' mangler dato');
+        }
+        if (!round.time || round.time.trim() === '') {
+            hasErrors = true;
+            errorMessages.push('Runde ' + (index + 1) + ' mangler tid');
+        }
+    });
+    
+    if (hasErrors) {
+        alert('Feil:\n' + errorMessages.join('\n'));
+        return;
+    }
+    
+    saveToServer();
+    alert('Turneringsplan lagret!');
+    loadAdmin(); // Refresh admin view
+}
+
+function resetSchedule() {
+    if (confirm('Er du sikker på at du vil tilbakestille turneringsplanen til standardverdier?')) {
+        // Reset to original schedule
+        schedule.forEach(function(round) {
+            switch(round.id) {
+                case 1:
+                    round.date = 'Fredag 29. aug';
+                    round.time = 'Morgen';
+                    break;
+                case 2:
+                    round.date = 'Fredag 29. aug';
+                    round.time = 'Ettermiddag';
+                    break;
+                case 3:
+                    round.date = 'Lørdag 30. aug';
+                    round.time = 'Morgen';
+                    break;
+                case 4:
+                    round.date = 'Lørdag 30. aug';
+                    round.time = 'Ettermiddag';
+                    break;
+                case 5:
+                    round.date = 'Søndag 31. aug';
+                    round.time = 'Hele dagen';
+                    break;
+            }
+            round.teeTime = ''; // Clear tee times
+        });
+        
+        saveToServer();
+        alert('Turneringsplan tilbakestilt!');
+        loadAdmin(); // Refresh admin view
+    }
+}
 // Handicap calculation functions
 function toggleHandicapMethod(useSlope) {
     window.useSlope = useSlope;
@@ -2466,6 +2547,11 @@ window.saveAwards = saveAwards;
 window.saveWhisky = saveWhisky;
 window.loadScorecardForm = loadScorecardForm;
 window.updateScore = updateScore;
+window.updateRoundDate = updateRoundDate;
+window.updateRoundTime = updateRoundTime;
+window.updateTeeTime = updateTeeTime;
+window.saveSchedule = saveSchedule;
+window.resetSchedule = resetSchedule;
 
 </script>
 </body>
